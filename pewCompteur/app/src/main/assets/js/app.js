@@ -1132,6 +1132,32 @@ class App {
 }
 
 // Start
+
+window.requestBackAction = () => {
+    if (window.app && window.app.router) {
+        const history = window.app.router.history;
+        const state = {
+            history: history.length,
+            page: history.length > 0 ? history[history.length - 1].name : 'home'
+        };
+        if (window.Android && window.Android.handleBackButtonState) {
+            window.Android.handleBackButtonState(JSON.stringify(state));
+        } else {
+            // Fallback for when the interface is not available (e.g. testing in browser)
+            // Or if the timing is off. This provides a default graceful fallback.
+            if (history.length > 1) {
+                window.app.router.back();
+            }
+        }
+    } else {
+        // App not yet initialized, or in a weird state. Assume we can quit.
+        const state = { history: 1, page: 'home' };
+        if (window.Android && window.Android.handleBackButtonState) {
+            window.Android.handleBackButtonState(JSON.stringify(state));
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Dynamic Viewport Height Fix
     const setAppHeight = () => {
