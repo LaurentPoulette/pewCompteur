@@ -1,8 +1,11 @@
 package com.pewpew.pewcompteur
 
 import android.app.AlertDialog
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.webkit.JavascriptInterface
+import android.webkit.PermissionRequest
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
@@ -13,14 +16,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import com.pewpew.pewcompteur.ui.theme.PewCompteurTheme
 import org.json.JSONObject
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
+    private var cameraPermissionRequest: PermissionRequest? = null
+    private lateinit var permissionLauncher: ActivityResultLauncher<String>
 
     // The Javascript Interface class
     inner class WebAppInterface {
@@ -53,6 +61,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                cameraPermissionRequest?.grant(cameraPermissionRequest?.resources)
+            } else {
+                cameraPermissionRequest?.deny()
+            }
+            cameraPermissionRequest = null
+        }
+
         webView = WebView(this).apply {
             val assetLoader = WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(context))
@@ -64,8 +81,29 @@ class MainActivity : ComponentActivity() {
                     request: android.webkit.WebResourceRequest
                 ) = assetLoader.shouldInterceptRequest(request.url)
             }
+            
+            webChromeClient = object : WebChromeClient() {
+                override fun onPermissionRequest(request: PermissionRequest) {
+                    // Check if the requested resources include camera access
+                    if (request.resources.any { it == PermissionRequest.RESOURCE_VIDEO_CAPTURE }) {
+                        // Check if Android app has camera permission
+                        if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                            request.grant(request.resources)
+                        } else {
+                            // Store the request and ask for runtime permission
+                            cameraPermissionRequest = request
+                            permissionLauncher.launch(android.Manifest.permission.CAMERA)
+                        }
+                    }
+                    else {
+                        request.deny()
+                    }
+                }
+            }
+
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            settings.mediaPlaybackRequiresUserGesture = false // Allow autoplay for camera stream
             // Add the interface
             addJavascriptInterface(WebAppInterface(), "Android")
             loadUrl("https://appassets.androidplatform.net/assets/index.html")
@@ -91,7 +129,7 @@ class MainActivity : ComponentActivity() {
     private fun showQuitConfirmationDialog() {
         AlertDialog.Builder(this@MainActivity)
             .setTitle("Quitter")
-            .setMessage("Voulez-vous vraiment quitter l'application ?")
+            .setMessage("Voulez-vous vraiment quitter l\'application ?")
             .setPositiveButton("Oui") { _, _ -> finish() }
             .setNegativeButton("Non", null)
             .show()

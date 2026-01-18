@@ -438,23 +438,7 @@ class App {
         this.router.navigate('game');
     }
 
-    handleImageUpload(inputElement) {
-        const file = inputElement.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.openCropper(e.target.result, (croppedDataUrl) => {
-                const previewId = inputElement.id + '-preview';
-                const previewEl = document.getElementById(previewId);
-                if (previewEl) {
-                    previewEl.src = croppedDataUrl;
-                    previewEl.style.display = 'block';
-                }
-            });
-        };
-        reader.readAsDataURL(file);
-    }
+    // Removed handleImageUpload as it's no longer used for file input
 
     async startCamera(prefix) {
         const container = document.getElementById(`${prefix}-camera-container`);
@@ -494,10 +478,22 @@ class App {
 
         // Open cropper
         this.openCropper(dataUrl, (croppedDataUrl) => {
-            const previewEl = document.getElementById(`${prefix}-photo-preview`);
+            const previewEl = document.getElementById(`${prefix}-photo-display`); // Use -display for the main preview
+            const avatarEl = document.getElementById(`${prefix}-avatar-display`);
+            const avatarInput = document.getElementById(`${prefix}-avatar`);
+            const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
+
             if (previewEl) {
                 previewEl.src = croppedDataUrl;
                 previewEl.style.display = 'block';
+                previewEl.classList.add('selected'); // Add selected class to photo
+            }
+            if (avatarEl) avatarEl.style.display = 'none'; // Hide avatar
+            if (avatarInput) avatarInput.value = ''; // Clear avatar value
+
+            // Remove selected class from all avatar options
+            if (imageSelectionDiv) {
+                imageSelectionDiv.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
             }
         });
     }
@@ -515,14 +511,78 @@ class App {
         if (actions) actions.style.display = 'block';
     }
 
+    selectAvatar(prefix, emoji) {
+        const avatarInput = document.getElementById(`${prefix}-avatar`);
+        const avatarDisplay = document.getElementById(`${prefix}-avatar-display`);
+        const photoDisplay = document.getElementById(`${prefix}-photo-display`);
+        const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
+
+        if (avatarInput) avatarInput.value = emoji;
+
+        if (avatarDisplay) {
+            avatarDisplay.textContent = emoji;
+            avatarDisplay.style.display = 'block';
+            avatarDisplay.classList.add('selected');
+        }
+
+        if (photoDisplay) {
+            photoDisplay.src = '';
+            photoDisplay.style.display = 'none';
+            photoDisplay.classList.remove('selected');
+        }
+
+        // Ensure only the clicked avatar-opt has 'selected' class
+        if (imageSelectionDiv) {
+            imageSelectionDiv.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
+            // The click handler in views.js already adds the selected class to 'this'.
+            // This part might be redundant if the views.js onclick is handling it correctly.
+            // Let's assume views.js handles adding the 'selected' to `this`.
+        }
+    }
+
+    removePhoto(prefix) {
+        const avatarInput = document.getElementById(`${prefix}-avatar`);
+        const avatarDisplay = document.getElementById(`${prefix}-avatar-display`);
+        const photoDisplay = document.getElementById(`${prefix}-photo-display`);
+        const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
+        const removePhotoBtn = event.target; // The button that was clicked
+
+        if (photoDisplay) {
+            photoDisplay.src = '';
+            photoDisplay.style.display = 'none';
+            photoDisplay.classList.remove('selected');
+        }
+
+        // Set default avatar and select it
+        const defaultAvatar = '👤'; // Or player.avatar if editing, if we want to revert to original.
+        if (avatarInput) avatarInput.value = defaultAvatar;
+        if (avatarDisplay) {
+            avatarDisplay.textContent = defaultAvatar;
+            avatarDisplay.style.display = 'block';
+            avatarDisplay.classList.add('selected');
+        }
+
+        // Remove selected class from all avatar options, then add to default
+        if (imageSelectionDiv) {
+            imageSelectionDiv.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
+            const defaultAvatarOpt = Array.from(imageSelectionDiv.querySelectorAll('.avatar-opt')).find(el => el.textContent === defaultAvatar);
+            if (defaultAvatarOpt) {
+                defaultAvatarOpt.classList.add('selected');
+            }
+        }
+        // Hide the "Supprimer photo" button itself
+        if(removePhotoBtn) removePhotoBtn.style.display = 'none';
+    }
+
+
     submitCreatePlayer() {
         const nameInput = document.getElementById('new-player-name');
         const avatarInput = document.getElementById('new-player-avatar');
-        const previewEl = document.getElementById('new-player-photo-preview');
+        const photoDisplay = document.getElementById('new-player-photo-display');
 
         const name = nameInput.value.trim();
-        const avatar = avatarInput.value;
-        const photo = (previewEl && previewEl.style.display !== 'none' && previewEl.src.startsWith('data:')) ? previewEl.src : null;
+        const avatar = avatarInput.value; // Will be empty string if photo is selected, otherwise emoji
+        const photo = (photoDisplay && photoDisplay.style.display !== 'none' && photoDisplay.src.startsWith('data:')) ? photoDisplay.src : null;
 
         if (name) {
             this.store.addPlayer(name, avatar, photo);
@@ -540,44 +600,19 @@ class App {
         const idInput = document.getElementById('edit-player-id');
         const nameInput = document.getElementById('edit-player-name');
         const avatarInput = document.getElementById('edit-player-avatar');
-        const previewEl = document.getElementById('edit-player-photo-preview');
+        const photoDisplay = document.getElementById('edit-player-photo-display');
 
         const id = idInput.value;
         const name = nameInput.value.trim();
         const avatar = avatarInput.value;
-        // Check if photo was explicitly removed or kept
+
         let photo = null;
-        if (previewEl && previewEl.style.display !== 'none' && previewEl.src.startsWith('data:')) {
-            photo = previewEl.src;
-        } else if (previewEl && previewEl.style.display === 'none') {
-            // Explicitly hidden -> means remove photo. 
-            // We pass an empty string or specific flag to store to indicate removal?
-            // Store expects 'null' to keep or new value.
-            // Let's look at store: 
-            // if (photo !== null) player.photo = photo; 
-            // So if I pass null, it does nothing.
-            // I need to be able to pass something that says "remove".
-            // Let's pass empty string '' for removal.
+        if (photoDisplay && photoDisplay.style.display !== 'none' && photoDisplay.src.startsWith('data:')) {
+            photo = photoDisplay.src;
+        } else if (photoDisplay && photoDisplay.style.display === 'none') {
+            // Photo was explicitly removed, set to empty string for removal in store
             photo = '';
-        } else {
-            // Preview visible but not data URL? (Unlikely with our logic, unless we support external URLs later)
-            // or it is existing persistence.
-            // If we just navigated here, previewEl.src is the Existing photo.
-            // If we didn't touch it, it is still the existing photo.
-            // If it was existing photo, it is a data-url from store.
-            // So the first check covers it.
-
-            // Wait, if I enter edit, preview is src="data:..." and display:block.
-            // check 1: src starts with data -> photo = src. Correct.
-            // If I click "Remove", display becomes none, src becomes ''.
-            // check 2: display none -> photo = ''. 
-            // Then in store: if (photo !== null) ...
-            // if photo is '', player.photo = '' -> Effectively removed.
-
-            // BUT, what if there was NO photo initially? 
-            // preview src='', display:none.
-            // check 2 matches. photo = ''. Store sets player.photo = ''. result: no photo. Correct.
-        }
+        } // else if photoDisplay is block but src is not data: (meaning it's an existing player photo from store), keep photo = null
 
         if (name) {
             this.store.updatePlayer(id, name, avatar, photo);
@@ -801,11 +836,7 @@ class App {
                 // If we check every update, it might reappear if we don't track dismissal.
                 // For now, let's assume if condition is met, we show it, unless we are in "continued" mode.
                 // But we don't have "continued" mode in state. 
-                // Let's rely on the view re-render or explicit method.
-                // Actually, if I type a score and it triggers, it should show.
-                // "Continue Game" will just hide it DOM-wise? No, next update it will come back.
-                // We need a flag in session? Or just let it be. 
-                // Let's just update DOM. 
+                // Let's just update DOM.
                 // If "Continue Game" is clicked, we'll probably want to ignore this check until next round?
                 // Let's keeping it simple: Update shows it. "Continue" hides it.
                 // If user updates score again, it might reappear if condition still met. That seems correct.
@@ -827,7 +858,7 @@ class App {
                 // But "Continuer la partie" implies ignoring the CURRENT stop.
 
                 bannerContainer.innerHTML = `
-                    <div style="background-color:var(--primary-color); color:white; padding:15px; border-radius:8px; margin-bottom:10px; text-align:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="background-color:var(--primary-color); color:white; padding:15px; border-radius:8px; margin-bottom:10px; text-align:center; box-shadow: 0 44px 6px rgba(0,0,0,0.1);">
                         <div style="font-size:1.2em; font-weight:bold;">🏁 Partie Terminée</div>
                         <div style="opacity:0.9; margin-bottom:10px;">${reason}</div>
                         <div style="display:flex; justify-content:center; gap:10px;">
@@ -861,7 +892,7 @@ class App {
         // Update session config
         this.store.updateSessionConfig({
             target: newTarget,
-            rounds: newRounds
+            rounds: newRuds
         });
 
         this.router.back();

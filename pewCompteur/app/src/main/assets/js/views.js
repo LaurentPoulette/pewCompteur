@@ -60,11 +60,15 @@ export const PlayerSelectView = (store, gameId) => {
 
             ${players.map(p => {
         const isSelected = window.app.selectedPlayers.includes(p.id);
+        // Determine if the selected element is an avatar or a photo
+        const isAvatarSelected = !p.photo && isSelected;
+        const isPhotoSelected = p.photo && isSelected;
+
         return `
                 <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px;">
                         <div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
-                             ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.8em;">${p.avatar}</span>`}
+                             ${p.photo ? `<img src="${p.photo}" class="${isPhotoSelected ? 'selected-photo' : ''}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span class="${isAvatarSelected ? 'selected-avatar' : ''}" style="font-size:1.8em;">${p.avatar}</span>`}
                         </div>
                         <div onclick="event.stopPropagation(); window.app.editPlayer('${p.id}')" style="font-size:1.2rem; cursor:pointer;">✏️</div>
                     </div>
@@ -84,6 +88,8 @@ export const PlayerSelectView = (store, gameId) => {
         </div>
         <style>
             .player-card.selected { border: 2px solid var(--primary-color); background-color: #e0f2fe; }
+            .selected-avatar { text-shadow: 0 0 3px var(--primary-color); }
+            .selected-photo { border: 2px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
         </style>
 `;
 };
@@ -309,9 +315,9 @@ export const CreateGameView = () => `
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
             <label for="new-game-name" style="font-weight:bold; width: 50%;">Nom du jeu</label>
-            <input type="text" id="new-game-name" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" id="new-game-name" style="width:45%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
 
@@ -359,9 +365,9 @@ export const EditGameView = (store, gameId) => {
     <div class="card">
         <input type="hidden" id="edit-game-id" value="${game.id}">
         
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
             <label for="edit-game-name" style="font-weight:bold; width: 50%;">Nom du jeu</label>
-            <input type="text" id="edit-game-name" value="${game.name}" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" id="edit-game-name" value="${game.name}" style="width:45%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
         
 
@@ -430,50 +436,64 @@ export const CreatePlayerView = () => `
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-            <label for="new-player-name" style="font-weight:bold; width: 50%;">Nom du joueur</label>
-            <input type="text" id="new-player-name" style="width:45%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        <!-- Section 1: Player Information -->
+        <div style="margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #f0f0f0;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+                <label for="new-player-name" style="font-weight:bold; width: 50%;">Nom du joueur</label>
+                <input type="text" id="new-player-name" style="width:45%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            </div>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <label style="font-weight:bold;">Image du joueur</label>
+                <div id="new-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
+                    <span id="new-player-avatar-display" class="selected">👤</span>
+                    <img id="new-player-photo-display" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:none;">
+                </div>
+            </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-bottom:20px;">
-            ${['👤', '🧑‍🚀', '🦸', '🦹', '🧙', '🧟', '🧛', '🧞', '🧜', '🧚'].map(emoji => `
-                <div onclick="document.querySelectorAll('.avatar-opt').forEach(el=>el.classList.remove('selected')); this.classList.add('selected'); document.getElementById('new-player-avatar').value='${emoji}'; const p = document.getElementById('new-player-photo-preview'); p.src=''; p.style.display='none';" class="avatar-opt" style="font-size:2em; text-align:center; padding:5px; border-radius:5px; cursor:pointer; background:#eee;">${emoji}</div>
+        <!-- Section 2: Separator Title -->
+        <h3 style="margin-bottom:20px; text-align:center;">Choisissez une image ou prenez une photo</h3>
+
+        <!-- Section 3: Image Selection -->
+        <div style="margin-bottom:20px; text-align:center;">
+            <div id="new-player-image-selection" style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+                ${['👤', '🧑‍🚀', '🦸', '🦹', '🧙', '🧟', '🧛', '🧞', '🧜', '🧚'].map(emoji => `
+                <div onclick="window.app.selectAvatar('new-player', '${emoji}');" class="avatar-opt ${emoji === '👤' ? 'selected' : ''}" style="font-size:2em; text-align:center; padding:5px; border-radius:5px; cursor:pointer; background:#eee;">${emoji}</div>
             `).join('')}
+            </div>
+            <input type="hidden" id="new-player-avatar" value="👤">
+
+            <!-- Camera Actions -->
+            <div id="new-player-photo-actions" style="margin-bottom:10px;">
+                <button onclick="window.app.startCamera('new-player')" style="background:var(--primary-color); color:white; padding:8px 12px; border-radius:5px; border:none; margin-right:5px;">📷 Appareil Photo</button>
+            </div>
+
+            <!-- Camera View -->
+            <div id="new-player-camera-container" style="display:none; margin-bottom:10px;">
+                <video id="new-player-camera-video" autoplay playsinline style="width:100px; height:100px; background:#000; border-radius:50%; object-fit:cover; margin-bottom:5px;"></video>
+                <br>
+                <button onclick="window.app.capturePhoto('new-player')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
+                <button onclick="window.app.stopCamera('new-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
+            </div>
         </div>
-        <input type="hidden" id="new-player-avatar" value="👤">
 
-            <div style="margin-bottom:20px; text-align:center;">
-                <div style="margin-bottom:5px; font-weight:bold;">Ou une photo</div>
-
-                <!-- Camera Actions -->
-                <div id="new-player-photo-actions" style="margin-bottom:10px;">
-                    <button onclick="window.app.startCamera('new-player')" style="background:var(--primary-color); color:white; padding:8px 12px; border-radius:5px; border:none; margin-right:5px;">📷 Appareil Photo</button>
-                    <button onclick="document.getElementById('new-player-photo').click()" style="background:#eee; color:#333; padding:8px 12px; border-radius:5px; border:1px solid #ccc;">📁 Fichier</button>
-                </div>
-
-                <!-- Camera View -->
-                <div id="new-player-camera-container" style="display:none; margin-bottom:10px;">
-                    <video id="new-player-camera-video" autoplay playsinline style="width:100%; max-width:250px; background:#000; border-radius:8px; margin-bottom:5px;"></video>
-                    <br>
-                        <button onclick="window.app.capturePhoto('new-player')" style="background:var(--primary-color); color:white; padding:10px 20px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
-                        <button onclick="window.app.stopCamera('new-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
-                </div>
-
-                <input type="file" id="new-player-photo" accept="image/*" onchange="window.app.handleImageUpload(this)" style="display:none;">
-                    <img id="new-player-photo-preview" style="width:100px; height:100px; border-radius:50%; object-fit:cover; display:none; margin: 0 auto; border:3px solid var(--primary-color); margin-top:10px;">
-                    </div>
-
-                    <button onclick="window.app.submitCreatePlayer()" style="width:100%">Ajouter</button>
-            </div>
-            </div>
-            <style>
-                .avatar-opt.selected {background - color: var(--primary-color) !important; color: white; }
-            </style>
-            `;
+        <button onclick="window.app.submitCreatePlayer()" style="width:100%">Ajouter</button>
+    </div>
+    </div>
+    <style>
+        .avatar-opt.selected { background-color: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
+        #new-player-avatar-display.selected { text-shadow: 0 0 3px var(--primary-color); }
+        #new-player-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
+    </style>
+`;
 
 export const EditPlayerView = (store, playerId) => {
     const player = store.getPlayers().find(p => p.id === playerId);
     if (!player) return '<div>Joueur introuvable</div>';
+
+    // Determine initial state
+    const initialAvatarSelected = !player.photo;
+    const initialPhotoSelected = !!player.photo; // !! converts to boolean
 
     return `
             <header style="display:flex; align-items:center; margin-bottom: 20px;">
@@ -483,47 +503,59 @@ export const EditPlayerView = (store, playerId) => {
             <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
             <div class="card">
                 <input type="hidden" id="edit-player-id" value="${player.id}">
-                    <label style="display:block; margin-bottom:20px;">
+
+                <!-- Section 1: Player Information -->
+                <div style="margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #f0f0f0;">
+                    <label style="display:block; margin-bottom:15px;">
                         Nom du joueur
                         <input type="text" id="edit-player-name" value="${player.name}" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:5px;">
                     </label>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <label style="font-weight:bold;">Image du joueur</label>
+                        <div id="edit-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
+                            <span id="edit-player-avatar-display" class="${initialAvatarSelected ? 'selected' : ''}" style="display:${initialAvatarSelected ? 'block' : 'none'};">${player.avatar}</span>
+                            <img id="edit-player-photo-display" src="${player.photo || ''}" class="${initialPhotoSelected ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${initialPhotoSelected ? 'block' : 'none'};">
+                        </div>
+                    </div>
+                </div>
 
-                    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-bottom:20px;">
+                <!-- Section 2: Separator Title -->
+                <h3 style="margin-bottom:20px; text-align:center;">Choisissez une image ou prenez une photo</h3>
+
+                <!-- Section 3: Image Selection -->
+                <div style="margin-bottom:20px; text-align:center;">
+                    <div id="edit-player-image-selection" style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
                         ${['👤', '🧑‍🚀', '🦸', '🦹', '🧙', '🧟', '🧛', '🧞', '🧜', '🧚'].map(emoji => `
-                <div onclick="document.querySelectorAll('.avatar-opt').forEach(el=>el.classList.remove('selected')); this.classList.add('selected'); document.getElementById('edit-player-avatar').value='${emoji}'; const p = document.getElementById('edit-player-photo-preview'); p.src=''; p.style.display='none';" class="avatar-opt ${player.avatar === emoji ? 'selected' : ''}" style="font-size:2em; text-align:center; padding:5px; border-radius:5px; cursor:pointer; background:#eee;">${emoji}</div>
-            `).join('')}
+                        <div onclick="window.app.selectAvatar('edit-player', '${emoji}');" class="avatar-opt ${player.avatar === emoji && initialAvatarSelected ? 'selected' : ''}" style="font-size:2em; text-align:center; padding:5px; border-radius:5px; cursor:pointer; background:#eee;">${emoji}</div>
+                    `).join('')}
                     </div>
                     <input type="hidden" id="edit-player-avatar" value="${player.avatar}">
 
-                        <div style="margin-bottom:20px; text-align:center;">
-                            <div style="margin-bottom:5px; font-weight:bold;">Ou une photo</div>
+                    <!-- Camera Actions -->
+                    <div id="edit-player-photo-actions" style="margin-bottom:10px;">
+                        <button onclick="window.app.startCamera('edit-player')" style="background:var(--primary-color); color:white; padding:8px 12px; border-radius:5px; border:none; margin-right:5px;">📷 Appareil Photo</button>
+                    </div>
 
-                            <!-- Camera Actions -->
-                            <div id="edit-player-photo-actions" style="margin-bottom:10px;">
-                                <button onclick="window.app.startCamera('edit-player')" style="background:var(--primary-color); color:white; padding:8px 12px; border-radius:5px; border:none; margin-right:5px;">📷 Appareil Photo</button>
-                                <button onclick="document.getElementById('edit-player-photo').click()" style="background:#eee; color:#333; padding:8px 12px; border-radius:5px; border:1px solid #ccc;">📁 Fichier</button>
-                            </div>
+                    <!-- Camera View -->
+                    <div id="edit-player-camera-container" style="display:none; margin-bottom:10px;">
+                        <video id="edit-player-camera-video" autoplay playsinline style="width:100px; height:100px; background:#000; border-radius:50%; object-fit:cover; margin-bottom:5px;"></video>
+                        <br>
+                        <button onclick="window.app.capturePhoto('edit-player')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
+                        <button onclick="window.app.stopCamera('edit-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
+                    </div>
 
-                            <!-- Camera View -->
-                            <div id="edit-player-camera-container" style="display:none; margin-bottom:10px;">
-                                <video id="edit-player-camera-video" autoplay playsinline style="width:100%; max-width:250px; background:#000; border-radius:8px; margin-bottom:5px;"></video>
-                                <br>
-                                    <button onclick="window.app.capturePhoto('edit-player')" style="background:var(--primary-color); color:white; padding:10px 20px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
-                                    <button onclick="window.app.stopCamera('edit-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
-                            </div>
+                    ${player.photo ? `<button onclick="window.app.removePhoto('edit-player');" style="margin-top:5px; background:none; border:none; color:red; text-decoration:underline; font-size:0.8em; cursor:pointer;">Supprimer photo</button>` : ''}
+                </div>
 
-                            <input type="file" id="edit-player-photo" accept="image/*" onchange="window.app.handleImageUpload(this)" style="display:none;">
-                                <img id="edit-player-photo-preview" src="${player.photo || ''}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; display:${player.photo ? 'block' : 'none'}; margin: 0 auto; border:3px solid var(--primary-color); margin-top:10px;">
-                                    ${player.photo ? `<button onclick="document.getElementById('edit-player-photo-preview').src=''; document.getElementById('edit-player-photo-preview').style.display='none';" style="margin-top:5px; background:none; border:none; color:red; text-decoration:underline; font-size:0.8em; cursor:pointer;">Supprimer photo</button>` : ''}
-                                </div>
-
-                                <button onclick="window.app.submitEditPlayer()" style="width:100%">Enregistrer</button>
-                        </div>
-                        </div>
-                        <style>
-                            .avatar-opt.selected {background - color: var(--primary-color) !important; color: white; }
-                        </style>
-                        `;
+                <button onclick="window.app.submitEditPlayer()" style="width:100%">Enregistrer</button>
+            </div>
+            </div>
+            <style>
+                .avatar-opt.selected { background-color: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
+                #edit-player-avatar-display.selected { text-shadow: 0 0 3px var(--primary-color); }
+                #edit-player-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
+            </style>
+`;
 };
 
 export const GameSetupView = (store, gameId) => {
