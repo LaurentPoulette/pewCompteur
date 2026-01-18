@@ -1,4 +1,4 @@
-export const APP_VERSION = '1.0.5';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.3';
 
 export const HomeView = (store) => {
     const games = store.getGames();
@@ -18,6 +18,7 @@ export const HomeView = (store) => {
         </div>
 
         <div style="flex:1; overflow-y:auto; width:100%;">
+        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Choisissez votre jeu</h3>
         <div class="grid" style="padding-bottom:100px;">
             <!-- New Game Card -->
             <div class="card" onclick="window.app.router.navigate('createGame')" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:80px; border: 2px dashed #ccc; background:transparent;">
@@ -43,13 +44,28 @@ export const HomeView = (store) => {
 
 export const PlayerSelectView = (store, gameId) => {
     const players = store.getPlayers();
+    const game = store.getGames().find(g => g.id === gameId);
+    
+    let subtitle = "Sélectionnez les joueurs";
+    if (game && game.minPlayers && game.maxPlayers) {
+        if (game.minPlayers === game.maxPlayers) {
+            subtitle = `Sélectionnez ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+        } else {
+            subtitle = `Sélectionnez entre ${game.minPlayers} et ${game.maxPlayers} joueurs`;
+        }
+    } else if (game && game.minPlayers) {
+        subtitle = `Sélectionnez au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}`;
+    } else if (game && game.maxPlayers) {
+        subtitle = `Sélectionnez au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+    }
+    
     return `
         <header style="display:flex; align-items:center; margin-bottom: 20px;">
             <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <h1>Choix des joueurs</h1>
+            <h1>Joueurs</h1>
         </header>
         <div style="flex:1; overflow-y:auto; width:100%;">
-        <p class="subtitle">Sélectionnez les joueurs pour la partie</p>
+        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">${subtitle}</h3>
         <div class="grid" id="player-grid" style="padding-bottom: 100px;">
             <!-- New Player Card -->
             <div class="card" onclick="window.app.router.navigate('createPlayer')" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:80px; border: 2px dashed #ccc; background:transparent;">
@@ -98,10 +114,10 @@ export const PlayerOrderView = (store, gameId) => {
     return `
         <header style="display:flex; align-items:center; margin-bottom: 20px;">
              <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <h1>Ordre des joueurs</h1>
+            <h1>Ordre</h1>
         </header>
         <div style="flex:1; overflow-y:auto; width:100%;">
-        <p class="subtitle"></p>
+        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Glissez pour changer l'ordre</h3>
         
         <div id="selected-players-list" style="margin-bottom:80px;">
              <!-- Populated by window.app.updateSelectedPlayersUI() -->
@@ -315,34 +331,53 @@ export const CreateGameView = () => `
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
+        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Informations</h3>
+
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <label for="new-game-name" style="font-weight:bold; width: 50%;">Nom du jeu</label>
-            <input type="text" id="new-game-name" style="width:45%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="new-game-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
+            <input type="text" id="new-game-name" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
-
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-type" style="font-weight:bold; width: 50%;">Score vainqueur</label>
-            <select id="new-game-type" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
+            <label for="new-game-type" style="font-weight:bold; width: 40%;">Vainqueur</label>
+            <select id="new-game-type" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
                 <option value="highest">Le plus grand</option>
                 <option value="lowest">Le plus petit</option>
             </select>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-target" style="font-weight:bold; width:50%;">Limite de score <!--(opt)--></label>
-            <input type="number" id="new-game-target" placeholder="Illimité" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
+                <label for="new-game-fixed-score-value">Score fixe</label>
+                <span onclick="window.app.showHelpPopup(&quot;Le score est fixé pour un tour de jeu, ce qui permet d'afficher un décompte lors de la saisie des scores&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
+            </div>
+            <input type="number" id="new-game-fixed-score-value" placeholder="Optionnel" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        </div>
+
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Fin de partie</h3>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label for="new-game-target" style="font-weight:bold; width:40%;">Limite de score</label>
+            <input type="number" id="new-game-target" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-rounds" style="font-weight:bold; width:50%;">Limite de tours <!--(opt)--></label>
-            <input type="number" id="new-game-rounds" placeholder="Illimité" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="new-game-rounds" style="font-weight:bold; width:40%;">Limite de tours</label>
+            <input type="number" id="new-game-rounds" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        </div>
+
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Nombre de joueurs</h3>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label for="new-game-min-players" style="font-weight:bold; width:40%;">Minimum</label>
+            <input type="number" id="new-game-min-players" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-fixed-score-value" style="font-weight:bold; width:50%;">Score fixe par tour ?</label>
-            <input type="number" id="new-game-fixed-score-value" placeholder="Optionnel" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="new-game-max-players" style="font-weight:bold; width:40%;">Maximum</label>
+            <input type="number" id="new-game-max-players" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
 
@@ -365,40 +400,59 @@ export const EditGameView = (store, gameId) => {
     <div class="card">
         <input type="hidden" id="edit-game-id" value="${game.id}">
         
+        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Informations</h3>
+
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <label for="edit-game-name" style="font-weight:bold; width: 50%;">Nom du jeu</label>
-            <input type="text" id="edit-game-name" value="${game.name}" style="width:45%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="edit-game-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
+            <input type="text" id="edit-game-name" value="${game.name}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
         
-
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-type" style="font-weight:bold; width: 50%;">Vainqueur</label>
-            <select id="edit-game-type" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; background:white; text-align:right;">
+            <label for="edit-game-type" style="font-weight:bold; width: 40%;">Vainqueur</label>
+            <select id="edit-game-type" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; background:white; text-align:right;">
                 <option value="highest" ${game.winCondition === 'highest' ? 'selected' : ''}>Le plus grand</option>
                 <option value="lowest" ${game.winCondition === 'lowest' ? 'selected' : ''}>Le plus petit</option>
             </select>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-target" style="font-weight:bold; width: 50%;">Limite de score <!--(opt)--></label>
-            <input type="number" id="edit-game-target" value="${game.target || ''}" placeholder="Illimité" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
+                <label for="edit-game-fixed-score-value">Score fixe</label>
+                <span onclick="window.app.showHelpPopup(&quot;Le score est fixé pour un tour de jeu, ce qui permet d'afficher un décompte lors de la saisie des scores&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
+            </div>
+            <input type="number" id="edit-game-fixed-score-value" value="${game.fixedRoundScore || ''}" placeholder="Optionnel" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        </div>
+
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Fin de partie</h3>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label for="edit-game-target" style="font-weight:bold; width: 40%;">Limite de score</label>
+            <input type="number" id="edit-game-target" value="${game.target || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-rounds" style="font-weight:bold; width: 50%;">Limite de tours <!--(opt)--></label>
-            <input type="number" id="edit-game-rounds" value="${game.rounds || ''}" placeholder="Illimité" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="edit-game-rounds" style="font-weight:bold; width: 40%;">Limite de tours</label>
+            <input type="number" id="edit-game-rounds" value="${game.rounds || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        </div>
+
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Nombre de joueurs</h3>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label for="edit-game-min-players" style="font-weight:bold; width:40%;">Minimum</label>
+            <input type="number" id="edit-game-min-players" value="${game.minPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-fixed-score-value" style="font-weight:bold; width:50%;">Score total fixe par tour</label>
-            <input type="number" id="edit-game-fixed-score-value" value="${game.fixedRoundScore || ''}" placeholder="Optionnel" style="width:45%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="edit-game-max-players" style="font-weight:bold; width:40%;">Maximum</label>
+            <input type="number" id="edit-game-max-players" value="${game.maxPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
 
 
         <button onclick="window.app.submitEditGame()" style="width:100%; margin-bottom:15px;">Enregistrer</button>
-        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="width:100%; background-color:#ef4444; color:white;">Supprimer ce jeu</button>
+        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="width:100%; background-color:#ef4444; color:white;">Liste des joueurs</button>
     </div>
     </div>
     <style>
@@ -436,23 +490,21 @@ export const CreatePlayerView = () => `
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
-        <!-- Section 1: Player Information -->
-        <div style="margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #f0f0f0;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
-                <label for="new-player-name" style="font-weight:bold; width: 50%;">Nom du joueur</label>
-                <input type="text" id="new-player-name" style="width:45%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-            </div>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <label style="font-weight:bold;">Image du joueur</label>
-                <div id="new-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
-                    <span id="new-player-avatar-display" class="selected">👤</span>
-                    <img id="new-player-photo-display" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:none;">
-                </div>
+        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label for="new-player-name" style="font-weight:bold; width: 40%;">Nom</label>
+            <input type="text" id="new-player-name" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label style="font-weight:bold; width:40%;">Avatar</label>
+            <div id="new-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
+                <span id="new-player-avatar-display" class="selected">👤</span>
+                <img id="new-player-photo-display" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:none;">
             </div>
         </div>
 
-        <!-- Section 2: Separator Title -->
-        <h3 style="margin-bottom:20px; text-align:center;">Choisissez une image ou prenez une photo</h3>
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Choix de l'avatar</h3>
 
         <!-- Section 3: Image Selection -->
         <div style="margin-bottom:20px; text-align:center;">
@@ -504,23 +556,21 @@ export const EditPlayerView = (store, playerId) => {
             <div class="card">
                 <input type="hidden" id="edit-player-id" value="${player.id}">
 
-                <!-- Section 1: Player Information -->
-                <div style="margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #f0f0f0;">
-                    <label style="display:block; margin-bottom:15px;">
-                        Nom du joueur
-                        <input type="text" id="edit-player-name" value="${player.name}" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:5px;">
-                    </label>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <label style="font-weight:bold;">Image du joueur</label>
-                        <div id="edit-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
-                            <span id="edit-player-avatar-display" class="${initialAvatarSelected ? 'selected' : ''}" style="display:${initialAvatarSelected ? 'block' : 'none'};">${player.avatar}</span>
-                            <img id="edit-player-photo-display" src="${player.photo || ''}" class="${initialPhotoSelected ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${initialPhotoSelected ? 'block' : 'none'};">
-                        </div>
+                <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+                    <label for="edit-player-name" style="font-weight:bold; width:40%;">Nom</label>
+                    <input type="text" id="edit-player-name" value="${player.name}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+                    <label style="font-weight:bold; width:40%;">Avatar</label>
+                    <div id="edit-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
+                        <span id="edit-player-avatar-display" class="${initialAvatarSelected ? 'selected' : ''}" style="display:${initialAvatarSelected ? 'block' : 'none'};">${player.avatar}</span>
+                        <img id="edit-player-photo-display" src="${player.photo || ''}" class="${initialPhotoSelected ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${initialPhotoSelected ? 'block' : 'none'};">
                     </div>
                 </div>
 
-                <!-- Section 2: Separator Title -->
-                <h3 style="margin-bottom:20px; text-align:center;">Choisissez une image ou prenez une photo</h3>
+                <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Choix de l'avatar</h3>
 
                 <!-- Section 3: Image Selection -->
                 <div style="margin-bottom:20px; text-align:center;">
@@ -543,8 +593,6 @@ export const EditPlayerView = (store, playerId) => {
                         <button onclick="window.app.capturePhoto('edit-player')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
                         <button onclick="window.app.stopCamera('edit-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
                     </div>
-
-                    ${player.photo ? `<button onclick="window.app.removePhoto('edit-player');" style="margin-top:5px; background:none; border:none; color:red; text-decoration:underline; font-size:0.8em; cursor:pointer;">Supprimer photo</button>` : ''}
                 </div>
 
                 <button onclick="window.app.submitEditPlayer()" style="width:100%">Enregistrer</button>
@@ -573,7 +621,7 @@ export const GameSetupView = (store, gameId) => {
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
                         <div class="card" style="margin-bottom: 80px;">
-                            <p style="margin-bottom:20px;">Définissez les conditions de fin de partie.</p>
+                            <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Adaptez si besoin</h3>
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="setup-score-limit" style="font-weight:bold; width: 60%;">Limite de Score</label>
@@ -609,7 +657,7 @@ export const UpdateLimitsView = (store) => {
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
                         <div class="card" style="margin-bottom: 80px;">
-                            <p style="margin-bottom:20px; color:#666;">Pour continuer, vous pouvez augmenter ou supprimer les limites de la partie.</p>
+                            <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Adaptez si besoin</h3>
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="update-score-limit" style="font-weight:bold; width:60%;">Limite de score</label>
@@ -641,9 +689,10 @@ export const AddIngamePlayerView = (store) => {
     return `
                         <header style="display:flex; align-items:center; margin-bottom: 20px;">
                             <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Ajouter un joueur</h1>
+                            <h1>Joueurs</h1>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+                        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Joueurs disponibles</h3>
                         <div class="grid">
                             <!-- Option to create new -->
                             <div class="card" onclick="window.app.router.navigate('createPlayer')" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:100px; border: 2px dashed #ccc; background:transparent;">
@@ -680,7 +729,7 @@ export const RemoveIngamePlayerView = (store) => {
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
                         <div class="card">
-                            <p style="margin-bottom:20px; color: #ef4444;">Selectionnez le joueur à supprimer.</p>
+                            <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Selectionnez le joueur à supprimer</h3>
                             <div class="grid">
                                 ${players.map(p => `
                 <div class="card" onclick="window.app.router.navigate('confirmRemoveIngamePlayer', { playerId: '${p.id}' })" style="cursor:pointer; text-align:center;">
@@ -722,11 +771,11 @@ export const ReorderIngamePlayersView = (store) => {
     return `
                         <header style="display:flex; align-items:center; margin-bottom: 20px;">
                             <button onclick="window.app.cancelReorderIngame()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Ordre des joueurs</h1>
+                            <h1>Joueurs</h1>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
                         <div class="card" style="margin-bottom:80px;"> <!-- Margin bottom for fixed footer button space -->
-                            <p style="margin-bottom:10px; color:#666; font-size:0.9em;">Glissez pour réorganiser.</p>
+                            <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Glissez pour réorganiser</h3>
                             <div id="reorder-ingame-list"></div>
                         </div>
                         </div>

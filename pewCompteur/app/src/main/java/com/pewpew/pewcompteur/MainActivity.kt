@@ -80,6 +80,12 @@ class MainActivity : ComponentActivity() {
                     view: WebView,
                     request: android.webkit.WebResourceRequest
                 ) = assetLoader.shouldInterceptRequest(request.url)
+                
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+                    view?.evaluateJavascript("window.APP_VERSION_NATIVE = '$versionName';", null)
+                }
             }
             
             webChromeClient = object : WebChromeClient() {

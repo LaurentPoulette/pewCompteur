@@ -213,10 +213,26 @@ class App {
     }
 
     navigatePlayerOrder(gameId) {
-        if (this.selectedPlayers.length === 0) {
-            alert("Sélectionnez au moins un joueur !");
+        const game = this.store.getGames().find(g => g.id === gameId);
+        const playerCount = this.selectedPlayers.length;
+
+        if (playerCount === 0) {
+            this.showHelpPopup("Sélectionnez au moins un joueur !");
             return;
         }
+
+        // Vérifier le nombre minimum de joueurs
+        if (game && game.minPlayers && playerCount < game.minPlayers) {
+            this.showHelpPopup(`Ce jeu nécessite au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}. Vous en avez sélectionné ${playerCount}.`);
+            return;
+        }
+
+        // Vérifier le nombre maximum de joueurs
+        if (game && game.maxPlayers && playerCount > game.maxPlayers) {
+            this.showHelpPopup(`Ce jeu accepte au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}. Vous en avez sélectionné ${playerCount}.`);
+            return;
+        }
+
         this.router.navigate('playerOrder', { gameId });
     }
     togglePlayer(playerId) {
@@ -411,10 +427,26 @@ class App {
     }
 
     proceedToSetup(gameId) {
-        if (this.selectedPlayers.length === 0) {
-            alert("Sélectionnez au moins un joueur !");
+        const game = this.store.getGames().find(g => g.id === gameId);
+        const playerCount = this.selectedPlayers.length;
+
+        if (playerCount === 0) {
+            this.showHelpPopup("Sélectionnez au moins un joueur !");
             return;
         }
+
+        // Vérifier le nombre minimum de joueurs
+        if (game.minPlayers && playerCount < game.minPlayers) {
+            this.showHelpPopup(`Ce jeu nécessite au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}. Vous en avez sélectionné ${playerCount}.`);
+            return;
+        }
+
+        // Vérifier le nombre maximum de joueurs
+        if (game.maxPlayers && playerCount > game.maxPlayers) {
+            this.showHelpPopup(`Ce jeu accepte au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}. Vous en avez sélectionné ${playerCount}.`);
+            return;
+        }
+
         this.router.navigate('gameSetup', { gameId });
     }
 
@@ -446,7 +478,7 @@ class App {
         const actions = document.getElementById(`${prefix}-photo-actions`);
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("L'appareil photo n'est pas accessible (HTTPS requis ou pas de caméra détectée).");
+            this.showHelpPopup("L'appareil photo n'est pas accessible (HTTPS requis ou pas de caméra détectée).");
             return;
         }
 
@@ -457,7 +489,7 @@ class App {
             actions.style.display = 'none';
         } catch (err) {
             console.error("Erreur caméra:", err);
-            alert("Erreur d'accès à la caméra: " + err.message);
+            this.showHelpPopup("Erreur d'accès à la caméra: " + err.message);
         }
     }
 
@@ -588,7 +620,7 @@ class App {
             this.store.addPlayer(name, avatar, photo);
             this.router.back();
         } else {
-            alert("Le nom est obligatoire");
+            this.showHelpPopup("Le nom est obligatoire");
         }
     }
 
@@ -618,7 +650,7 @@ class App {
             this.store.updatePlayer(id, name, avatar, photo);
             this.router.back();
         } else {
-            alert("Le nom est obligatoire");
+            this.showHelpPopup("Le nom est obligatoire");
         }
     }
 
@@ -629,8 +661,18 @@ class App {
 
 
         const fixedScoreValue = document.getElementById('new-game-fixed-score-value');
+        const minPlayersInput = document.getElementById('new-game-min-players');
+        const maxPlayersInput = document.getElementById('new-game-max-players');
 
         const name = nameInput.value.trim();
+        const minPlayers = minPlayersInput.value ? parseInt(minPlayersInput.value) : null;
+        const maxPlayers = maxPlayersInput.value ? parseInt(maxPlayersInput.value) : null;
+
+        // Validation: si les deux sont renseignés, min doit être <= max
+        if (minPlayers && maxPlayers && minPlayers > maxPlayers) {
+            this.showHelpPopup("Le nombre minimum de joueurs ne peut pas être supérieur au maximum.");
+            return;
+        }
 
         if (name) {
             this.store.createGame({
@@ -638,12 +680,47 @@ class App {
                 winCondition: typeInput.value,
                 target: (document.getElementById('new-game-target').value) ? parseInt(document.getElementById('new-game-target').value) : 0,
                 rounds: roundsInput.value ? parseInt(roundsInput.value) : null,
-                fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null
+                fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null,
+                minPlayers: minPlayers,
+                maxPlayers: maxPlayers
             });
             this.router.back();
         } else {
-            alert("Le nom est obligatoire");
+            this.showHelpPopup("Le nom est obligatoire");
         }
+    }
+
+    showHelpPopup(message) {
+        // Créer la popup modale
+        const overlay = document.createElement('div');
+        overlay.className = 'help-popup-overlay';
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;';
+        
+        const popup = document.createElement('div');
+        popup.style.cssText = 'background:white; border-radius:12px; padding:25px; max-width:400px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:slideIn 0.3s ease;';
+        
+        popup.innerHTML = `
+            <style>
+                @keyframes slideIn {
+                    from { transform: translateY(-20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            </style>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                <span style="font-size:1.8em; color:#667eea;">ℹ️</span>
+                <h3 style="margin:0; color:#333;">Information</h3>
+            </div>
+            <p style="color:#666; line-height:1.5; margin-bottom:20px;">${message}</p>
+            <button onclick="document.querySelector('.help-popup-overlay')?.remove()" style="width:100%; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:1rem;">OK</button>
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        // Fermer en cliquant sur l'overlay
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
     }
 
     editGame(gameId) {
@@ -658,9 +735,19 @@ class App {
 
 
         const fixedScoreValue = document.getElementById('edit-game-fixed-score-value');
+        const minPlayersInput = document.getElementById('edit-game-min-players');
+        const maxPlayersInput = document.getElementById('edit-game-max-players');
 
         const id = idInput.value;
         const name = nameInput.value.trim();
+        const minPlayers = minPlayersInput.value ? parseInt(minPlayersInput.value) : null;
+        const maxPlayers = maxPlayersInput.value ? parseInt(maxPlayersInput.value) : null;
+
+        // Validation: si les deux sont renseignés, min doit être <= max
+        if (minPlayers && maxPlayers && minPlayers > maxPlayers) {
+            this.showHelpPopup("Le nombre minimum de joueurs ne peut pas être supérieur au maximum.");
+            return;
+        }
 
         if (name) {
             this.store.updateGame(id, {
@@ -668,11 +755,13 @@ class App {
                 winCondition: typeInput.value,
                 target: (document.getElementById('edit-game-target').value) ? parseInt(document.getElementById('edit-game-target').value) : 0,
                 rounds: roundsInput.value ? parseInt(roundsInput.value) : null,
-                fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null
+                fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null,
+                minPlayers: minPlayers,
+                maxPlayers: maxPlayers
             });
             this.router.back();
         } else {
-            alert("Le nom est obligatoire");
+            this.showHelpPopup("Le nom est obligatoire");
         }
     }
 
@@ -892,7 +981,7 @@ class App {
         // Update session config
         this.store.updateSessionConfig({
             target: newTarget,
-            rounds: newRuds
+            rounds: newRounds
         });
 
         this.router.back();
@@ -1077,12 +1166,33 @@ class App {
     }
 
     addPlayerToGame(playerId) {
+        const session = this.store.restoreSession();
+        const game = this.store.getGames().find(g => g.id === session.gameId);
+        const currentPlayerCount = session.players.length;
+
+        // Vérifier le nombre maximum de joueurs
+        if (game.maxPlayers && currentPlayerCount >= game.maxPlayers) {
+            this.showHelpPopup(`Ce jeu accepte au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}. Impossible d'ajouter un joueur supplémentaire.`);
+            return;
+        }
+
         this.store.addPlayerToSession(playerId);
         this.router.navigate('game', {}, 'back');
     }
 
     // New method for the confirmation view action
     executeRemovePlayer(playerId) {
+        const session = this.store.restoreSession();
+        const game = this.store.getGames().find(g => g.id === session.gameId);
+        const currentPlayerCount = session.players.length;
+
+        // Vérifier le nombre minimum de joueurs
+        if (game.minPlayers && currentPlayerCount <= game.minPlayers) {
+            this.showHelpPopup(`Ce jeu nécessite au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}. Impossible de supprimer un joueur.`);
+            this.router.navigate('game', {}, 'back');
+            return;
+        }
+
         this.store.removePlayerFromSession(playerId);
         // We need to go back twice ideally (Confirm -> RemoveList -> Game), 
         // OR just navigate explicitly to game.
