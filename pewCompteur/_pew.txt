@@ -1,0 +1,15 @@
+//builde
+gradlew assembleDebug
+
+//listeg des machines
+%ANDROID_HOME%\emulator\emulator.exe -list-avds
+
+//lancer une machine
+%ANDROID_HOME%\emulator\emulator.exe -avd Pixel_8a
+
+//installer l'appli sur la machine
+gradlew installDebug
+
+//sue le port usb 
+adb devices
+gradlew installDebug
