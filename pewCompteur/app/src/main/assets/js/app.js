@@ -60,6 +60,144 @@ class App {
         this.initCropper();
     }
 
+    initLongPress() {
+        // Don't initialize long press if we're in a drag-and-drop context
+        if (document.querySelector('.draggable-item')) {
+            return; // Skip long press if there are draggable items on the page
+        }
+
+        // Long press for game cards
+        const gameCards = document.querySelectorAll('.game-card');
+        gameCards.forEach(card => {
+            let longPressTimer = null;
+            let longPressTriggered = false;
+            let startPos = { x: 0, y: 0 };
+
+            const startLongPress = (e) => {
+                longPressTriggered = false;
+                startPos = { x: e.clientX || e.touches[0].clientX, y: e.clientY || e.touches[0].clientY };
+                longPressTimer = setTimeout(() => {
+                    longPressTriggered = true;
+                    const gameId = card.dataset.gameId;
+                    if (gameId) {
+                        this.editGame(gameId);
+                    }
+                }, 500); // 500ms for long press
+            };
+
+            const cancelLongPress = (e) => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                // Reset flag after a short delay to allow click to be prevented
+                setTimeout(() => { longPressTriggered = false; }, 100);
+            };
+
+            const checkMove = (e) => {
+                const currentPos = { x: e.clientX || e.touches[0].clientX, y: e.clientY || e.touches[0].clientY };
+                const distance = Math.sqrt(Math.pow(currentPos.x - startPos.x, 2) + Math.pow(currentPos.y - startPos.y, 2));
+                if (distance > 10) { // If moved more than 10px, cancel
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                }
+            };
+
+            // Remove existing onclick to avoid conflicts
+            const onclickAttr = card.getAttribute('onclick');
+            if (onclickAttr) {
+                card.removeAttribute('onclick');
+                card.addEventListener('click', (e) => {
+                    if (!longPressTriggered) {
+                        // Execute the original onclick
+                        const gameId = card.dataset.gameId;
+                        if (gameId) {
+                            this.selectGame(gameId);
+                        }
+                    } else {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+            }
+
+            card.addEventListener('touchstart', startLongPress, { passive: true });
+            card.addEventListener('touchend', cancelLongPress);
+            card.addEventListener('touchmove', checkMove);
+            card.addEventListener('mousedown', startLongPress);
+            card.addEventListener('mouseup', cancelLongPress);
+            card.addEventListener('mousemove', checkMove);
+        });
+
+        // Long press for player cards
+        const playerCards = document.querySelectorAll('.player-card[data-player-id]');
+        playerCards.forEach(card => {
+            let longPressTimer = null;
+            let longPressTriggered = false;
+            let startPos = { x: 0, y: 0 };
+
+            const startLongPress = (e) => {
+                longPressTriggered = false;
+                startPos = { x: e.clientX || e.touches[0].clientX, y: e.clientY || e.touches[0].clientY };
+                longPressTimer = setTimeout(() => {
+                    longPressTriggered = true;
+                    const playerId = card.dataset.playerId;
+                    if (playerId) {
+                        this.editPlayer(playerId);
+                    }
+                }, 500); // 500ms for long press
+            };
+
+            const cancelLongPress = (e) => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                // Reset flag after a short delay to allow click to be prevented
+                setTimeout(() => { longPressTriggered = false; }, 100);
+            };
+
+            const checkMove = (e) => {
+                const currentPos = { x: e.clientX || e.touches[0].clientX, y: e.clientY || e.touches[0].clientY };
+                const distance = Math.sqrt(Math.pow(currentPos.x - startPos.x, 2) + Math.pow(currentPos.y - startPos.y, 2));
+                if (distance > 10) { // If moved more than 10px, cancel
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                }
+            };
+
+            // Remove existing onclick to avoid conflicts
+            const onclickAttr = card.getAttribute('onclick');
+            if (onclickAttr) {
+                card.removeAttribute('onclick');
+                card.addEventListener('click', (e) => {
+                    if (!longPressTriggered) {
+                        // Execute the original onclick: toggle selection
+                        card.classList.toggle('selected');
+                        const playerId = card.dataset.playerId;
+                        if (playerId) {
+                            this.togglePlayer(playerId);
+                        }
+                    } else {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
+            }
+
+            card.addEventListener('touchstart', startLongPress, { passive: true });
+            card.addEventListener('touchend', cancelLongPress);
+            card.addEventListener('touchmove', checkMove);
+            card.addEventListener('mousedown', startLongPress);
+            card.addEventListener('mouseup', cancelLongPress);
+            card.addEventListener('mousemove', checkMove);
+        });
+    }
+
     initCropper() {
         const modalHtml = `
             <div id="cropper-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; flex-direction:column; align-items:center; justify-content:center;">
@@ -354,6 +492,9 @@ class App {
             const item = e.target.closest('.draggable-item');
             if (!item) return;
 
+            // Prevent context menu and other long-press behaviors
+            e.preventDefault();
+
             touchedItem = item;
             touchStartIndex = parseInt(item.dataset.index);
 
@@ -364,9 +505,12 @@ class App {
             // Calculate position to center under finger or keep relative offset
             const rect = item.getBoundingClientRect();
             // We want the mirror to visually align initially
+            mirrorElement.style.position = 'fixed';
+            mirrorElement.style.zIndex = '9999';
             mirrorElement.style.width = `${rect.width}px`;
             mirrorElement.style.left = `${rect.left}px`;
             mirrorElement.style.top = `${rect.top}px`;
+            mirrorElement.style.pointerEvents = 'none';
 
             document.body.appendChild(mirrorElement);
             item.classList.add('dragging-source');
@@ -510,18 +654,33 @@ class App {
 
         // Open cropper
         this.openCropper(dataUrl, (croppedDataUrl) => {
-            const previewEl = document.getElementById(`${prefix}-photo-display`); // Use -display for the main preview
+            const previewEl = document.getElementById(`${prefix}-photo-display`); // Main preview at top
+            const capturePreviewContainer = document.getElementById(`${prefix}-photo-capture-preview`); // Container below button
+            const capturePreviewEl = document.getElementById(`${prefix}-photo-capture-display`); // Photo below button
             const avatarEl = document.getElementById(`${prefix}-avatar-display`);
             const avatarInput = document.getElementById(`${prefix}-avatar`);
             const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
 
+            // Update main preview (top)
             if (previewEl) {
                 previewEl.src = croppedDataUrl;
                 previewEl.style.display = 'block';
-                previewEl.classList.add('selected'); // Add selected class to photo
+                previewEl.classList.add('selected');
             }
-            if (avatarEl) avatarEl.style.display = 'none'; // Hide avatar
-            if (avatarInput) avatarInput.value = ''; // Clear avatar value
+            
+            // Update and show photo below button
+            if (capturePreviewEl) {
+                capturePreviewEl.src = croppedDataUrl;
+            }
+            if (capturePreviewContainer) {
+                capturePreviewContainer.style.display = 'block';
+            }
+            
+            if (avatarEl) {
+                avatarEl.style.display = 'none';
+                avatarEl.classList.remove('selected');
+            }
+            if (avatarInput) avatarInput.value = '';
 
             // Remove selected class from all avatar options
             if (imageSelectionDiv) {
@@ -547,6 +706,7 @@ class App {
         const avatarInput = document.getElementById(`${prefix}-avatar`);
         const avatarDisplay = document.getElementById(`${prefix}-avatar-display`);
         const photoDisplay = document.getElementById(`${prefix}-photo-display`);
+        const capturePreviewEl = document.getElementById(`${prefix}-photo-capture-display`);
         const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
 
         if (avatarInput) avatarInput.value = emoji;
@@ -558,17 +718,24 @@ class App {
         }
 
         if (photoDisplay) {
-            photoDisplay.src = '';
             photoDisplay.style.display = 'none';
             photoDisplay.classList.remove('selected');
+        }
+
+        // Remove blue border from photo below button (but keep photo visible)
+        if (capturePreviewEl) {
+            capturePreviewEl.style.border = '3px solid #ccc';
+            capturePreviewEl.style.boxShadow = 'none';
         }
 
         // Ensure only the clicked avatar-opt has 'selected' class
         if (imageSelectionDiv) {
             imageSelectionDiv.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
-            // The click handler in views.js already adds the selected class to 'this'.
-            // This part might be redundant if the views.js onclick is handling it correctly.
-            // Let's assume views.js handles adding the 'selected' to `this`.
+            // Find and select the clicked avatar option
+            const selectedAvatarOpt = Array.from(imageSelectionDiv.querySelectorAll('.avatar-opt')).find(el => el.textContent === emoji);
+            if (selectedAvatarOpt) {
+                selectedAvatarOpt.classList.add('selected');
+            }
         }
     }
 
@@ -576,6 +743,7 @@ class App {
         const avatarInput = document.getElementById(`${prefix}-avatar`);
         const avatarDisplay = document.getElementById(`${prefix}-avatar-display`);
         const photoDisplay = document.getElementById(`${prefix}-photo-display`);
+        const capturePreviewContainer = document.getElementById(`${prefix}-photo-capture-preview`);
         const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
         const removePhotoBtn = event.target; // The button that was clicked
 
@@ -583,6 +751,11 @@ class App {
             photoDisplay.src = '';
             photoDisplay.style.display = 'none';
             photoDisplay.classList.remove('selected');
+        }
+
+        // Hide the photo below the button
+        if (capturePreviewContainer) {
+            capturePreviewContainer.style.display = 'none';
         }
 
         // Set default avatar and select it
@@ -604,6 +777,92 @@ class App {
         }
         // Hide the "Supprimer photo" button itself
         if(removePhotoBtn) removePhotoBtn.style.display = 'none';
+    }
+
+    reselectPhoto(prefix) {
+        const photoDisplay = document.getElementById(`${prefix}-photo-display`);
+        const capturePreviewEl = document.getElementById(`${prefix}-photo-capture-display`);
+        const avatarDisplay = document.getElementById(`${prefix}-avatar-display`);
+        const avatarInput = document.getElementById(`${prefix}-avatar`);
+        const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
+        const capturePreviewContainer = document.getElementById(`${prefix}-photo-capture-preview`);
+
+        // Get the photo from the capture preview
+        const photoSrc = capturePreviewEl ? capturePreviewEl.src : '';
+
+        if (photoSrc && photoDisplay) {
+            // Show photo in main preview
+            photoDisplay.src = photoSrc;
+            photoDisplay.style.display = 'block';
+            photoDisplay.classList.add('selected');
+
+            // Restore blue border on photo below button
+            if (capturePreviewEl) {
+                capturePreviewEl.style.border = '3px solid var(--primary-color)';
+                capturePreviewEl.style.boxShadow = '0 0 5px var(--primary-color)';
+            }
+
+            // Hide avatar in main preview
+            if (avatarDisplay) {
+                avatarDisplay.style.display = 'none';
+                avatarDisplay.classList.remove('selected');
+            }
+
+            // Clear avatar input
+            if (avatarInput) {
+                avatarInput.value = '';
+            }
+
+            // Remove selected class from all avatar options
+            if (imageSelectionDiv) {
+                imageSelectionDiv.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
+            }
+
+            // Ensure capture preview remains visible
+            if (capturePreviewContainer) {
+                capturePreviewContainer.style.display = 'block';
+            }
+        }
+    }
+
+    deletePhoto(prefix) {
+        const photoDisplay = document.getElementById(`${prefix}-photo-display`);
+        const capturePreviewContainer = document.getElementById(`${prefix}-photo-capture-preview`);
+        const avatarDisplay = document.getElementById(`${prefix}-avatar-display`);
+        const avatarInput = document.getElementById(`${prefix}-avatar`);
+        const imageSelectionDiv = document.getElementById(`${prefix}-image-selection`);
+
+        // Clear main photo preview
+        if (photoDisplay) {
+            photoDisplay.src = '';
+            photoDisplay.style.display = 'none';
+            photoDisplay.classList.remove('selected');
+        }
+
+        // Hide photo capture preview
+        if (capturePreviewContainer) {
+            capturePreviewContainer.style.display = 'none';
+        }
+
+        // Select default avatar (first icon)
+        const defaultAvatar = '👤';
+        if (avatarInput) {
+            avatarInput.value = defaultAvatar;
+        }
+        if (avatarDisplay) {
+            avatarDisplay.textContent = defaultAvatar;
+            avatarDisplay.style.display = 'block';
+            avatarDisplay.classList.add('selected');
+        }
+
+        // Remove selected class from all avatar options, then select the first one
+        if (imageSelectionDiv) {
+            imageSelectionDiv.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
+            const defaultAvatarOpt = Array.from(imageSelectionDiv.querySelectorAll('.avatar-opt')).find(el => el.textContent === defaultAvatar);
+            if (defaultAvatarOpt) {
+                defaultAvatarOpt.classList.add('selected');
+            }
+        }
     }
 
 
@@ -721,6 +980,57 @@ class App {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) overlay.remove();
         });
+    }
+
+    showPlayerNamePopup(playerName) {
+        // Remove any existing popup
+        const existingPopup = document.getElementById('player-name-popup');
+        if (existingPopup) {
+            existingPopup.remove();
+        }
+
+        // Create popup
+        const popup = document.createElement('div');
+        popup.id = 'player-name-popup';
+        popup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: fadeInOut 1s ease-in-out;
+            pointer-events: none;
+        `;
+        popup.textContent = playerName;
+
+        // Add animation style if not already present
+        if (!document.getElementById('player-popup-style')) {
+            const style = document.createElement('style');
+            style.id = 'player-popup-style';
+            style.textContent = `
+                @keyframes fadeInOut {
+                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                    20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(popup);
+
+        // Remove after 1 second
+        setTimeout(() => {
+            popup.remove();
+        }, 1000);
     }
 
     editGame(gameId) {

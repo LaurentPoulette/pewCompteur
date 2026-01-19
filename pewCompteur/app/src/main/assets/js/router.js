@@ -36,6 +36,11 @@ export class Router {
 
         this.app.appendChild(newView);
 
+        // Initialize long press immediately for the new view
+        if (window.app && window.app.initLongPress) {
+            window.app.initLongPress();
+        }
+
         // Current view (to be removed)
         const currentView = this.app.lastElementChild.previousElementSibling;
 

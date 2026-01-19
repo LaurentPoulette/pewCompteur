@@ -449,6 +449,10 @@ select {
     transition: background-color 0.2s, transform 0.2s;
     touch-action: none;
     /* Prevent scrolling while dragging */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    /* Prevent iOS callout menu on long press */
 }
 
 .draggable-item.dragging-source {

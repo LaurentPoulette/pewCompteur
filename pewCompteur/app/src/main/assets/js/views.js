@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.3';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.4';
 
 export const HomeView = (store) => {
     const games = store.getGames();
@@ -19,6 +19,7 @@ export const HomeView = (store) => {
 
         <div style="flex:1; overflow-y:auto; width:100%;">
         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Choisissez votre jeu</h3>
+        <p style="text-align:center; color:#999; font-size:0.9em; margin:-10px 0 15px 0;">Appui long pour modifier</p>
         <div class="grid" style="padding-bottom:100px;">
             <!-- New Game Card -->
             <div class="card" onclick="window.app.router.navigate('createGame')" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:80px; border: 2px dashed #ccc; background:transparent;">
@@ -28,12 +29,9 @@ export const HomeView = (store) => {
             </div>
 
             ${games.map(g => `
-                <div class="card" onclick="window.app.selectGame('${g.id}')" style="min-height:80px; display:flex; align-items:center; justify-content: space-between;">
+                <div class="card game-card" data-game-id="${g.id}" onclick="window.app.selectGame('${g.id}')" style="min-height:80px; display:flex; align-items:center; justify-content: center; cursor:pointer;">
                     <div style="display:flex; align-items:center;">
                         <h3 style="margin:0;">${g.name}</h3>
-                    </div>
-                    <div style="z-index:10;">
-                        <span onclick="event.stopPropagation(); window.app.editGame('${g.id}')" style="cursor:pointer; font-size:1.2em; padding:10px;">✏️</span>
                     </div>
                 </div>
             `).join('')}
@@ -66,6 +64,7 @@ export const PlayerSelectView = (store, gameId) => {
         </header>
         <div style="flex:1; overflow-y:auto; width:100%;">
         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">${subtitle}</h3>
+        <p style="text-align:center; color:#999; font-size:0.9em; margin:-10px 0 15px 0;">Appui long pour modifier</p>
         <div class="grid" id="player-grid" style="padding-bottom: 100px;">
             <!-- New Player Card -->
             <div class="card" onclick="window.app.router.navigate('createPlayer')" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:80px; border: 2px dashed #ccc; background:transparent;">
@@ -81,12 +80,11 @@ export const PlayerSelectView = (store, gameId) => {
         const isPhotoSelected = p.photo && isSelected;
 
         return `
-                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px;">
+                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" data-player-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:10px;">
+                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:5px;">
                         <div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
                              ${p.photo ? `<img src="${p.photo}" class="${isPhotoSelected ? 'selected-photo' : ''}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span class="${isAvatarSelected ? 'selected-avatar' : ''}" style="font-size:1.8em;">${p.avatar}</span>`}
                         </div>
-                        <div onclick="event.stopPropagation(); window.app.editPlayer('${p.id}')" style="font-size:1.2rem; cursor:pointer;">✏️</div>
                     </div>
                     <div style="text-align:center;">
                         <h3 style="margin:0; font-size:1em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</h3>
@@ -191,7 +189,7 @@ export const ActiveGameView = (store) => {
 
             return `
                             <td class="leaderboard-cell">
-                                 <div class="leaderboard-card ${themeClass}" style="flex-direction:column; justify-content:center;">
+                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="flex-direction:column; justify-content:center; cursor:pointer;">
                                     <div style="margin-bottom:2px; font-weight:bold; font-size:0.9em;">
                                         <span class="leaderboard-rank">${i + 1}</span>:${p.score}
                                     </div>
@@ -250,7 +248,7 @@ export const ActiveGameView = (store) => {
                         <tr>
                             <th class="history-header">#</th>
                             ${tablePlayers.map(p => `
-                                <th class="history-header">
+                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="cursor:pointer;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
@@ -288,7 +286,7 @@ export const ActiveGameView = (store) => {
                                                class="score-input"
                                                value="${round[p.id] !== undefined ? round[p.id] : ''}" 
                                                onchange="window.app.updateRound('${roundIndex}', '${p.id}', this.value)"
-                                               onfocus="this.select()"
+                                               onfocus="this.select(); window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"
                                                placeholder="-">
                                     </td>
                                 `).join('')}
@@ -498,7 +496,7 @@ export const CreatePlayerView = () => `
         </div>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label style="font-weight:bold; width:40%;">Avatar</label>
-            <div id="new-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
+            <div id="new-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color);">
                 <span id="new-player-avatar-display" class="selected">👤</span>
                 <img id="new-player-photo-display" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:none;">
             </div>
@@ -526,6 +524,14 @@ export const CreatePlayerView = () => `
                 <br>
                 <button onclick="window.app.capturePhoto('new-player')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
                 <button onclick="window.app.stopCamera('new-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
+            </div>
+
+            <!-- Photo capture display below camera button -->
+            <div id="new-player-photo-capture-preview" style="display:none; margin-top:15px;">
+                <div style="position:relative; display:inline-block;">
+                    <img id="new-player-photo-capture-display" onclick="window.app.reselectPhoto('new-player');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); cursor:pointer;">
+                    <button onclick="event.stopPropagation(); window.app.deletePhoto('new-player');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">×</button>
+                </div>
             </div>
         </div>
 
@@ -564,7 +570,7 @@ export const EditPlayerView = (store, playerId) => {
                 </div>
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                     <label style="font-weight:bold; width:40%;">Avatar</label>
-                    <div id="edit-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em;">
+                    <div id="edit-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color);">
                         <span id="edit-player-avatar-display" class="${initialAvatarSelected ? 'selected' : ''}" style="display:${initialAvatarSelected ? 'block' : 'none'};">${player.avatar}</span>
                         <img id="edit-player-photo-display" src="${player.photo || ''}" class="${initialPhotoSelected ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${initialPhotoSelected ? 'block' : 'none'};">
                     </div>
@@ -592,6 +598,14 @@ export const EditPlayerView = (store, playerId) => {
                         <br>
                         <button onclick="window.app.capturePhoto('edit-player')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
                         <button onclick="window.app.stopCamera('edit-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
+                    </div>
+
+                    <!-- Photo capture display below camera button -->
+                    <div id="edit-player-photo-capture-preview" style="display:${initialPhotoSelected ? 'block' : 'none'}; margin-top:15px;">
+                        <div style="position:relative; display:inline-block;">
+                            <img id="edit-player-photo-capture-display" src="${player.photo || ''}" onclick="window.app.reselectPhoto('edit-player');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); cursor:pointer;">
+                            <button onclick="event.stopPropagation(); window.app.deletePhoto('edit-player');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">×</button>
+                        </div>
                     </div>
                 </div>
 
