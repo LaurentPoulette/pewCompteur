@@ -917,7 +917,7 @@ class App {
         const nameInput = document.getElementById('new-game-name');
         const typeInput = document.getElementById('new-game-type');
         const roundsInput = document.getElementById('new-game-rounds');
-
+        const scoreModeInput = document.getElementById('new-game-score-mode');
 
         const fixedScoreValue = document.getElementById('new-game-fixed-score-value');
         const minPlayersInput = document.getElementById('new-game-min-players');
@@ -937,6 +937,7 @@ class App {
             this.store.createGame({
                 name,
                 winCondition: typeInput.value,
+                scoreMode: scoreModeInput.value || 'points',
                 target: (document.getElementById('new-game-target').value) ? parseInt(document.getElementById('new-game-target').value) : 0,
                 rounds: roundsInput.value ? parseInt(roundsInput.value) : null,
                 fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null,
@@ -1042,7 +1043,7 @@ class App {
         const nameInput = document.getElementById('edit-game-name');
         const typeInput = document.getElementById('edit-game-type');
         const roundsInput = document.getElementById('edit-game-rounds');
-
+        const scoreModeInput = document.getElementById('edit-game-score-mode');
 
         const fixedScoreValue = document.getElementById('edit-game-fixed-score-value');
         const minPlayersInput = document.getElementById('edit-game-min-players');
@@ -1063,6 +1064,7 @@ class App {
             this.store.updateGame(id, {
                 name,
                 winCondition: typeInput.value,
+                scoreMode: scoreModeInput.value || 'points',
                 target: (document.getElementById('edit-game-target').value) ? parseInt(document.getElementById('edit-game-target').value) : 0,
                 rounds: roundsInput.value ? parseInt(roundsInput.value) : null,
                 fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null,
@@ -1194,6 +1196,78 @@ class App {
 
                     // Attempt to scroll to bottom or focus new row?
                     // Let's rely on standard render.
+                }
+            }
+        }
+    }
+
+    updateWinnerForRound(roundIndex, winnerId) {
+        const session = this.store.restoreSession();
+        if (!session) return;
+
+        // Set all players to 0 for this round
+        session.players.forEach(p => {
+            this.store.updateRoundScore(roundIndex, p.id, 0);
+        });
+
+        // Set winner to 1
+        this.store.updateRoundScore(roundIndex, winnerId, 1);
+
+        // Refresh Leaderboard
+        const game = this.store.getGames().find(g => g.id === session.gameId);
+        const isLowestWin = game && game.winCondition === 'lowest';
+        const players = session.players.map(sp => {
+            const info = this.store.getPlayers().find(p => p.id === sp.id);
+            return { ...sp, ...info };
+        });
+
+        const sorted = [...players].sort((a, b) => isLowestWin ? a.score - b.score : b.score - a.score);
+
+        const html = `
+    <table class="leaderboard-table">
+        <tbody>
+            <tr>
+                ${sorted.map((p, i) => {
+            let themeClass = 'theme-default';
+            if (i === 0) {
+                themeClass = 'theme-first';
+            } else if (i === sorted.length - 1 && sorted.length > 1) {
+                themeClass = 'theme-last';
+            }
+            return `
+                            <td class="leaderboard-cell">
+                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')" style="flex-direction:column; justify-content:center; cursor:pointer;">
+                                    <div style="margin-bottom:2px; font-weight:bold; font-size:0.9em;">
+                                        <span class="leaderboard-rank">${i + 1}</span>:${p.score}
+                                    </div>
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        ${p.photo ? `<img src="${p.photo}" style="width:16px; height:16px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:0.9em;">${p.avatar}</span>`} 
+                                        <span class="name-full" style="font-size:0.85em;">${p.name}</span>
+                                        <span class="name-initial" style="font-size:0.85em;">${p.name.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                </div>
+                            </td>
+                     `;
+        }).join('')}
+            </tr>
+        </tbody>
+    </table>
+    `;
+
+        document.getElementById('leaderboard-content').innerHTML = html;
+
+        // Check for game end
+        const reason = this.checkGameEndCondition(session, game);
+        if (!reason) {
+            // Auto-add new round if this was the last round and it's complete
+            const isLastRound = parseInt(roundIndex) === session.history.length - 1;
+            if (isLastRound) {
+                const currentRoundData = session.history[roundIndex];
+                const isRoundComplete = session.players.every(p => currentRoundData[p.id] !== undefined && currentRoundData[p.id] !== "");
+                if (isRoundComplete) {
+                    this.store.addEmptyRound();
+                    const content = ActiveGameView(this.store);
+                    document.querySelector('.view:last-child').innerHTML = content;
                 }
             }
         }

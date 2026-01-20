@@ -141,6 +141,7 @@ export const ActiveGameView = (store) => {
     const game = store.getGames().find(g => g.id === session.gameId);
     const isLowestWin = game && game.winCondition === 'lowest';
     const hasFixedScore = game && (game.fixedRoundScore !== null && game.fixedRoundScore !== undefined && game.fixedRoundScore !== 0);
+    const isWinsMode = game && game.scoreMode === 'wins';
 
     const players = session.players.map(sp => {
         const info = store.getPlayers().find(p => p.id === sp.id);
@@ -280,7 +281,22 @@ export const ActiveGameView = (store) => {
                                         ${hasFixedScore ? `<span id="check-val-${roundIndex}" style="font-size:0.8em; font-weight:bold; color:${checkValue === 0 ? 'var(--primary-color)' : '#ef4444'}">${checkValue === 0 ? 'OK' : checkValue}</span>` : '<br>'}
                                     </div>
                                 </td>
-                                ${tablePlayers.map(p => `
+                                ${tablePlayers.map(p => {
+                                    if (isWinsMode) {
+                                        const isChecked = round[p.id] === 1;
+                                        return `
+                                    <td class="history-cell-score">
+                                        <input type="radio" 
+                                               name="winner-round-${roundIndex}"
+                                               class="win-radio"
+                                               ${isChecked ? 'checked' : ''}
+                                               onchange="window.app.updateWinnerForRound('${roundIndex}', '${p.id}')"
+                                               onfocus="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"
+                                               style="width:20px; height:20px; cursor:pointer;">
+                                    </td>
+                                        `;
+                                    } else {
+                                        return `
                                     <td class="history-cell-score">
                                         <input type="number" 
                                                class="score-input"
@@ -289,7 +305,9 @@ export const ActiveGameView = (store) => {
                                                onfocus="this.select(); window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"
                                                placeholder="-">
                                     </td>
-                                `).join('')}
+                                        `;
+                                    }
+                                }).join('')}
                             </tr>
                         `}).join('')}
     </tbody>
@@ -339,6 +357,17 @@ export const CreateGameView = () => `
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
+                <label for="new-game-score-mode">Mode de score</label>
+                <span onclick="window.app.showHelpPopup(&quot;Choisissez si les joueurs accumulent des points ou si on compte juste les victoires (1 point par tour gagné)&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
+            </div>
+            <select id="new-game-score-mode" onchange="document.getElementById('new-game-fixed-score-container').style.display = this.value === 'points' ? 'flex' : 'none';" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
+                <option value="points">Points</option>
+                <option value="wins">Victoires</option>
+            </select>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="new-game-type" style="font-weight:bold; width: 40%;">Vainqueur</label>
             <select id="new-game-type" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
                 <option value="highest">Le plus grand</option>
@@ -346,7 +375,7 @@ export const CreateGameView = () => `
             </select>
         </div>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+        <div id="new-game-fixed-score-container" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
                 <label for="new-game-fixed-score-value">Score fixe</label>
                 <span onclick="window.app.showHelpPopup(&quot;Le score est fixé pour un tour de jeu, ce qui permet d'afficher un décompte lors de la saisie des scores&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
@@ -408,6 +437,17 @@ export const EditGameView = (store, gameId) => {
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
+                <label for="edit-game-score-mode">Mode de score</label>
+                <span onclick="window.app.showHelpPopup(&quot;Choisissez si les joueurs accumulent des points ou si on compte juste les victoires (1 point par tour gagné)&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
+            </div>
+            <select id="edit-game-score-mode" onchange="document.getElementById('edit-game-fixed-score-container').style.display = this.value === 'points' ? 'flex' : 'none';" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; background:white; text-align:right;">
+                <option value="points" ${(game.scoreMode || 'points') === 'points' ? 'selected' : ''}>Points</option>
+                <option value="wins" ${game.scoreMode === 'wins' ? 'selected' : ''}>Victoires</option>
+            </select>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="edit-game-type" style="font-weight:bold; width: 40%;">Vainqueur</label>
             <select id="edit-game-type" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; background:white; text-align:right;">
                 <option value="highest" ${game.winCondition === 'highest' ? 'selected' : ''}>Le plus grand</option>
@@ -415,7 +455,7 @@ export const EditGameView = (store, gameId) => {
             </select>
         </div>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+        <div id="edit-game-fixed-score-container" style="display:${(game.scoreMode || 'points') === 'points' ? 'flex' : 'none'}; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
                 <label for="edit-game-fixed-score-value">Score fixe</label>
                 <span onclick="window.app.showHelpPopup(&quot;Le score est fixé pour un tour de jeu, ce qui permet d'afficher un décompte lors de la saisie des scores&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>

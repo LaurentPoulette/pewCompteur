@@ -12,10 +12,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("../pewcompteur.jks")
-            storePassword = "password"
-            keyAlias = "pewcompteur"
-            keyPassword = "password"
+            storeFile = file("C:\\_DEV\\_GIT\\androidKeyStore\\apps.pewpew")
+            storePassword = "P&wP&w2001"
+            keyAlias = "apps.pewpew"
+            keyPassword = "P&wP&w2001"
         }
     }
 
@@ -23,8 +23,8 @@ android {
         applicationId = "com.pewpew.pewcompteur"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.4"
+        versionCode = 5
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
