@@ -1244,10 +1244,13 @@ export const StatisticsView = (store) => {
     }
 
     return `
-        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <h1>Statistiques</h1>
-        </header>
+        <div style="position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; overflow:hidden;">
+            <header style="display:flex; align-items:center; margin-bottom: 20px; flex-shrink: 0; padding: 2px;">
+                <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                <h1>Statistiques</h1>
+            </header>
+
+            <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overflow-x:hidden; padding: 0 2px 20px 2px;">
 
         <!-- FILTERS -->
         <div class="card" style="margin-bottom: 20px;">
@@ -1286,6 +1289,9 @@ export const StatisticsView = (store) => {
             ${state.tab === 'comparator' ? comparatorContent : ''}
             ${state.tab === 'history' ? historyContent : ''}
             ${state.tab === 'global' ? globalContent : ''}
+        </div>
+
+            </div>
         </div>
     `;
 };
