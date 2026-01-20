@@ -1,6 +1,7 @@
 package com.pewpew.pewcompteur
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.webkit.JavascriptInterface
@@ -53,6 +54,20 @@ class MainActivity : ComponentActivity() {
                         showQuitConfirmationDialog()
                     }
                 }
+            }
+        }
+
+        @JavascriptInterface
+        fun shareText(title: String, text: String) {
+            runOnUiThread {
+                val sendIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TITLE, title)
+                    putExtra(Intent.EXTRA_TEXT, text)
+                    type = "text/plain"
+                }
+                val shareIntent = Intent.createChooser(sendIntent, title)
+                startActivity(shareIntent)
             }
         }
     }
