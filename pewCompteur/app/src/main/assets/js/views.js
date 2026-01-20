@@ -652,7 +652,8 @@ export const EditPlayerView = (store, playerId) => {
                     </div>
                 </div>
 
-                <button onclick="window.app.submitEditPlayer()" style="width:100%">Enregistrer</button>
+                <button onclick="window.app.submitEditPlayer()" style="width:100%; margin-bottom:15px;">Enregistrer</button>
+                <button onclick="window.app.router.navigate('confirmDeletePlayer', { playerId: '${player.id}' })" style="width:100%; background-color:#ef4444; color:white;">Supprimer le joueur</button>
             </div>
             </div>
             <style>
@@ -661,6 +662,28 @@ export const EditPlayerView = (store, playerId) => {
                 #edit-player-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
             </style>
 `;
+};
+
+export const ConfirmDeletePlayerView = (store, playerId) => {
+    const player = store.getPlayers().find(p => p.id === playerId);
+    if (!player) return '<div>Joueur introuvable</div>';
+
+    return `
+        <div style="display:flex; align-items:center; justify-content:center; min-height:100%; padding:20px;">
+            <div class="card" style="max-width:500px; width:100%; text-align:center;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:15px; margin-bottom:20px;">
+                    ${player.photo 
+                        ? `<img src="${player.photo}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #ef4444;">`
+                        : `<div style="font-size:4em;">${player.avatar}</div>`
+                    }
+                    <h2 style="margin:0; color:#333;">${player.name}</h2>
+                </div>
+                <p style="color:#666; margin-bottom:30px;">Voulez-vous vraiment supprimer ce joueur ? Il ne sera plus visible dans la liste des joueurs.</p>
+                <button onclick="window.app.executeDeletePlayer('${playerId}')" style="width:100%; background-color:#ef4444; margin-bottom:15px; padding:15px;">Supprimer définitivement</button>
+                <button onclick="window.app.router.back()" style="width:100%; background-color:#ddd; color:#333; padding:15px;">Annuler</button>
+            </div>
+        </div>
+    `;
 };
 
 export const GameSetupView = (store, gameId) => {
@@ -993,8 +1016,8 @@ export const StatisticsView = (store) => {
     }
     const state = window.app.statsState;
     const history = (store.state.history || []).sort((a, b) => b.startTime - a.startTime);
-    const games = store.getGames();
-    const players = store.getPlayers();
+    const games = store.getAllGames();
+    const players = store.getAllPlayers();
 
     // ----------------------
     // FILTER LOGIC (Shared for Comparator & History)

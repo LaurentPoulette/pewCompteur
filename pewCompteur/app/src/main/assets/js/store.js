@@ -40,9 +40,19 @@ export class Store {
     }
 
     getGames() {
+        return this.state.games.filter(g => !g.deleted).sort((a, b) => a.name.localeCompare(b.name));
+    }
+    getPlayers() { 
+        return this.state.players.filter(p => !p.deleted);
+    }
+
+    // Pour les statistiques : inclure les jeux et joueurs archivés
+    getAllGames() {
         return this.state.games.sort((a, b) => a.name.localeCompare(b.name));
     }
-    getPlayers() { return this.state.players; }
+    getAllPlayers() {
+        return this.state.players;
+    }
 
     addPlayer(name, avatar, photo = null) {
         const id = 'p_' + Date.now();
@@ -80,11 +90,21 @@ export class Store {
     }
 
     deleteGame(id) {
-        this.state.games = this.state.games.filter(g => g.id !== id);
-        // Optional: Remove history associated with this game?
-        // For now we keep history but it might display "Unknown Game" if we are not careful.
-        // Let's leave history as is, but maybe filter it in stats.
-        this.save();
+        const game = this.state.games.find(g => g.id === id);
+        if (game) {
+            game.deleted = true;
+            game.deletedAt = Date.now();
+            this.save();
+        }
+    }
+
+    deletePlayer(id) {
+        const player = this.state.players.find(p => p.id === id);
+        if (player) {
+            player.deleted = true;
+            player.deletedAt = Date.now();
+            this.save();
+        }
     }
 
     startNewSession(gameId, playerIds, title, config = {}) {

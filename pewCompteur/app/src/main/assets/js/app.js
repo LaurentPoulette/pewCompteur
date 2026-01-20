@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, CreateGameView, CreatePlayerView, EditPlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, EditGameView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, CreateGameView, CreatePlayerView, EditPlayerView, ConfirmDeletePlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, EditGameView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -29,6 +29,7 @@ class App {
         this.router.register('createGame', () => CreateGameView());
         this.router.register('createPlayer', () => CreatePlayerView());
         this.router.register('editPlayer', ({ playerId }) => EditPlayerView(this.store, playerId));
+        this.router.register('confirmDeletePlayer', ({ playerId }) => ConfirmDeletePlayerView(this.store, playerId));
         this.router.register('gameSetup', ({ gameId }) => GameSetupView(this.store, gameId));
         this.router.register('addIngamePlayer', () => AddIngamePlayerView(this.store));
         this.router.register('removeIngamePlayer', () => RemoveIngamePlayerView(this.store));
@@ -1088,6 +1089,13 @@ class App {
         this.router.navigate('home');
     }
 
+    executeDeletePlayer(playerId) {
+        this.store.deletePlayer(playerId);
+        // Go back 2 levels: confirmation page + edit page, to return to player list
+        this.router.back();
+        this.router.back();
+    }
+
     addRound() {
         this.store.addEmptyRound();
         const content = ActiveGameView(this.store);
@@ -1697,18 +1705,21 @@ class App {
                 return;
             }
 
-            const existingGames = this.store.getGames();
+            const existingGames = this.store.getAllGames();
             const existingNames = new Set(existingGames.map(g => g.name.toLowerCase()));
 
             const listHtml = `
                 <div style="border-top:1px solid #ddd; padding-top:15px;">
                     <p style="color:#666; margin-bottom:15px; font-weight:500;">Jeux à importer :</p>
                     ${importedGames.map(g => {
-                        const exists = existingNames.has(g.name.toLowerCase());
+                        const existingGame = existingGames.find(eg => eg.name.toLowerCase() === g.name.toLowerCase());
+                        const exists = !!existingGame;
+                        const isArchived = exists && existingGame.deleted;
+                        const label = exists ? (isArchived ? ' (archivé - sera réactivé)' : ' (mettre à jour ?)') : '';
                         return `
                             <label style="display:flex; align-items:center; padding:12px; background:white; border-radius:8px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; ${exists ? 'border: 2px solid #ff4444;' : ''}">
                                 <input type="checkbox" class="import-game-checkbox" data-game='${JSON.stringify(g).replace(/'/g, "&apos;")}' style="margin-right:12px; width:20px; height:20px; cursor:pointer;" ${exists ? '' : 'checked'}>
-                                <span style="font-weight:500; ${exists ? 'color:#ff4444;' : ''}">${g.name}${exists ? ' (mettre à jour ?)' : ''}</span>
+                                <span style="font-weight:500; ${exists ? 'color:#ff4444;' : ''}">${g.name}${label}</span>
                             </label>
                         `;
                     }).join('')}
@@ -1736,18 +1747,27 @@ class App {
 
         let imported = 0;
         let updated = 0;
-        const existingGames = this.store.getGames();
+        let reactivated = 0;
+        const existingGames = this.store.getAllGames();
         
         checkboxes.forEach(cb => {
             const gameData = JSON.parse(cb.dataset.game);
             
-            // Check if a game with the same name already exists
+            // Check if a game with the same name already exists (including archived)
             const existingGame = existingGames.find(g => g.name.toLowerCase() === gameData.name.toLowerCase());
             
             if (existingGame) {
-                // Update existing game
-                this.store.updateGame(existingGame.id, gameData);
-                updated++;
+                // Update existing game with all new data and reactivate if archived
+                const updateData = { ...gameData };
+                if (existingGame.deleted) {
+                    // Remove archived status to reactivate
+                    updateData.deleted = false;
+                    updateData.deletedAt = null;
+                    reactivated++;
+                } else {
+                    updated++;
+                }
+                this.store.updateGame(existingGame.id, updateData);
             } else {
                 // Create new game with new ID
                 const newGame = {
@@ -1759,11 +1779,22 @@ class App {
             }
         });
 
-        const message = updated > 0 && imported > 0 
-            ? `${imported} jeu(x) importé(s), ${updated} mis à jour !`
-            : updated > 0 
-                ? `${updated} jeu(x) mis à jour !`
-                : `${imported} jeu(x) importé(s) !`;
+        let message = '';
+        if (reactivated > 0 && updated > 0 && imported > 0) {
+            message = `${imported} jeu(x) importé(s), ${updated} mis à jour, ${reactivated} réactivé(s) !`;
+        } else if (reactivated > 0 && updated > 0) {
+            message = `${updated} jeu(x) mis à jour, ${reactivated} réactivé(s) !`;
+        } else if (reactivated > 0 && imported > 0) {
+            message = `${imported} jeu(x) importé(s), ${reactivated} réactivé(s) !`;
+        } else if (updated > 0 && imported > 0) {
+            message = `${imported} jeu(x) importé(s), ${updated} mis à jour !`;
+        } else if (reactivated > 0) {
+            message = `${reactivated} jeu(x) réactivé(s) !`;
+        } else if (updated > 0) {
+            message = `${updated} jeu(x) mis à jour !`;
+        } else {
+            message = `${imported} jeu(x) importé(s) !`;
+        }
         this.showHelpPopup(message);
         setTimeout(() => this.router.navigate('home'), 1500);
     }
