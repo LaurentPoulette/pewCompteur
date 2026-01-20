@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, CreateGameView, CreatePlayerView, EditPlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, EditGameView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, CreateGameView, CreatePlayerView, EditPlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, EditGameView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -42,7 +42,8 @@ class App {
         this.router.register('editGame', ({ gameId }) => EditGameView(this.store, gameId));
         this.router.register('confirmDeleteGame', ({ gameId }) => ConfirmDeleteGameView(this.store, gameId));
         this.router.register('updateLimits', () => UpdateLimitsView(this.store));
-        this.router.register('updateLimits', () => UpdateLimitsView(this.store));
+        this.router.register('exportGames', () => ExportGamesView(this.store));
+        this.router.register('importGames', () => ImportGamesView(this.store));
         // History is now part of Statistics
 
 
@@ -1083,7 +1084,8 @@ class App {
 
     executeDeleteGame(gameId) {
         this.store.deleteGame(gameId);
-        this.router.back();
+        this.router.history = [];
+        this.router.navigate('home');
     }
 
     addRound() {
@@ -1650,6 +1652,120 @@ class App {
         this.store.cancelSession();
         this.router.history = [];
         this.router.navigate('home');
+    }
+
+    exportSelectedGames() {
+        const checkboxes = document.querySelectorAll('[id^="export-game-"]:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            this.showHelpPopup('Veuillez sélectionner au moins un jeu à exporter');
+            return;
+        }
+
+        const games = this.store.getGames();
+        const gamesToExport = games.filter(g => selectedIds.includes(g.id));
+        const jsonString = JSON.stringify(gamesToExport, null, 2);
+
+        // Use Android share API if available
+        if (window.Android && window.Android.shareText) {
+            window.Android.shareText('Configuration des jeux', jsonString);
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(jsonString).then(() => {
+                this.showHelpPopup('JSON copié dans le presse-papiers !');
+            }).catch(err => {
+                this.showHelpPopup('Erreur lors de la copie : ' + err);
+            });
+        }
+    }
+
+    parseImportGames() {
+        const textarea = document.getElementById('import-json-input');
+        const jsonText = textarea.value.trim();
+
+        if (!jsonText) {
+            this.showHelpPopup('Veuillez coller le JSON à importer');
+            return;
+        }
+
+        try {
+            const importedGames = JSON.parse(jsonText);
+            
+            if (!Array.isArray(importedGames)) {
+                this.showHelpPopup('Le JSON doit être un tableau de jeux');
+                return;
+            }
+
+            const existingGames = this.store.getGames();
+            const existingNames = new Set(existingGames.map(g => g.name.toLowerCase()));
+
+            const listHtml = `
+                <div style="border-top:1px solid #ddd; padding-top:15px;">
+                    <p style="color:#666; margin-bottom:15px; font-weight:500;">Jeux à importer :</p>
+                    ${importedGames.map(g => {
+                        const exists = existingNames.has(g.name.toLowerCase());
+                        return `
+                            <label style="display:flex; align-items:center; padding:12px; background:white; border-radius:8px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; ${exists ? 'border: 2px solid #ff4444;' : ''}">
+                                <input type="checkbox" class="import-game-checkbox" data-game='${JSON.stringify(g).replace(/'/g, "&apos;")}' style="margin-right:12px; width:20px; height:20px; cursor:pointer;" ${exists ? '' : 'checked'}>
+                                <span style="font-weight:500; ${exists ? 'color:#ff4444;' : ''}">${g.name}${exists ? ' (mettre à jour ?)' : ''}</span>
+                            </label>
+                        `;
+                    }).join('')}
+
+                    <button onclick="window.app.confirmImportGames()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-top:10px;">
+                        Importer la sélection
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('import-games-list').innerHTML = listHtml;
+
+        } catch (err) {
+            this.showHelpPopup('Erreur lors de l\'analyse du JSON : ' + err.message);
+        }
+    }
+
+    confirmImportGames() {
+        const checkboxes = document.querySelectorAll('.import-game-checkbox:checked');
+        
+        if (checkboxes.length === 0) {
+            this.showHelpPopup('Veuillez sélectionner au moins un jeu à importer');
+            return;
+        }
+
+        let imported = 0;
+        let updated = 0;
+        const existingGames = this.store.getGames();
+        
+        checkboxes.forEach(cb => {
+            const gameData = JSON.parse(cb.dataset.game);
+            
+            // Check if a game with the same name already exists
+            const existingGame = existingGames.find(g => g.name.toLowerCase() === gameData.name.toLowerCase());
+            
+            if (existingGame) {
+                // Update existing game
+                this.store.updateGame(existingGame.id, gameData);
+                updated++;
+            } else {
+                // Create new game with new ID
+                const newGame = {
+                    ...gameData,
+                    id: 'game-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+                };
+                this.store.createGame(newGame);
+                imported++;
+            }
+        });
+
+        const message = updated > 0 && imported > 0 
+            ? `${imported} jeu(x) importé(s), ${updated} mis à jour !`
+            : updated > 0 
+                ? `${updated} jeu(x) mis à jour !`
+                : `${imported} jeu(x) importé(s) !`;
+        this.showHelpPopup(message);
+        setTimeout(() => this.router.navigate('home'), 1500);
     }
 
     // Old method deprecated

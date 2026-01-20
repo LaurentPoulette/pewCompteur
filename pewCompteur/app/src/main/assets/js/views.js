@@ -13,6 +13,9 @@ export const HomeView = (store) => {
             <div class="menu-content">
                 <button class="menu-item" onclick="window.app.router.navigate('statistics')">Statistiques</button>
                 <div style="height:1px; background:#eee; margin:5px 0;"></div>
+                <button class="menu-item" onclick="window.app.router.navigate('exportGames')">Exporter jeux</button>
+                <button class="menu-item" onclick="window.app.router.navigate('importGames')">Importer jeux</button>
+                <div style="height:1px; background:#eee; margin:5px 0;"></div>
                 <button class="menu-item" onclick="window.app.router.navigate('about')">A propos</button>
             </div>
         </div>
@@ -490,7 +493,7 @@ export const EditGameView = (store, gameId) => {
 
 
         <button onclick="window.app.submitEditGame()" style="width:100%; margin-bottom:15px;">Enregistrer</button>
-        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="width:100%; background-color:#ef4444; color:white;">Liste des joueurs</button>
+        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="width:100%; background-color:#ef4444; color:white;">Supprimer ce jeu</button>
     </div>
     </div>
     <style>
@@ -1261,5 +1264,53 @@ export const StatisticsView = (store) => {
             ${state.tab === 'history' ? historyContent : ''}
             ${state.tab === 'global' ? globalContent : ''}
         </div>
+    `;
+};
+
+export const ExportGamesView = (store) => {
+    const games = store.getGames();
+    return `
+        <header style="display:flex; align-items:center; margin-bottom:20px;">
+            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+            <h1 style="margin:0;">Exporter jeux</h1>
+        </header>
+
+        ${games.length === 0 ? `
+            <p style="text-align:center; color:#999; padding:40px 20px;">Aucun jeu à exporter</p>
+        ` : `
+            <p style="color:#666; margin-bottom:15px;">Sélectionnez les jeux à exporter :</p>
+            
+            <div style="margin-bottom:20px;">
+                ${games.map(g => `
+                    <label style="display:flex; align-items:center; padding:12px; background:white; border-radius:8px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer;">
+                        <input type="checkbox" id="export-game-${g.id}" value="${g.id}" style="margin-right:12px; width:20px; height:20px; cursor:pointer;" checked>
+                        <span style="font-weight:500;">${g.name}</span>
+                    </label>
+                `).join('')}
+            </div>
+
+            <button onclick="window.app.exportSelectedGames()" class="primary-button" style="width:100%; padding:15px; font-size:1em;">
+                Partager la sélection
+            </button>
+        `}
+    `;
+};
+
+export const ImportGamesView = (store) => {
+    return `
+        <header style="display:flex; align-items:center; margin-bottom:20px;">
+            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+            <h1 style="margin:0;">Importer jeux</h1>
+        </header>
+
+        <p style="color:#666; margin-bottom:15px;">Collez le JSON des jeux à importer :</p>
+
+        <textarea id="import-json-input" placeholder='[{"id":"...","name":"..."}]' style="width:100%; min-height:150px; padding:12px; border:1px solid #ddd; border-radius:8px; font-family:monospace; font-size:0.9em; margin-bottom:15px; resize:vertical;"></textarea>
+
+        <button onclick="window.app.parseImportGames()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:20px;">
+            Analyser
+        </button>
+
+        <div id="import-games-list"></div>
     `;
 };
