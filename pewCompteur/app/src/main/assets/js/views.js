@@ -498,6 +498,80 @@ export const ConfirmDeleteGameView = (store, gameId) => {
 `;
 };
 
+export const AvatarSelectionView = (store) => {
+    // Récupérer les données temporaires de la session
+    const tempData = store.state.tempAvatarSelection || {};
+    const currentAvatar = tempData.avatar || '👤';
+    const currentPhoto = tempData.photo || '';
+    const hasPhoto = !!currentPhoto;
+    
+    return `
+    <header style="display:flex; align-items:center; margin-bottom: 15px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1>Choix de l'avatar</h1>
+    </header>
+    <div style="flex:1; overflow-y:auto; width:100%;">
+    <div class="card" style="padding-bottom:80px;">
+        <h3 style="margin-top:0; margin-bottom:10px; padding:8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Aperçu</h3>
+
+        <div style="display:flex; align-items:center; justify-content:center; margin-bottom:15px;">
+            <div id="avatar-selection-preview" style="width:70px; height:70px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2.5em; border:3px solid var(--primary-color); box-shadow: 0 0 8px var(--primary-color);">
+                <span id="avatar-selection-avatar-display" class="${!hasPhoto ? 'selected' : ''}" style="display:${!hasPhoto ? 'block' : 'none'};">${currentAvatar}</span>
+                <img id="avatar-selection-photo-display" src="${currentPhoto}" class="${hasPhoto ? 'selected' : ''}" style="width:70px; height:70px; border-radius:50%; object-fit:cover; display:${hasPhoto ? 'block' : 'none'};">
+            </div>
+        </div>
+
+        <h3 style="margin-top:15px; margin-bottom:10px; padding:8px 12px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Avatars</h3>
+
+        <div style="margin-bottom:15px; text-align:center;">
+            <div id="avatar-selection-image-selection" style="display:flex; justify-content:center; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+                ${['👤', '🧑‍🚀', '🦸', '🦹', '🧙', '🧟', '🧛', '🧞', '🧜', '🧚'].map(emoji => `
+                <div onclick="window.app.selectAvatar('avatar-selection', '${emoji}');" class="avatar-opt ${currentAvatar === emoji && !hasPhoto ? 'selected' : ''}" style="font-size:1.8em; text-align:center; padding:6px; border-radius:6px; cursor:pointer; background:#eee; min-width:45px;">${emoji}</div>
+            `).join('')}
+            </div>
+            <input type="hidden" id="avatar-selection-avatar" value="${currentAvatar}">
+        </div>
+
+        <h3 style="margin-top:15px; margin-bottom:10px; padding:8px 12px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Photo</h3>
+
+        <div style="margin-bottom:10px; text-align:center;">
+            <!-- Camera Actions -->
+            <div id="avatar-selection-photo-actions" style="margin-bottom:10px;">
+                <button onclick="window.app.startCamera('avatar-selection')" style="background:var(--primary-color); color:white; padding:10px 16px; border-radius:8px; border:none; font-size:1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">📷 Prendre une Photo</button>
+            </div>
+
+            <!-- Camera View -->
+            <div id="avatar-selection-camera-container" style="display:none; margin-bottom:10px;">
+                <video id="avatar-selection-camera-video" autoplay playsinline style="width:150px; height:150px; background:#000; border-radius:50%; object-fit:cover; margin-bottom:8px; border:3px solid var(--primary-color);"></video>
+                <br>
+                <button onclick="window.app.capturePhoto('avatar-selection')" style="background:var(--primary-color); color:white; padding:10px 16px; border-radius:20px; border:none; font-weight:bold; font-size:1rem;">📸 Capturer</button>
+                <button onclick="window.app.stopCamera('avatar-selection')" style="background:#eee; color:#333; padding:10px 16px; border-radius:8px; margin-left:8px; font-size:1rem;">Annuler</button>
+            </div>
+
+            <!-- Photo capture display -->
+            <div id="avatar-selection-photo-capture-preview" style="display:${hasPhoto ? 'block' : 'none'}; margin-top:10px;">
+                <div style="position:relative; display:inline-block;">
+                    <img id="avatar-selection-photo-capture-display" src="${currentPhoto}" onclick="window.app.reselectPhoto('avatar-selection');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 8px var(--primary-color); cursor:pointer;">
+                    <button onclick="event.stopPropagation(); window.app.deletePhoto('avatar-selection');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">×</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+    
+    <div style="position:fixed; bottom:0; left:0; right:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index:100;">
+        <button onclick="window.app.submitAvatarSelection()" style="width:100%; padding:15px; font-size:1.1rem; font-weight:bold;">Valider</button>
+    </div>
+    
+    <style>
+        .avatar-opt.selected { background-color: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
+        #avatar-selection-avatar-display.selected { text-shadow: 0 0 5px var(--primary-color); }
+        #avatar-selection-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
+    </style>
+`;
+};
+
 export const PlayerFormView = (store, playerId) => {
     const isEditMode = !!playerId;
     const player = isEditMode ? store.getPlayers().find(p => p.id === playerId) : null;
@@ -506,9 +580,15 @@ export const PlayerFormView = (store, playerId) => {
 
     const prefix = 'player';
     const defaultAvatar = '👤';
-    const initialAvatarSelected = isEditMode ? !player.photo : true;
-    const initialPhotoSelected = isEditMode ? !!player.photo : false;
-    const currentAvatar = player?.avatar || defaultAvatar;
+    
+    // Récupérer les données temporaires si elles existent
+    const tempData = store.state.tempAvatarSelection || {};
+    
+    // Déterminer les valeurs à afficher : temp > player > défaut
+    const currentName = tempData.name !== undefined ? tempData.name : (player?.name || '');
+    const currentAvatar = tempData.avatar !== undefined ? tempData.avatar : (player?.avatar || defaultAvatar);
+    const currentPhoto = tempData.photo !== undefined ? tempData.photo : (player?.photo || '');
+    const hasPhoto = !!currentPhoto;
     
     return `
     <header style="display:flex; align-items:center; margin-bottom: 20px;">
@@ -518,51 +598,26 @@ export const PlayerFormView = (store, playerId) => {
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
         ${isEditMode ? `<input type="hidden" id="${prefix}-id" value="${player.id}">` : ''}
+        <input type="hidden" id="${prefix}-avatar" value="${currentAvatar}">
+        <input type="hidden" id="${prefix}-photo-data" value="${currentPhoto || ''}">
 
         <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-name" style="font-weight:bold; width: 40%;">Nom</label>
-            <input type="text" id="${prefix}-name" value="${player?.name || ''}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" id="${prefix}-name" value="${currentName}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+        
+        <div onclick="window.app.openAvatarSelection()" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px; cursor:pointer;">
             <label style="font-weight:bold; width:40%;">Avatar</label>
-            <div id="${prefix}-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color);">
-                <span id="${prefix}-avatar-display" class="${initialAvatarSelected ? 'selected' : ''}" style="display:${initialAvatarSelected ? 'block' : 'none'};">${currentAvatar}</span>
-                <img id="${prefix}-photo-display" src="${player?.photo || ''}" class="${initialPhotoSelected ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${initialPhotoSelected ? 'block' : 'none'};">
-            </div>
-        </div>
-
-        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Choix de l'avatar</h3>
-
-        <!-- Section 3: Image Selection -->
-        <div style="margin-bottom:20px; text-align:center;">
-            <div id="${prefix}-image-selection" style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
-                ${['👤', '🧑‍🚀', '🦸', '🦹', '🧙', '🧟', '🧛', '🧞', '🧜', '🧚'].map(emoji => `
-                <div onclick="window.app.selectAvatar('${prefix}', '${emoji}');" class="avatar-opt ${currentAvatar === emoji && initialAvatarSelected ? 'selected' : ''}" style="font-size:2em; text-align:center; padding:5px; border-radius:5px; cursor:pointer; background:#eee;">${emoji}</div>
-            `).join('')}
-            </div>
-            <input type="hidden" id="${prefix}-avatar" value="${currentAvatar}">
-
-            <!-- Camera Actions -->
-            <div id="${prefix}-photo-actions" style="margin-bottom:10px;">
-                <button onclick="window.app.startCamera('${prefix}')" style="background:var(--primary-color); color:white; padding:8px 12px; border-radius:5px; border:none; margin-right:5px;">📷 Appareil Photo</button>
-            </div>
-
-            <!-- Camera View -->
-            <div id="${prefix}-camera-container" style="display:none; margin-bottom:10px;">
-                <video id="${prefix}-camera-video" autoplay playsinline style="width:100px; height:100px; background:#000; border-radius:50%; object-fit:cover; margin-bottom:5px;"></video>
-                <br>
-                <button onclick="window.app.capturePhoto('${prefix}')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
-                <button onclick="window.app.stopCamera('${prefix}')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
-            </div>
-
-            <!-- Photo capture display below camera button -->
-            <div id="${prefix}-photo-capture-preview" style="display:${initialPhotoSelected ? 'block' : 'none'}; margin-top:15px;">
-                <div style="position:relative; display:inline-block;">
-                    <img id="${prefix}-photo-capture-display" src="${player?.photo || ''}" onclick="window.app.reselectPhoto('${prefix}');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); cursor:pointer;">
-                    <button onclick="event.stopPropagation(); window.app.deletePhoto('${prefix}');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">×</button>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div id="${prefix}-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color);">
+                    <span id="${prefix}-avatar-display" class="${!hasPhoto ? 'selected' : ''}" style="display:${!hasPhoto ? 'block' : 'none'};">${currentAvatar}</span>
+                    <img id="${prefix}-photo-display" src="${currentPhoto || ''}" class="${hasPhoto ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${hasPhoto ? 'block' : 'none'};">
                 </div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
             </div>
         </div>
 
@@ -581,7 +636,6 @@ export const PlayerFormView = (store, playerId) => {
     `}
     
     <style>
-        .avatar-opt.selected { background-color: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
         #${prefix}-avatar-display.selected { text-shadow: 0 0 3px var(--primary-color); }
         #${prefix}-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
     </style>

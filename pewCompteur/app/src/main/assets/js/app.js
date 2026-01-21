@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, ConfirmDeletePlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -27,8 +27,25 @@ class App {
         this.router.register('playerOrder', ({ gameId }) => PlayerOrderView(this.store, gameId));
         this.router.register('game', () => ActiveGameView(this.store));
         this.router.register('createGame', () => GameFormView(this.store));
-        this.router.register('createPlayer', () => PlayerFormView(this.store));
-        this.router.register('editPlayer', ({ playerId }) => PlayerFormView(this.store, playerId));
+        this.router.register('createPlayer', () => {
+            // Réinitialiser tempAvatarSelection seulement si on n'est pas en train de revenir de la sélection d'avatar
+            if (!this.store.state.returningFromAvatarSelection) {
+                this.store.state.tempAvatarSelection = {
+                    name: '',
+                    avatar: '👤',
+                    photo: ''
+                };
+            }
+            // Nettoyer le flag après utilisation
+            delete this.store.state.returningFromAvatarSelection;
+            return PlayerFormView(this.store);
+        });
+        this.router.register('editPlayer', ({ playerId }) => {
+            // Nettoyer tempAvatarSelection pour l'édition
+            delete this.store.state.tempAvatarSelection;
+            return PlayerFormView(this.store, playerId);
+        });
+        this.router.register('avatarSelection', () => AvatarSelectionView(this.store));
         this.router.register('confirmDeletePlayer', ({ playerId }) => ConfirmDeletePlayerView(this.store, playerId));
         this.router.register('gameSetup', ({ gameId }) => GameSetupView(this.store, gameId));
         this.router.register('addIngamePlayer', () => AddIngamePlayerView(this.store));
@@ -873,19 +890,22 @@ class App {
         const idInput = document.getElementById(`${prefix}-id`);
         const nameInput = document.getElementById(`${prefix}-name`);
         const avatarInput = document.getElementById(`${prefix}-avatar`);
-        const photoDisplay = document.getElementById(`${prefix}-photo-display`);
+        const photoDataInput = document.getElementById(`${prefix}-photo-data`);
 
         const isEditMode = idInput && idInput.value;
         const name = nameInput.value.trim();
         const avatar = avatarInput.value;
+        const photoData = photoDataInput ? photoDataInput.value : '';
 
+        // Déterminer la valeur de photo à passer au store
         let photo = null;
-        if (photoDisplay && photoDisplay.style.display !== 'none' && photoDisplay.src.startsWith('data:')) {
-            photo = photoDisplay.src;
-        } else if (photoDisplay && photoDisplay.style.display === 'none') {
-            // Photo was explicitly removed, set to empty string for removal in store
+        if (photoData && photoData.startsWith('data:')) {
+            photo = photoData;
+        } else if (photoData === '') {
+            // Photo explicitement supprimée
             photo = '';
-        } // else if photoDisplay is block but src is not data: (meaning it's an existing player photo from store), keep photo = null
+        }
+        // Sinon photo = null (pas de changement)
 
         if (name) {
             if (isEditMode) {
@@ -893,6 +913,11 @@ class App {
             } else {
                 this.store.addPlayer(name, avatar, photo);
             }
+            
+            // Nettoyer les données temporaires
+            delete this.store.state.tempAvatarSelection;
+            this.store.save();
+            
             this.router.back();
         } else {
             this.showHelpPopup("Le nom est obligatoire");
@@ -910,6 +935,50 @@ class App {
 
     submitEditPlayer() {
         this.submitPlayerForm();
+    }
+
+    openAvatarSelection() {
+        // Sauvegarder l'avatar, la photo et le nom actuels dans une variable temporaire
+        const nameInput = document.getElementById('player-name');
+        const avatarInput = document.getElementById('player-avatar');
+        const photoDataInput = document.getElementById('player-photo-data');
+        
+        // Mettre à jour avec les valeurs actuelles du formulaire
+        this.store.state.tempAvatarSelection = {
+            name: nameInput ? nameInput.value.trim() : '',
+            avatar: avatarInput ? avatarInput.value : '👤',
+            photo: photoDataInput ? photoDataInput.value : ''
+        };
+        this.store.save();
+        
+        this.router.navigate('avatarSelection');
+    }
+
+    submitAvatarSelection() {
+        // Récupérer les valeurs sélectionnées
+        const avatarInput = document.getElementById('avatar-selection-avatar');
+        const photoDisplay = document.getElementById('avatar-selection-photo-display');
+        
+        const avatar = avatarInput ? avatarInput.value : '👤';
+        let photo = '';
+        
+        if (photoDisplay && photoDisplay.style.display !== 'none' && photoDisplay.src) {
+            photo = photoDisplay.src;
+        }
+        
+        // Mettre à jour les données temporaires (préserver le nom qui était déjà sauvegardé)
+        const existingData = this.store.state.tempAvatarSelection || {};
+        this.store.state.tempAvatarSelection = {
+            name: existingData.name || '',
+            avatar: avatar,
+            photo: photo
+        };
+        // Définir un flag pour indiquer qu'on retourne de la sélection d'avatar
+        this.store.state.returningFromAvatarSelection = true;
+        this.store.save();
+        
+        // Retourner à la page précédente
+        this.router.back();
     }
 
     submitGameForm() {
