@@ -8,7 +8,10 @@ class App {
         this.router = new Router(document.getElementById('app'));
 
         this.selectedPlayers = [];
-        this.selectedCircleFilter = 'all'; // Filter for player selection by circle
+        
+        // Restaurer les filtres sauvegardés
+        this.selectedCircleFilter = this.store.state.playerCircleFilter || 'all';
+        this.homeFilterFavorites = this.store.state.homeFilterFavorites || false;
 
         // Initialize persistent selection from store immediately
         if (this.store.state.lastSelectedPlayers && Array.isArray(this.store.state.lastSelectedPlayers)) {
@@ -23,7 +26,7 @@ class App {
 
     init() {
         // Register Routes
-        this.router.register('home', () => HomeView(this.store));
+        this.router.register('home', () => HomeView(this.store, this.homeFilterFavorites));
         this.router.register('playerSelect', ({ gameId }) => PlayerSelectView(this.store, gameId));
         this.router.register('playerOrder', ({ gameId }) => PlayerOrderView(this.store, gameId));
         this.router.register('game', () => ActiveGameView(this.store));
@@ -1192,13 +1195,12 @@ class App {
     }
 
     toggleFavoritesFilter() {
-        // Initialize if not exists
-        if (!window.app.homeFilterFavorites) {
-            window.app.homeFilterFavorites = false;
-        }
-        
         // Toggle the filter
-        window.app.homeFilterFavorites = !window.app.homeFilterFavorites;
+        this.homeFilterFavorites = !this.homeFilterFavorites;
+        
+        // Sauvegarder dans le store
+        this.store.state.homeFilterFavorites = this.homeFilterFavorites;
+        this.store.save();
         
         // Re-render the home view without transition
         this.router.history.pop();
@@ -1376,7 +1378,13 @@ class App {
 
     filterByCircle(circleId, gameId) {
         this.selectedCircleFilter = circleId;
-        // Re-render the player select view
+        
+        // Sauvegarder dans le store
+        this.store.state.playerCircleFilter = circleId;
+        this.store.save();
+        
+        // Re-render the player select view without adding to history
+        this.router.history.pop();
         this.router.navigate('playerSelect', { gameId }, 'none');
     }
 

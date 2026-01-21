@@ -6,7 +6,9 @@ export class Store {
             circles: [], // List of player circles
             activeGame: null, // Current running game state
             history: [], // Past games
-            lastSelectedPlayers: [] // IDs of players selected in the last game
+            lastSelectedPlayers: [], // IDs of players selected in the last game
+            homeFilterFavorites: false, // Filter favorites on home page
+            playerCircleFilter: 'all' // Filter players by circle
         };
         this.load();
     }
@@ -14,7 +16,18 @@ export class Store {
     load() {
         const stored = localStorage.getItem('point_counter_db');
         if (stored) {
-            this.state = JSON.parse(stored);
+            const loadedState = JSON.parse(stored);
+            // Fusionner avec les valeurs par défaut pour gérer les nouveaux champs
+            this.state = {
+                games: loadedState.games || [],
+                players: loadedState.players || [],
+                circles: loadedState.circles || [],
+                activeGame: loadedState.activeGame || null,
+                history: loadedState.history || [],
+                lastSelectedPlayers: loadedState.lastSelectedPlayers || [],
+                homeFilterFavorites: loadedState.homeFilterFavorites || false,
+                playerCircleFilter: loadedState.playerCircleFilter || 'all'
+            };
         } else {
             this.seedDefaults();
         }

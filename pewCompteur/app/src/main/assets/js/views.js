@@ -1,11 +1,6 @@
 export const APP_VERSION = window.APP_VERSION_NATIVE || '1.7';
 
-export const HomeView = (store) => {
-    // Initialize filter state
-    if (!window.app.homeFilterFavorites) {
-        window.app.homeFilterFavorites = false;
-    }
-    const showOnlyFavorites = window.app.homeFilterFavorites;
+export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
     const games = showOnlyFavorites ? allGames.filter(g => g.favorite) : allGames;
     
