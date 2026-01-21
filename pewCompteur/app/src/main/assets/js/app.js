@@ -1089,6 +1089,36 @@ class App {
         this.router.navigate('home');
     }
 
+    toggleGameFavorite(gameId) {
+        const game = this.store.getGames().find(g => g.id === gameId);
+        if (!game) return;
+        
+        this.store.updateGame(gameId, {
+            favorite: !game.favorite
+        });
+        
+        // Re-render the current view without transition
+        const current = this.router.history[this.router.history.length - 1];
+        if (current) {
+            this.router.history.pop();
+            this.router.navigate(current.name, current.params, 'none');
+        }
+    }
+
+    toggleFavoritesFilter() {
+        // Initialize if not exists
+        if (!window.app.homeFilterFavorites) {
+            window.app.homeFilterFavorites = false;
+        }
+        
+        // Toggle the filter
+        window.app.homeFilterFavorites = !window.app.homeFilterFavorites;
+        
+        // Re-render the home view without transition
+        this.router.history.pop();
+        this.router.navigate('home', {}, 'none');
+    }
+
     executeDeletePlayer(playerId) {
         this.store.deletePlayer(playerId);
         // Go back 2 levels: confirmation page + edit page, to return to player list

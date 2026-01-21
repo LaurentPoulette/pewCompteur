@@ -77,7 +77,7 @@ export class Store {
     }
 
     createGame(config) {
-        this.state.games.push({ ...config, id: 'g_' + Date.now() });
+        this.state.games.push({ ...config, id: 'g_' + Date.now(), favorite: false });
         this.save();
     }
 

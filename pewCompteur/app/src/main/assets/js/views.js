@@ -1,7 +1,14 @@
 export const APP_VERSION = window.APP_VERSION_NATIVE || '1.4';
 
 export const HomeView = (store) => {
-    const games = store.getGames();
+    // Initialize filter state
+    if (!window.app.homeFilterFavorites) {
+        window.app.homeFilterFavorites = false;
+    }
+    const showOnlyFavorites = window.app.homeFilterFavorites;
+    const allGames = store.getGames();
+    const games = showOnlyFavorites ? allGames.filter(g => g.favorite) : allGames;
+    
     return `
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; z-index:1001; position:relative;">
             <h1>Jeux</h1>
@@ -21,7 +28,14 @@ export const HomeView = (store) => {
         </div>
 
         <div style="flex:1; overflow-y:auto; width:100%;">
-        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Choisissez votre jeu</h3>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin:0; flex:1; text-align:center;">Choisissez votre jeu</h3>
+            <button onclick="window.app.toggleFavoritesFilter()" style="background:none; border:none; cursor:pointer; padding:0; line-height:1; width:28px; height:28px;" title="${showOnlyFavorites ? 'Afficher tous les jeux' : 'Afficher uniquement les favoris'}">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="${showOnlyFavorites ? '#ffd700' : 'none'}" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </button>
+        </div>
         <p style="text-align:center; color:#999; font-size:0.9em; margin:-10px 0 15px 0;">Appui long pour modifier</p>
         <div class="grid" style="padding-bottom:100px;">
             <!-- New Game Card -->
@@ -32,7 +46,12 @@ export const HomeView = (store) => {
             </div>
 
             ${games.map(g => `
-                <div class="card game-card" data-game-id="${g.id}" onclick="window.app.selectGame('${g.id}')" style="min-height:80px; display:flex; align-items:center; justify-content: center; cursor:pointer;">
+                <div class="card game-card" data-game-id="${g.id}" onclick="window.app.selectGame('${g.id}')" style="position:relative; min-height:80px; display:flex; align-items:center; justify-content: center; cursor:pointer;">
+                    <button onclick="event.stopPropagation(); window.app.toggleGameFavorite('${g.id}')" style="position:absolute; top:5px; right:5px; background:none; border:none; cursor:pointer; padding:0; line-height:1; z-index:10; width:24px; height:24px;" title="${g.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="${g.favorite ? '#ffd700' : 'none'}" stroke="${g.favorite ? '#ffd700' : '#ccc'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </button>
                     <div style="display:flex; align-items:center;">
                         <h3 style="margin:0;">${g.name}</h3>
                     </div>
@@ -430,7 +449,14 @@ export const EditGameView = (store, gameId) => {
     <div class="card">
         <input type="hidden" id="edit-game-id" value="${game.id}">
         
-        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Informations</h3>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin:0; font-size:1.1rem; font-weight:bold;">Informations</h3>
+            <button onclick="window.app.toggleGameFavorite('${game.id}')" style="background:none; border:none; cursor:pointer; padding:0; width:28px; height:28px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="${game.favorite ? '#ffd700' : 'none'}" stroke="${game.favorite ? '#fff' : '#fff'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </button>
+        </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
             <label for="edit-game-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
@@ -490,12 +516,14 @@ export const EditGameView = (store, gameId) => {
             <input type="number" id="edit-game-max-players" value="${game.maxPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
-
-
-        <button onclick="window.app.submitEditGame()" style="width:100%; margin-bottom:15px;">Enregistrer</button>
-        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="width:100%; background-color:#ef4444; color:white;">Supprimer ce jeu</button>
     </div>
     </div>
+    
+    <div style="position:sticky; bottom:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:flex; gap:10px; z-index:100;">
+        <button onclick="window.app.submitEditGame()" style="flex:1; padding:12px;">Enregistrer</button>
+        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="flex:1; padding:12px; background-color:#ef4444; color:white;">Supprimer</button>
+    </div>
+    
     <style>
         .game-icon-opt.selected { background-color: var(--primary-color) !important; color: white; }
     </style>
@@ -652,10 +680,14 @@ export const EditPlayerView = (store, playerId) => {
                     </div>
                 </div>
 
-                <button onclick="window.app.submitEditPlayer()" style="width:100%; margin-bottom:15px;">Enregistrer</button>
-                <button onclick="window.app.router.navigate('confirmDeletePlayer', { playerId: '${player.id}' })" style="width:100%; background-color:#ef4444; color:white;">Supprimer le joueur</button>
             </div>
             </div>
+            
+            <div style="position:sticky; bottom:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:flex; gap:10px; z-index:100;">
+                <button onclick="window.app.submitEditPlayer()" style="flex:1; padding:12px;">Enregistrer</button>
+                <button onclick="window.app.router.navigate('confirmDeletePlayer', { playerId: '${player.id}' })" style="flex:1; padding:12px; background-color:#ef4444; color:white;">Supprimer</button>
+            </div>
+            
             <style>
                 .avatar-opt.selected { background-color: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
                 #edit-player-avatar-display.selected { text-shadow: 0 0 3px var(--primary-color); }
