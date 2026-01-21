@@ -1,7 +1,14 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.4';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.7';
 
 export const HomeView = (store) => {
-    const games = store.getGames();
+    // Initialize filter state
+    if (!window.app.homeFilterFavorites) {
+        window.app.homeFilterFavorites = false;
+    }
+    const showOnlyFavorites = window.app.homeFilterFavorites;
+    const allGames = store.getGames();
+    const games = showOnlyFavorites ? allGames.filter(g => g.favorite) : allGames;
+    
     return `
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; z-index:1001; position:relative;">
             <h1>Jeux</h1>
@@ -21,7 +28,14 @@ export const HomeView = (store) => {
         </div>
 
         <div style="flex:1; overflow-y:auto; width:100%;">
-        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Choisissez votre jeu</h3>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin:0; flex:1; text-align:center;">Choisissez votre jeu</h3>
+            <button onclick="window.app.toggleFavoritesFilter()" style="background:none; border:none; cursor:pointer; padding:0; line-height:1; width:28px; height:28px;" title="${showOnlyFavorites ? 'Afficher tous les jeux' : 'Afficher uniquement les favoris'}">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="${showOnlyFavorites ? '#ffd700' : 'none'}" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </button>
+        </div>
         <p style="text-align:center; color:#999; font-size:0.9em; margin:-10px 0 15px 0;">Appui long pour modifier</p>
         <div class="grid" style="padding-bottom:100px;">
             <!-- New Game Card -->
@@ -32,7 +46,12 @@ export const HomeView = (store) => {
             </div>
 
             ${games.map(g => `
-                <div class="card game-card" data-game-id="${g.id}" onclick="window.app.selectGame('${g.id}')" style="min-height:80px; display:flex; align-items:center; justify-content: center; cursor:pointer;">
+                <div class="card game-card" data-game-id="${g.id}" onclick="window.app.selectGame('${g.id}')" style="position:relative; min-height:80px; display:flex; align-items:center; justify-content: center; cursor:pointer;">
+                    <button onclick="event.stopPropagation(); window.app.toggleGameFavorite('${g.id}')" style="position:absolute; top:5px; right:5px; background:none; border:none; cursor:pointer; padding:0; line-height:1; z-index:10; width:24px; height:24px;" title="${g.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="${g.favorite ? '#ffd700' : 'none'}" stroke="${g.favorite ? '#ffd700' : '#ccc'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </button>
                     <div style="display:flex; align-items:center;">
                         <h3 style="margin:0;">${g.name}</h3>
                     </div>
@@ -343,164 +362,119 @@ export const ActiveGameView = (store) => {
     </div >
     `;
 };
-export const CreateGameView = () => `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>Nouveau Jeu</h1>
-    </header>
-    <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
-    <div class="card">
-        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Informations</h3>
+export const GameFormView = (store, gameId) => {
+    const isEditMode = !!gameId;
+    const game = isEditMode ? store.getGames().find(g => g.id === gameId) : null;
+    
+    if (isEditMode && !game) return '<div>Jeu introuvable</div>';
 
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <label for="new-game-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
-            <input type="text" id="new-game-name" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-        </div>
-
-        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
-                <label for="new-game-score-mode">Mode de score</label>
-                <span onclick="window.app.showHelpPopup(&quot;Choisissez si les joueurs accumulent des points ou si on compte juste les victoires (1 point par tour gagné)&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
-            </div>
-            <select id="new-game-score-mode" onchange="document.getElementById('new-game-fixed-score-container').style.display = this.value === 'points' ? 'flex' : 'none';" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
-                <option value="points">Points</option>
-                <option value="wins">Victoires</option>
-            </select>
-        </div>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-type" style="font-weight:bold; width: 40%;">Vainqueur</label>
-            <select id="new-game-type" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
-                <option value="highest">Le plus grand</option>
-                <option value="lowest">Le plus petit</option>
-            </select>
-        </div>
-
-        <div id="new-game-fixed-score-container" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
-                <label for="new-game-fixed-score-value">Score fixe</label>
-                <span onclick="window.app.showHelpPopup(&quot;Le score est fixé pour un tour de jeu, ce qui permet d'afficher un décompte lors de la saisie des scores&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
-            </div>
-            <input type="number" id="new-game-fixed-score-value" placeholder="Optionnel" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-        </div>
-
-        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Fin de partie</h3>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-target" style="font-weight:bold; width:40%;">Limite de score</label>
-            <input type="number" id="new-game-target" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-        </div>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-rounds" style="font-weight:bold; width:40%;">Limite de tours</label>
-            <input type="number" id="new-game-rounds" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-        </div>
-
-        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Nombre de joueurs</h3>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-min-players" style="font-weight:bold; width:40%;">Minimum</label>
-            <input type="number" id="new-game-min-players" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-        </div>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-game-max-players" style="font-weight:bold; width:40%;">Maximum</label>
-            <input type="number" id="new-game-max-players" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-        </div>
-
-
-
-        <button onclick="window.app.submitCreateGame()" style="width:100%">Créer</button>
-    </div>
-    </div>
-`;
-
-export const EditGameView = (store, gameId) => {
-    const game = store.getGames().find(g => g.id === gameId);
-    if (!game) return '<div>Jeu introuvable</div>';
-
+    const prefix = 'game';
+    const scoreMode = game?.scoreMode || 'points';
+    const winCondition = game?.winCondition || 'highest';
+    
     return `
     <header style="display:flex; align-items:center; margin-bottom: 20px;">
         <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>Modifier Jeu</h1>
+        <h1>${isEditMode ? 'Modifier Jeu' : 'Nouveau Jeu'}</h1>
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
-        <input type="hidden" id="edit-game-id" value="${game.id}">
+        ${isEditMode ? `<input type="hidden" id="${prefix}-id" value="${game.id}">` : ''}
         
+        ${isEditMode ? `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="margin:0; font-size:1.1rem; font-weight:bold;">Informations</h3>
+            <button onclick="window.app.toggleGameFavorite('${game.id}')" style="background:none; border:none; cursor:pointer; padding:0; width:28px; height:28px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="${game.favorite ? '#ffd700' : 'none'}" stroke="${game.favorite ? '#fff' : '#fff'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </button>
+        </div>
+        ` : `
         <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Informations</h3>
+        `}
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <label for="edit-game-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
-            <input type="text" id="edit-game-name" value="${game.name}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="${prefix}-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
+            <input type="text" id="${prefix}-name" value="${game?.name || ''}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
-        
+
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
-                <label for="edit-game-score-mode">Mode de score</label>
+                <label for="${prefix}-score-mode">Mode de score</label>
                 <span onclick="window.app.showHelpPopup(&quot;Choisissez si les joueurs accumulent des points ou si on compte juste les victoires (1 point par tour gagné)&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
             </div>
-            <select id="edit-game-score-mode" onchange="document.getElementById('edit-game-fixed-score-container').style.display = this.value === 'points' ? 'flex' : 'none';" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; background:white; text-align:right;">
-                <option value="points" ${(game.scoreMode || 'points') === 'points' ? 'selected' : ''}>Points</option>
-                <option value="wins" ${game.scoreMode === 'wins' ? 'selected' : ''}>Victoires</option>
+            <select id="${prefix}-score-mode" onchange="document.getElementById('${prefix}-fixed-score-container').style.display = this.value === 'points' ? 'flex' : 'none';" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
+                <option value="points" ${scoreMode === 'points' ? 'selected' : ''}>Points</option>
+                <option value="wins" ${scoreMode === 'wins' ? 'selected' : ''}>Victoires</option>
             </select>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-type" style="font-weight:bold; width: 40%;">Vainqueur</label>
-            <select id="edit-game-type" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; background:white; text-align:right;">
-                <option value="highest" ${game.winCondition === 'highest' ? 'selected' : ''}>Le plus grand</option>
-                <option value="lowest" ${game.winCondition === 'lowest' ? 'selected' : ''}>Le plus petit</option>
+            <label for="${prefix}-type" style="font-weight:bold; width: 40%;">Vainqueur</label>
+            <select id="${prefix}-type" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
+                <option value="highest" ${winCondition === 'highest' ? 'selected' : ''}>Le plus grand</option>
+                <option value="lowest" ${winCondition === 'lowest' ? 'selected' : ''}>Le plus petit</option>
             </select>
         </div>
 
-        <div id="edit-game-fixed-score-container" style="display:${(game.scoreMode || 'points') === 'points' ? 'flex' : 'none'}; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+        <div id="${prefix}-fixed-score-container" style="display:${scoreMode === 'points' ? 'flex' : 'none'}; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
-                <label for="edit-game-fixed-score-value">Score fixe</label>
+                <label for="${prefix}-fixed-score-value">Score fixe</label>
                 <span onclick="window.app.showHelpPopup(&quot;Le score est fixé pour un tour de jeu, ce qui permet d'afficher un décompte lors de la saisie des scores&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
             </div>
-            <input type="number" id="edit-game-fixed-score-value" value="${game.fixedRoundScore || ''}" placeholder="Optionnel" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="number" id="${prefix}-fixed-score-value" value="${game?.fixedRoundScore || ''}" placeholder="Optionnel" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Fin de partie</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-target" style="font-weight:bold; width: 40%;">Limite de score</label>
-            <input type="number" id="edit-game-target" value="${game.target || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="${prefix}-target" style="font-weight:bold; width:40%;">Limite de score</label>
+            <input type="number" id="${prefix}-target" value="${game?.target || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-rounds" style="font-weight:bold; width: 40%;">Limite de tours</label>
-            <input type="number" id="edit-game-rounds" value="${game.rounds || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="${prefix}-rounds" style="font-weight:bold; width:40%;">Limite de tours</label>
+            <input type="number" id="${prefix}-rounds" value="${game?.rounds || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Nombre de joueurs</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-min-players" style="font-weight:bold; width:40%;">Minimum</label>
-            <input type="number" id="edit-game-min-players" value="${game.minPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="${prefix}-min-players" style="font-weight:bold; width:40%;">Minimum</label>
+            <input type="number" id="${prefix}-min-players" value="${game?.minPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="edit-game-max-players" style="font-weight:bold; width:40%;">Maximum</label>
-            <input type="number" id="edit-game-max-players" value="${game.maxPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <label for="${prefix}-max-players" style="font-weight:bold; width:40%;">Maximum</label>
+            <input type="number" id="${prefix}-max-players" value="${game?.maxPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
-
-
-        <button onclick="window.app.submitEditGame()" style="width:100%; margin-bottom:15px;">Enregistrer</button>
-        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="width:100%; background-color:#ef4444; color:white;">Supprimer ce jeu</button>
     </div>
     </div>
+    
+    ${isEditMode ? `
+    <div style="position:sticky; bottom:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:flex; gap:10px; z-index:100;">
+        <button onclick="window.app.submitGameForm()" style="flex:1; padding:12px;">Enregistrer</button>
+        <button onclick="window.app.navigateDeleteGame('${game.id}')" style="flex:1; padding:12px; background-color:#ef4444; color:white;">Supprimer</button>
+    </div>
+    ` : `
+    <div style="padding-bottom:20px;">
+        <button onclick="window.app.submitGameForm()" style="width:100%">Créer</button>
+    </div>
+    `}
+    
     <style>
         .game-icon-opt.selected { background-color: var(--primary-color) !important; color: white; }
     </style>
 `;
 };
+
+// Maintenir la compatibilité avec l'ancien code
+export const CreateGameView = (store) => GameFormView(store);
+export const EditGameView = (store, gameId) => GameFormView(store, gameId);
 
 export const ConfirmDeleteGameView = (store, gameId) => {
     const game = store.getGames().find(g => g.id === gameId);
@@ -524,145 +498,153 @@ export const ConfirmDeleteGameView = (store, gameId) => {
 `;
 };
 
-export const CreatePlayerView = () => `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
+export const AvatarSelectionView = (store) => {
+    // Récupérer les données temporaires de la session
+    const tempData = store.state.tempAvatarSelection || {};
+    const currentAvatar = tempData.avatar || '👤';
+    const currentPhoto = tempData.photo || '';
+    const hasPhoto = !!currentPhoto;
+    
+    return `
+    <header style="display:flex; align-items:center; margin-bottom: 15px;">
         <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>Nouveau Joueur</h1>
+        <h1>Choix de l'avatar</h1>
     </header>
-    <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
-    <div class="card">
-        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
+    <div style="flex:1; overflow-y:auto; width:100%;">
+    <div class="card" style="padding-bottom:80px;">
+        <h3 style="margin-top:0; margin-bottom:10px; padding:8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Aperçu</h3>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="new-player-name" style="font-weight:bold; width: 40%;">Nom</label>
-            <input type="text" id="new-player-name" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
-        </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label style="font-weight:bold; width:40%;">Avatar</label>
-            <div id="new-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color);">
-                <span id="new-player-avatar-display" class="selected">👤</span>
-                <img id="new-player-photo-display" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:none;">
+        <div style="display:flex; align-items:center; justify-content:center; margin-bottom:15px;">
+            <div id="avatar-selection-preview" style="width:70px; height:70px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2.5em; border:3px solid var(--primary-color); box-shadow: 0 0 8px var(--primary-color);">
+                <span id="avatar-selection-avatar-display" class="${!hasPhoto ? 'selected' : ''}" style="display:${!hasPhoto ? 'block' : 'none'};">${currentAvatar}</span>
+                <img id="avatar-selection-photo-display" src="${currentPhoto}" class="${hasPhoto ? 'selected' : ''}" style="width:70px; height:70px; border-radius:50%; object-fit:cover; display:${hasPhoto ? 'block' : 'none'};">
             </div>
         </div>
 
-        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Choix de l'avatar</h3>
+        <h3 style="margin-top:15px; margin-bottom:10px; padding:8px 12px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Avatars</h3>
 
-        <!-- Section 3: Image Selection -->
-        <div style="margin-bottom:20px; text-align:center;">
-            <div id="new-player-image-selection" style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+        <div style="margin-bottom:15px; text-align:center;">
+            <div id="avatar-selection-image-selection" style="display:flex; justify-content:center; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
                 ${['👤', '🧑‍🚀', '🦸', '🦹', '🧙', '🧟', '🧛', '🧞', '🧜', '🧚'].map(emoji => `
-                <div onclick="window.app.selectAvatar('new-player', '${emoji}');" class="avatar-opt ${emoji === '👤' ? 'selected' : ''}" style="font-size:2em; text-align:center; padding:5px; border-radius:5px; cursor:pointer; background:#eee;">${emoji}</div>
+                <div onclick="window.app.selectAvatar('avatar-selection', '${emoji}');" class="avatar-opt ${currentAvatar === emoji && !hasPhoto ? 'selected' : ''}" style="font-size:1.8em; text-align:center; padding:6px; border-radius:6px; cursor:pointer; background:#eee; min-width:45px;">${emoji}</div>
             `).join('')}
             </div>
-            <input type="hidden" id="new-player-avatar" value="👤">
+            <input type="hidden" id="avatar-selection-avatar" value="${currentAvatar}">
+        </div>
 
+        <h3 style="margin-top:15px; margin-bottom:10px; padding:8px 12px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Photo</h3>
+
+        <div style="margin-bottom:10px; text-align:center;">
             <!-- Camera Actions -->
-            <div id="new-player-photo-actions" style="margin-bottom:10px;">
-                <button onclick="window.app.startCamera('new-player')" style="background:var(--primary-color); color:white; padding:8px 12px; border-radius:5px; border:none; margin-right:5px;">📷 Appareil Photo</button>
+            <div id="avatar-selection-photo-actions" style="margin-bottom:10px;">
+                <button onclick="window.app.startCamera('avatar-selection')" style="background:var(--primary-color); color:white; padding:10px 16px; border-radius:8px; border:none; font-size:1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">📷 Prendre une Photo</button>
             </div>
 
             <!-- Camera View -->
-            <div id="new-player-camera-container" style="display:none; margin-bottom:10px;">
-                <video id="new-player-camera-video" autoplay playsinline style="width:100px; height:100px; background:#000; border-radius:50%; object-fit:cover; margin-bottom:5px;"></video>
+            <div id="avatar-selection-camera-container" style="display:none; margin-bottom:10px;">
+                <video id="avatar-selection-camera-video" autoplay playsinline style="width:150px; height:150px; background:#000; border-radius:50%; object-fit:cover; margin-bottom:8px; border:3px solid var(--primary-color);"></video>
                 <br>
-                <button onclick="window.app.capturePhoto('new-player')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
-                <button onclick="window.app.stopCamera('new-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
+                <button onclick="window.app.capturePhoto('avatar-selection')" style="background:var(--primary-color); color:white; padding:10px 16px; border-radius:20px; border:none; font-weight:bold; font-size:1rem;">📸 Capturer</button>
+                <button onclick="window.app.stopCamera('avatar-selection')" style="background:#eee; color:#333; padding:10px 16px; border-radius:8px; margin-left:8px; font-size:1rem;">Annuler</button>
             </div>
 
-            <!-- Photo capture display below camera button -->
-            <div id="new-player-photo-capture-preview" style="display:none; margin-top:15px;">
+            <!-- Photo capture display -->
+            <div id="avatar-selection-photo-capture-preview" style="display:${hasPhoto ? 'block' : 'none'}; margin-top:10px;">
                 <div style="position:relative; display:inline-block;">
-                    <img id="new-player-photo-capture-display" onclick="window.app.reselectPhoto('new-player');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); cursor:pointer;">
-                    <button onclick="event.stopPropagation(); window.app.deletePhoto('new-player');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">×</button>
+                    <img id="avatar-selection-photo-capture-display" src="${currentPhoto}" onclick="window.app.reselectPhoto('avatar-selection');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 8px var(--primary-color); cursor:pointer;">
+                    <button onclick="event.stopPropagation(); window.app.deletePhoto('avatar-selection');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">×</button>
                 </div>
             </div>
         </div>
 
-        <button onclick="window.app.submitCreatePlayer()" style="width:100%">Ajouter</button>
     </div>
     </div>
+    
+    <div style="position:fixed; bottom:0; left:0; right:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index:100;">
+        <button onclick="window.app.submitAvatarSelection()" style="width:100%; padding:15px; font-size:1.1rem; font-weight:bold;">Valider</button>
+    </div>
+    
     <style>
         .avatar-opt.selected { background-color: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
-        #new-player-avatar-display.selected { text-shadow: 0 0 3px var(--primary-color); }
-        #new-player-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
+        #avatar-selection-avatar-display.selected { text-shadow: 0 0 5px var(--primary-color); }
+        #avatar-selection-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
     </style>
 `;
+};
 
-export const EditPlayerView = (store, playerId) => {
-    const player = store.getPlayers().find(p => p.id === playerId);
-    if (!player) return '<div>Joueur introuvable</div>';
+export const PlayerFormView = (store, playerId) => {
+    const isEditMode = !!playerId;
+    const player = isEditMode ? store.getPlayers().find(p => p.id === playerId) : null;
+    
+    if (isEditMode && !player) return '<div>Joueur introuvable</div>';
 
-    // Determine initial state
-    const initialAvatarSelected = !player.photo;
-    const initialPhotoSelected = !!player.photo; // !! converts to boolean
-
+    const prefix = 'player';
+    const defaultAvatar = '👤';
+    
+    // Récupérer les données temporaires si elles existent
+    const tempData = store.state.tempAvatarSelection || {};
+    
+    // Déterminer les valeurs à afficher : temp > player > défaut
+    const currentName = tempData.name !== undefined ? tempData.name : (player?.name || '');
+    const currentAvatar = tempData.avatar !== undefined ? tempData.avatar : (player?.avatar || defaultAvatar);
+    const currentPhoto = tempData.photo !== undefined ? tempData.photo : (player?.photo || '');
+    const hasPhoto = !!currentPhoto;
+    
     return `
-            <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                <h1>Modifier Joueur</h1>
-            </header>
-            <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
-            <div class="card">
-                <input type="hidden" id="edit-player-id" value="${player.id}">
+    <header style="display:flex; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1>${isEditMode ? 'Modifier Joueur' : 'Nouveau Joueur'}</h1>
+    </header>
+    <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+    <div class="card">
+        ${isEditMode ? `<input type="hidden" id="${prefix}-id" value="${player.id}">` : ''}
+        <input type="hidden" id="${prefix}-avatar" value="${currentAvatar}">
+        <input type="hidden" id="${prefix}-photo-data" value="${currentPhoto || ''}">
 
-                <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
+        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
 
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-                    <label for="edit-player-name" style="font-weight:bold; width:40%;">Nom</label>
-                    <input type="text" id="edit-player-name" value="${player.name}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label for="${prefix}-name" style="font-weight:bold; width: 40%;">Nom</label>
+            <input type="text" id="${prefix}-name" value="${currentName}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        </div>
+        
+        <div onclick="window.app.openAvatarSelection()" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px; cursor:pointer;">
+            <label style="font-weight:bold; width:40%;">Avatar</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div id="${prefix}-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color);">
+                    <span id="${prefix}-avatar-display" class="${!hasPhoto ? 'selected' : ''}" style="display:${!hasPhoto ? 'block' : 'none'};">${currentAvatar}</span>
+                    <img id="${prefix}-photo-display" src="${currentPhoto || ''}" class="${hasPhoto ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${hasPhoto ? 'block' : 'none'};">
                 </div>
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-                    <label style="font-weight:bold; width:40%;">Avatar</label>
-                    <div id="edit-player-current-image-preview" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#eee; font-size:2em; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color);">
-                        <span id="edit-player-avatar-display" class="${initialAvatarSelected ? 'selected' : ''}" style="display:${initialAvatarSelected ? 'block' : 'none'};">${player.avatar}</span>
-                        <img id="edit-player-photo-display" src="${player.photo || ''}" class="${initialPhotoSelected ? 'selected' : ''}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; display:${initialPhotoSelected ? 'block' : 'none'};">
-                    </div>
-                </div>
-
-                <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Choix de l'avatar</h3>
-
-                <!-- Section 3: Image Selection -->
-                <div style="margin-bottom:20px; text-align:center;">
-                    <div id="edit-player-image-selection" style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
-                        ${['👤', '🧑‍🚀', '🦸', '🦹', '🧙', '🧟', '🧛', '🧞', '🧜', '🧚'].map(emoji => `
-                        <div onclick="window.app.selectAvatar('edit-player', '${emoji}');" class="avatar-opt ${player.avatar === emoji && initialAvatarSelected ? 'selected' : ''}" style="font-size:2em; text-align:center; padding:5px; border-radius:5px; cursor:pointer; background:#eee;">${emoji}</div>
-                    `).join('')}
-                    </div>
-                    <input type="hidden" id="edit-player-avatar" value="${player.avatar}">
-
-                    <!-- Camera Actions -->
-                    <div id="edit-player-photo-actions" style="margin-bottom:10px;">
-                        <button onclick="window.app.startCamera('edit-player')" style="background:var(--primary-color); color:white; padding:8px 12px; border-radius:5px; border:none; margin-right:5px;">📷 Appareil Photo</button>
-                    </div>
-
-                    <!-- Camera View -->
-                    <div id="edit-player-camera-container" style="display:none; margin-bottom:10px;">
-                        <video id="edit-player-camera-video" autoplay playsinline style="width:100px; height:100px; background:#000; border-radius:50%; object-fit:cover; margin-bottom:5px;"></video>
-                        <br>
-                        <button onclick="window.app.capturePhoto('edit-player')" style="background:var(--primary-color); color:white; padding:10px 15px; border-radius:20px; border:none; font-weight:bold;">📸 Prendre Photo</button>
-                        <button onclick="window.app.stopCamera('edit-player')" style="background:#eee; color:#333; padding:10px; border-radius:5px; margin-left:10px;">Annuler</button>
-                    </div>
-
-                    <!-- Photo capture display below camera button -->
-                    <div id="edit-player-photo-capture-preview" style="display:${initialPhotoSelected ? 'block' : 'none'}; margin-top:15px;">
-                        <div style="position:relative; display:inline-block;">
-                            <img id="edit-player-photo-capture-display" src="${player.photo || ''}" onclick="window.app.reselectPhoto('edit-player');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); cursor:pointer;">
-                            <button onclick="event.stopPropagation(); window.app.deletePhoto('edit-player');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">×</button>
-                        </div>
-                    </div>
-                </div>
-
-                <button onclick="window.app.submitEditPlayer()" style="width:100%; margin-bottom:15px;">Enregistrer</button>
-                <button onclick="window.app.router.navigate('confirmDeletePlayer', { playerId: '${player.id}' })" style="width:100%; background-color:#ef4444; color:white;">Supprimer le joueur</button>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
             </div>
-            </div>
-            <style>
-                .avatar-opt.selected { background-color: var(--primary-color); color: white; border: 2px solid var(--primary-color); }
-                #edit-player-avatar-display.selected { text-shadow: 0 0 3px var(--primary-color); }
-                #edit-player-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
-            </style>
+        </div>
+
+    </div>
+    </div>
+    
+    ${isEditMode ? `
+    <div style="position:sticky; bottom:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:flex; gap:10px; z-index:100;">
+        <button onclick="window.app.submitPlayerForm()" style="flex:1; padding:12px;">Enregistrer</button>
+        <button onclick="window.app.router.navigate('confirmDeletePlayer', { playerId: '${player.id}' })" style="flex:1; padding:12px; background-color:#ef4444; color:white;">Supprimer</button>
+    </div>
+    ` : `
+    <div style="padding-bottom:20px;">
+        <button onclick="window.app.submitPlayerForm()" style="width:100%">Ajouter</button>
+    </div>
+    `}
+    
+    <style>
+        #${prefix}-avatar-display.selected { text-shadow: 0 0 3px var(--primary-color); }
+        #${prefix}-photo-display.selected { border: 3px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
+    </style>
 `;
 };
+
+// Maintenir la compatibilité avec l'ancien code
+export const CreatePlayerView = (store) => PlayerFormView(store);
+export const EditPlayerView = (store, playerId) => PlayerFormView(store, playerId);
 
 export const ConfirmDeletePlayerView = (store, playerId) => {
     const player = store.getPlayers().find(p => p.id === playerId);
