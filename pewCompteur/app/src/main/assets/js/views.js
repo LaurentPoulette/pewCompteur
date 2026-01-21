@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.7';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.9';
 
 export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
@@ -135,7 +135,7 @@ export const PlayerSelectView = (store, gameId) => {
         </div>
         
         <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
-            <button onclick="window.app.navigatePlayerOrder('${gameId}')" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant</button>
+            <button onclick="window.app.navigatePlayerOrder('${gameId}')" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant (${window.app.selectedPlayers.length})</button>
         </div>
         <style>
             .player-card.selected { border: 2px solid var(--primary-color); background-color: #e0f2fe; }

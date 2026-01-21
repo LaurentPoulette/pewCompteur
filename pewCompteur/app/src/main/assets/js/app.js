@@ -27,7 +27,20 @@ class App {
     init() {
         // Register Routes
         this.router.register('home', () => HomeView(this.store, this.homeFilterFavorites));
-        this.router.register('playerSelect', ({ gameId }) => PlayerSelectView(this.store, gameId));
+        this.router.register('playerSelect', ({ gameId }) => {
+            // Filtrer les joueurs sélectionnés selon le filtre de cercle actif
+            if (this.selectedCircleFilter !== 'all') {
+                const allPlayers = this.store.getPlayers();
+                this.selectedPlayers = this.selectedPlayers.filter(playerId => {
+                    const player = allPlayers.find(p => p.id === playerId);
+                    return player && player.circles && player.circles.includes(this.selectedCircleFilter);
+                });
+                // Sauvegarder la sélection filtrée
+                this.store.state.lastSelectedPlayers = [...this.selectedPlayers];
+                this.store.save();
+            }
+            return PlayerSelectView(this.store, gameId);
+        });
         this.router.register('playerOrder', ({ gameId }) => PlayerOrderView(this.store, gameId));
         this.router.register('game', () => ActiveGameView(this.store));
         this.router.register('createGame', () => GameFormView(this.store));
@@ -414,7 +427,18 @@ class App {
         } else {
             this.selectedPlayers.push(playerId);
         }
+        
+        // Sauvegarder la sélection dans le store
+        this.store.state.lastSelectedPlayers = [...this.selectedPlayers];
+        this.store.save();
+        
         this.updateSelectedPlayersUI();
+        
+        // Mettre à jour le compteur dans le bouton "Suivant"
+        const nextButton = document.querySelector('button[onclick*="navigatePlayerOrder"]');
+        if (nextButton) {
+            nextButton.textContent = `Suivant (${this.selectedPlayers.length})`;
+        }
     }
 
     movePlayer(index, direction) {
@@ -1379,7 +1403,17 @@ class App {
     filterByCircle(circleId, gameId) {
         this.selectedCircleFilter = circleId;
         
-        // Sauvegarder dans le store
+        // Filtrer les joueurs sélectionnés : ne garder que ceux du cercle actif
+        if (circleId !== 'all') {
+            const allPlayers = this.store.getPlayers();
+            this.selectedPlayers = this.selectedPlayers.filter(playerId => {
+                const player = allPlayers.find(p => p.id === playerId);
+                return player && player.circles && player.circles.includes(circleId);
+            });
+        }
+        
+        // Sauvegarder la sélection et le filtre dans le store
+        this.store.state.lastSelectedPlayers = [...this.selectedPlayers];
         this.store.state.playerCircleFilter = circleId;
         this.store.save();
         
