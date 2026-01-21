@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, CreateGameView, CreatePlayerView, EditPlayerView, ConfirmDeletePlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, EditGameView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, ConfirmDeletePlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -26,9 +26,9 @@ class App {
         this.router.register('playerSelect', ({ gameId }) => PlayerSelectView(this.store, gameId));
         this.router.register('playerOrder', ({ gameId }) => PlayerOrderView(this.store, gameId));
         this.router.register('game', () => ActiveGameView(this.store));
-        this.router.register('createGame', () => CreateGameView());
-        this.router.register('createPlayer', () => CreatePlayerView());
-        this.router.register('editPlayer', ({ playerId }) => EditPlayerView(this.store, playerId));
+        this.router.register('createGame', () => GameFormView(this.store));
+        this.router.register('createPlayer', () => PlayerFormView(this.store));
+        this.router.register('editPlayer', ({ playerId }) => PlayerFormView(this.store, playerId));
         this.router.register('confirmDeletePlayer', ({ playerId }) => ConfirmDeletePlayerView(this.store, playerId));
         this.router.register('gameSetup', ({ gameId }) => GameSetupView(this.store, gameId));
         this.router.register('addIngamePlayer', () => AddIngamePlayerView(this.store));
@@ -40,7 +40,7 @@ class App {
         this.router.register('gameOver', () => GameOverView(this.store));
         this.router.register('about', () => AboutView());
         this.router.register('statistics', () => StatisticsView(this.store));
-        this.router.register('editGame', ({ gameId }) => EditGameView(this.store, gameId));
+        this.router.register('editGame', ({ gameId }) => GameFormView(this.store, gameId));
         this.router.register('confirmDeleteGame', ({ gameId }) => ConfirmDeleteGameView(this.store, gameId));
         this.router.register('updateLimits', () => UpdateLimitsView(this.store));
         this.router.register('exportGames', () => ExportGamesView(this.store));
@@ -868,34 +868,14 @@ class App {
     }
 
 
-    submitCreatePlayer() {
-        const nameInput = document.getElementById('new-player-name');
-        const avatarInput = document.getElementById('new-player-avatar');
-        const photoDisplay = document.getElementById('new-player-photo-display');
+    submitPlayerForm() {
+        const prefix = 'player';
+        const idInput = document.getElementById(`${prefix}-id`);
+        const nameInput = document.getElementById(`${prefix}-name`);
+        const avatarInput = document.getElementById(`${prefix}-avatar`);
+        const photoDisplay = document.getElementById(`${prefix}-photo-display`);
 
-        const name = nameInput.value.trim();
-        const avatar = avatarInput.value; // Will be empty string if photo is selected, otherwise emoji
-        const photo = (photoDisplay && photoDisplay.style.display !== 'none' && photoDisplay.src.startsWith('data:')) ? photoDisplay.src : null;
-
-        if (name) {
-            this.store.addPlayer(name, avatar, photo);
-            this.router.back();
-        } else {
-            this.showHelpPopup("Le nom est obligatoire");
-        }
-    }
-
-    editPlayer(playerId) {
-        this.router.navigate('editPlayer', { playerId });
-    }
-
-    submitEditPlayer() {
-        const idInput = document.getElementById('edit-player-id');
-        const nameInput = document.getElementById('edit-player-name');
-        const avatarInput = document.getElementById('edit-player-avatar');
-        const photoDisplay = document.getElementById('edit-player-photo-display');
-
-        const id = idInput.value;
+        const isEditMode = idInput && idInput.value;
         const name = nameInput.value.trim();
         const avatar = avatarInput.value;
 
@@ -908,23 +888,43 @@ class App {
         } // else if photoDisplay is block but src is not data: (meaning it's an existing player photo from store), keep photo = null
 
         if (name) {
-            this.store.updatePlayer(id, name, avatar, photo);
+            if (isEditMode) {
+                this.store.updatePlayer(idInput.value, name, avatar, photo);
+            } else {
+                this.store.addPlayer(name, avatar, photo);
+            }
             this.router.back();
         } else {
             this.showHelpPopup("Le nom est obligatoire");
         }
     }
 
-    submitCreateGame() {
-        const nameInput = document.getElementById('new-game-name');
-        const typeInput = document.getElementById('new-game-type');
-        const roundsInput = document.getElementById('new-game-rounds');
-        const scoreModeInput = document.getElementById('new-game-score-mode');
+    // Maintenir la compatibilité avec l'ancien code
+    submitCreatePlayer() {
+        this.submitPlayerForm();
+    }
 
-        const fixedScoreValue = document.getElementById('new-game-fixed-score-value');
-        const minPlayersInput = document.getElementById('new-game-min-players');
-        const maxPlayersInput = document.getElementById('new-game-max-players');
+    editPlayer(playerId) {
+        this.router.navigate('editPlayer', { playerId });
+    }
 
+    submitEditPlayer() {
+        this.submitPlayerForm();
+    }
+
+    submitGameForm() {
+        const prefix = 'game';
+        const idInput = document.getElementById(`${prefix}-id`);
+        const nameInput = document.getElementById(`${prefix}-name`);
+        const typeInput = document.getElementById(`${prefix}-type`);
+        const roundsInput = document.getElementById(`${prefix}-rounds`);
+        const scoreModeInput = document.getElementById(`${prefix}-score-mode`);
+        const fixedScoreValue = document.getElementById(`${prefix}-fixed-score-value`);
+        const minPlayersInput = document.getElementById(`${prefix}-min-players`);
+        const maxPlayersInput = document.getElementById(`${prefix}-max-players`);
+        const targetInput = document.getElementById(`${prefix}-target`);
+
+        const isEditMode = idInput && idInput.value;
         const name = nameInput.value.trim();
         const minPlayers = minPlayersInput.value ? parseInt(minPlayersInput.value) : null;
         const maxPlayers = maxPlayersInput.value ? parseInt(maxPlayersInput.value) : null;
@@ -936,20 +936,35 @@ class App {
         }
 
         if (name) {
-            this.store.createGame({
+            const gameData = {
                 name,
                 winCondition: typeInput.value,
                 scoreMode: scoreModeInput.value || 'points',
-                target: (document.getElementById('new-game-target').value) ? parseInt(document.getElementById('new-game-target').value) : 0,
+                target: targetInput.value ? parseInt(targetInput.value) : 0,
                 rounds: roundsInput.value ? parseInt(roundsInput.value) : null,
                 fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null,
                 minPlayers: minPlayers,
                 maxPlayers: maxPlayers
-            });
+            };
+
+            if (isEditMode) {
+                this.store.updateGame(idInput.value, gameData);
+            } else {
+                this.store.createGame(gameData);
+            }
             this.router.back();
         } else {
             this.showHelpPopup("Le nom est obligatoire");
         }
+    }
+
+    // Maintenir la compatibilité avec l'ancien code
+    submitCreateGame() {
+        this.submitGameForm();
+    }
+
+    submitEditGame() {
+        this.submitGameForm();
     }
 
     showHelpPopup(message) {
@@ -1038,45 +1053,6 @@ class App {
 
     editGame(gameId) {
         this.router.navigate('editGame', { gameId });
-    }
-
-    submitEditGame() {
-        const idInput = document.getElementById('edit-game-id');
-        const nameInput = document.getElementById('edit-game-name');
-        const typeInput = document.getElementById('edit-game-type');
-        const roundsInput = document.getElementById('edit-game-rounds');
-        const scoreModeInput = document.getElementById('edit-game-score-mode');
-
-        const fixedScoreValue = document.getElementById('edit-game-fixed-score-value');
-        const minPlayersInput = document.getElementById('edit-game-min-players');
-        const maxPlayersInput = document.getElementById('edit-game-max-players');
-
-        const id = idInput.value;
-        const name = nameInput.value.trim();
-        const minPlayers = minPlayersInput.value ? parseInt(minPlayersInput.value) : null;
-        const maxPlayers = maxPlayersInput.value ? parseInt(maxPlayersInput.value) : null;
-
-        // Validation: si les deux sont renseignés, min doit être <= max
-        if (minPlayers && maxPlayers && minPlayers > maxPlayers) {
-            this.showHelpPopup("Le nombre minimum de joueurs ne peut pas être supérieur au maximum.");
-            return;
-        }
-
-        if (name) {
-            this.store.updateGame(id, {
-                name,
-                winCondition: typeInput.value,
-                scoreMode: scoreModeInput.value || 'points',
-                target: (document.getElementById('edit-game-target').value) ? parseInt(document.getElementById('edit-game-target').value) : 0,
-                rounds: roundsInput.value ? parseInt(roundsInput.value) : null,
-                fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null,
-                minPlayers: minPlayers,
-                maxPlayers: maxPlayers
-            });
-            this.router.back();
-        } else {
-            this.showHelpPopup("Le nom est obligatoire");
-        }
     }
 
     navigateDeleteGame(gameId) {
