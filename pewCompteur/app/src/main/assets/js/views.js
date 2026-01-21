@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.4';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.7';
 
 export const HomeView = (store) => {
     // Initialize filter state

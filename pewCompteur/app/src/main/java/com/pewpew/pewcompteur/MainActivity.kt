@@ -95,12 +95,6 @@ class MainActivity : ComponentActivity() {
                     view: WebView,
                     request: android.webkit.WebResourceRequest
                 ) = assetLoader.shouldInterceptRequest(request.url)
-                
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    super.onPageFinished(view, url)
-                    val versionName = packageManager.getPackageInfo(packageName, 0).versionName
-                    view?.evaluateJavascript("window.APP_VERSION_NATIVE = '$versionName';", null)
-                }
             }
             
             webChromeClient = object : WebChromeClient() {
@@ -125,6 +119,11 @@ class MainActivity : ComponentActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false // Allow autoplay for camera stream
+            
+            // Inject version before loading the page
+            val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+            evaluateJavascript("window.APP_VERSION_NATIVE = '$versionName';", null)
+            
             // Add the interface
             addJavascriptInterface(WebAppInterface(), "Android")
             loadUrl("https://appassets.androidplatform.net/assets/index.html")

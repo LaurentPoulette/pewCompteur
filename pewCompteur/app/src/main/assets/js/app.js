@@ -41,8 +41,12 @@ class App {
             return PlayerFormView(this.store);
         });
         this.router.register('editPlayer', ({ playerId }) => {
-            // Nettoyer tempAvatarSelection pour l'édition
-            delete this.store.state.tempAvatarSelection;
+            // Nettoyer tempAvatarSelection seulement si on ne revient pas de la sélection d'avatar
+            if (!this.store.state.returningFromAvatarSelection) {
+                delete this.store.state.tempAvatarSelection;
+            }
+            // Nettoyer le flag après utilisation
+            delete this.store.state.returningFromAvatarSelection;
             return PlayerFormView(this.store, playerId);
         });
         this.router.register('avatarSelection', () => AvatarSelectionView(this.store));
