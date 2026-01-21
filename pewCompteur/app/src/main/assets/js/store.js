@@ -3,9 +3,12 @@ export class Store {
         this.state = {
             games: [], // List of defined game types
             players: [], // List of known players
+            circles: [], // List of player circles
             activeGame: null, // Current running game state
             history: [], // Past games
-            lastSelectedPlayers: [] // IDs of players selected in the last game
+            lastSelectedPlayers: [], // IDs of players selected in the last game
+            homeFilterFavorites: false, // Filter favorites on home page
+            playerCircleFilter: 'all' // Filter players by circle
         };
         this.load();
     }
@@ -13,7 +16,18 @@ export class Store {
     load() {
         const stored = localStorage.getItem('point_counter_db');
         if (stored) {
-            this.state = JSON.parse(stored);
+            const loadedState = JSON.parse(stored);
+            // Fusionner avec les valeurs par défaut pour gérer les nouveaux champs
+            this.state = {
+                games: loadedState.games || [],
+                players: loadedState.players || [],
+                circles: loadedState.circles || [],
+                activeGame: loadedState.activeGame || null,
+                history: loadedState.history || [],
+                lastSelectedPlayers: loadedState.lastSelectedPlayers || [],
+                homeFilterFavorites: loadedState.homeFilterFavorites || false,
+                playerCircleFilter: loadedState.playerCircleFilter || 'all'
+            };
         } else {
             this.seedDefaults();
         }
@@ -56,7 +70,7 @@ export class Store {
 
     addPlayer(name, avatar, photo = null) {
         const id = 'p_' + Date.now();
-        this.state.players.push({ id, name, avatar: avatar || '👤', photo });
+        this.state.players.push({ id, name, avatar: avatar || '👤', photo, circles: [] });
         this.save();
         return id;
     }
@@ -66,12 +80,9 @@ export class Store {
         if (player) {
             player.name = name;
             player.avatar = avatar;
-            if (photo !== null) player.photo = photo; // Only update if provided (undefined means keep existing, null means clear? No let's assume passed value is new value)
-            // Actually, if I pass undefined to update, I might want to keep it.
-            // But from app controller I will likely pass string or empty.
-            // Let's settle: if photo is passed (even empty string), update it.
-            // If the user didn't upload a new one, we might re-pass the old one or just pass null.
-            // Let's say: photo argument is the new photo data.
+            if (photo !== null) player.photo = photo;
+            // Initialize circles array if not exists (for backward compatibility)
+            if (!player.circles) player.circles = [];
             this.save();
         }
     }
@@ -103,6 +114,55 @@ export class Store {
         if (player) {
             player.deleted = true;
             player.deletedAt = Date.now();
+            this.save();
+        }
+    }
+
+    // Circle methods
+    getCircles() {
+        return this.state.circles || [];
+    }
+
+    addCircle(name) {
+        const id = 'c_' + Date.now();
+        if (!this.state.circles) this.state.circles = [];
+        this.state.circles.push({ id, name });
+        this.save();
+        return id;
+    }
+
+    updateCircle(id, name) {
+        if (!this.state.circles) this.state.circles = [];
+        const circle = this.state.circles.find(c => c.id === id);
+        if (circle) {
+            circle.name = name;
+            this.save();
+        }
+    }
+
+    deleteCircle(id) {
+        if (!this.state.circles) this.state.circles = [];
+        this.state.circles = this.state.circles.filter(c => c.id !== id);
+        
+        // Remove circle from all players
+        this.state.players.forEach(player => {
+            if (player.circles) {
+                player.circles = player.circles.filter(cid => cid !== id);
+            }
+        });
+        this.save();
+    }
+
+    togglePlayerCircle(playerId, circleId) {
+        const player = this.state.players.find(p => p.id === playerId);
+        if (player) {
+            if (!player.circles) player.circles = [];
+            const index = player.circles.indexOf(circleId);
+            if (index > -1) {
+                player.circles.splice(index, 1);
+            } else {
+                player.circles.push(circleId);
+            }
             this.save();
         }
     }

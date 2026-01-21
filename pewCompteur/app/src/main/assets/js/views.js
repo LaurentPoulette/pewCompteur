@@ -1,11 +1,6 @@
 export const APP_VERSION = window.APP_VERSION_NATIVE || '1.7';
 
-export const HomeView = (store) => {
-    // Initialize filter state
-    if (!window.app.homeFilterFavorites) {
-        window.app.homeFilterFavorites = false;
-    }
-    const showOnlyFavorites = window.app.homeFilterFavorites;
+export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
     const games = showOnlyFavorites ? allGames.filter(g => g.favorite) : allGames;
     
@@ -63,8 +58,18 @@ export const HomeView = (store) => {
 };
 
 export const PlayerSelectView = (store, gameId) => {
-    const players = store.getPlayers();
+    const allPlayers = store.getPlayers();
     const game = store.getGames().find(g => g.id === gameId);
+    const circles = store.getCircles();
+    
+    // Get current filter from app state (will be set by filter dropdown)
+    const selectedCircleFilter = window.app?.selectedCircleFilter || 'all';
+    
+    // Filter players based on selected circle
+    let players = allPlayers;
+    if (selectedCircleFilter !== 'all') {
+        players = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
+    }
     
     let subtitle = "Sélectionnez les joueurs";
     if (game && game.minPlayers && game.maxPlayers) {
@@ -86,10 +91,20 @@ export const PlayerSelectView = (store, gameId) => {
         </header>
         <div style="flex:1; overflow-y:auto; width:100%;">
         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">${subtitle}</h3>
+        
+        ${circles.length > 0 ? `
+        <div style="margin-bottom:15px;">
+            <select id="circle-filter" onchange="window.app.filterByCircle(this.value, '${gameId}')" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1em; background:white;">
+                <option value="all" ${selectedCircleFilter === 'all' ? 'selected' : ''}>Tous les joueurs</option>
+                ${circles.map(c => `<option value="${c.id}" ${selectedCircleFilter === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+            </select>
+        </div>
+        ` : ''}
+        
         <p style="text-align:center; color:#999; font-size:0.9em; margin:-10px 0 15px 0;">Appui long pour modifier</p>
         <div class="grid" id="player-grid" style="padding-bottom: 100px;">
             <!-- New Player Card -->
-            <div class="card" onclick="window.app.router.navigate('createPlayer')" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:80px; border: 2px dashed #ccc; background:transparent;">
+            <div class="card" onclick="window.app.navigateCreatePlayer()" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:80px; border: 2px dashed #ccc; background:transparent;">
                  <div style="text-align:center; color:#888;">
                     <span style="font-size:2em;">+</span><br>Nouveau
                  </div>
@@ -590,9 +605,14 @@ export const PlayerFormView = (store, playerId) => {
     const currentPhoto = tempData.photo !== undefined ? tempData.photo : (player?.photo || '');
     const hasPhoto = !!currentPhoto;
     
+    // Récupérer les cercles
+    const circles = store.getCircles();
+    // Utiliser les cercles temporaires si disponibles, sinon les cercles du joueur
+    const playerCircles = tempData.circles !== undefined ? tempData.circles : (player?.circles || []);
+    
     return `
     <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <button onclick="window.app.cancelPlayerForm()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
         <h1>${isEditMode ? 'Modifier Joueur' : 'Nouveau Joueur'}</h1>
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
@@ -620,6 +640,41 @@ export const PlayerFormView = (store, playerId) => {
                 </svg>
             </div>
         </div>
+
+        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between;">
+            <span>Cercles</span>
+            <button onclick="event.stopPropagation(); window.app.navigateCircleForm(${isEditMode ? `'${player.id}'` : 'null'})" style="background:rgba(255,255,255,0.3); border:none; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5em; cursor:pointer; padding:0;">+</button>
+        </h3>
+        
+        ${circles.length === 0 ? `
+            <p style="text-align:center; color:#999; margin:20px 0;">Aucun cercle. Créez-en un avec le bouton +</p>
+        ` : `
+            ${circles.map(c => {
+                const isChecked = playerCircles.includes(c.id);
+                return `
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:10px; border-radius:5px; background:#f9f9f9;">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                        <input type="checkbox" id="circle-${c.id}" ${isChecked ? 'checked' : ''} onchange="window.app.togglePlayerCircle(${isEditMode ? `'${player.id}'` : 'null'}, '${c.id}')" style="width:20px; height:20px; cursor:pointer;">
+                        <label for="circle-${c.id}" style="cursor:pointer; flex:1;">${c.name}</label>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="event.stopPropagation(); window.app.navigateEditCircle('${c.id}', ${isEditMode ? `'${player.id}'` : 'null'})" style="background:none; border:none; cursor:pointer; padding:5px;" title="Modifier">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="event.stopPropagation(); window.app.confirmDeleteCircle('${c.id}', ${isEditMode ? `'${player.id}'` : 'null'})" style="background:none; border:none; cursor:pointer; padding:5px;" title="Supprimer">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('')}
+        `}
 
     </div>
     </div>
@@ -666,6 +721,44 @@ export const ConfirmDeletePlayerView = (store, playerId) => {
             </div>
         </div>
     `;
+};
+
+export const CircleFormView = (store, circleId, returnPlayerId) => {
+    const isEditMode = !!circleId;
+    const circle = isEditMode ? store.getCircles().find(c => c.id === circleId) : null;
+    
+    if (isEditMode && !circle) return '<div>Cercle introuvable</div>';
+
+    return `
+    <header style="display:flex; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1>${isEditMode ? 'Modifier Cercle' : 'Nouveau Cercle'}</h1>
+    </header>
+    <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+    <div class="card">
+        ${isEditMode ? `<input type="hidden" id="circle-id" value="${circle.id}">` : ''}
+        ${returnPlayerId ? `<input type="hidden" id="circle-return-player" value="${returnPlayerId}">` : ''}
+
+        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label for="circle-name" style="font-weight:bold; width: 40%;">Nom</label>
+            <input type="text" id="circle-name" value="${circle?.name || ''}" placeholder="Ex: Famille, Amis..." style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+        </div>
+    </div>
+    </div>
+    
+    ${isEditMode ? `
+    <div style="position:sticky; bottom:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display:flex; gap:10px; z-index:100;">
+        <button onclick="window.app.submitCircleForm()" style="flex:1; padding:12px;">Enregistrer</button>
+        <button onclick="window.app.deleteCircle('${circle.id}')" style="flex:1; padding:12px; background-color:#ef4444; color:white;">Supprimer</button>
+    </div>
+    ` : `
+    <div style="position:sticky; bottom:0; background:white; padding:15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index:100;">
+        <button onclick="window.app.submitCircleForm()" style="width:100%; padding:12px;">Ajouter</button>
+    </div>
+    `}
+`;
 };
 
 export const GameSetupView = (store, gameId) => {
@@ -757,7 +850,7 @@ export const AddIngamePlayerView = (store) => {
                         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Joueurs disponibles</h3>
                         <div class="grid">
                             <!-- Option to create new -->
-                            <div class="card" onclick="window.app.router.navigate('createPlayer')" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:100px; border: 2px dashed #ccc; background:transparent;">
+                            <div class="card" onclick="window.app.navigateCreatePlayer()" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:100px; border: 2px dashed #ccc; background:transparent;">
                                 <div style="text-align:center; color:#888;">
                                     <span style="font-size:2em;">+</span><br>Nouveau
                                 </div>

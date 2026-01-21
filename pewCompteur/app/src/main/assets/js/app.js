@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -8,6 +8,10 @@ class App {
         this.router = new Router(document.getElementById('app'));
 
         this.selectedPlayers = [];
+        
+        // Restaurer les filtres sauvegardés
+        this.selectedCircleFilter = this.store.state.playerCircleFilter || 'all';
+        this.homeFilterFavorites = this.store.state.homeFilterFavorites || false;
 
         // Initialize persistent selection from store immediately
         if (this.store.state.lastSelectedPlayers && Array.isArray(this.store.state.lastSelectedPlayers)) {
@@ -22,35 +26,42 @@ class App {
 
     init() {
         // Register Routes
-        this.router.register('home', () => HomeView(this.store));
+        this.router.register('home', () => HomeView(this.store, this.homeFilterFavorites));
         this.router.register('playerSelect', ({ gameId }) => PlayerSelectView(this.store, gameId));
         this.router.register('playerOrder', ({ gameId }) => PlayerOrderView(this.store, gameId));
         this.router.register('game', () => ActiveGameView(this.store));
         this.router.register('createGame', () => GameFormView(this.store));
         this.router.register('createPlayer', () => {
-            // Réinitialiser tempAvatarSelection seulement si on n'est pas en train de revenir de la sélection d'avatar
-            if (!this.store.state.returningFromAvatarSelection) {
+            // Initialiser tempAvatarSelection seulement si vide (première visite)
+            if (!this.store.state.tempAvatarSelection) {
                 this.store.state.tempAvatarSelection = {
                     name: '',
                     avatar: '👤',
-                    photo: ''
+                    photo: '',
+                    circles: []
                 };
             }
-            // Nettoyer le flag après utilisation
-            delete this.store.state.returningFromAvatarSelection;
             return PlayerFormView(this.store);
         });
         this.router.register('editPlayer', ({ playerId }) => {
-            // Nettoyer tempAvatarSelection seulement si on ne revient pas de la sélection d'avatar
-            if (!this.store.state.returningFromAvatarSelection) {
-                delete this.store.state.tempAvatarSelection;
+            // Initialiser tempAvatarSelection avec les données du joueur seulement si vide
+            if (!this.store.state.tempAvatarSelection) {
+                const player = this.store.getPlayers().find(p => p.id === playerId);
+                if (player) {
+                    this.store.state.tempAvatarSelection = {
+                        name: player.name,
+                        avatar: player.avatar,
+                        photo: player.photo || '',
+                        circles: [...(player.circles || [])]
+                    };
+                }
             }
-            // Nettoyer le flag après utilisation
-            delete this.store.state.returningFromAvatarSelection;
             return PlayerFormView(this.store, playerId);
         });
         this.router.register('avatarSelection', () => AvatarSelectionView(this.store));
         this.router.register('confirmDeletePlayer', ({ playerId }) => ConfirmDeletePlayerView(this.store, playerId));
+        this.router.register('createCircle', ({ returnPlayerId }) => CircleFormView(this.store, null, returnPlayerId));
+        this.router.register('editCircle', ({ circleId, returnPlayerId }) => CircleFormView(this.store, circleId, returnPlayerId));
         this.router.register('gameSetup', ({ gameId }) => GameSetupView(this.store, gameId));
         this.router.register('addIngamePlayer', () => AddIngamePlayerView(this.store));
         this.router.register('removeIngamePlayer', () => RemoveIngamePlayerView(this.store));
@@ -914,8 +925,20 @@ class App {
         if (name) {
             if (isEditMode) {
                 this.store.updatePlayer(idInput.value, name, avatar, photo);
+                // Appliquer les cercles
+                const player = this.store.state.players.find(p => p.id === idInput.value);
+                if (player && this.store.state.tempAvatarSelection?.circles) {
+                    player.circles = [...this.store.state.tempAvatarSelection.circles];
+                }
             } else {
-                this.store.addPlayer(name, avatar, photo);
+                const playerId = this.store.addPlayer(name, avatar, photo);
+                // Appliquer les cercles temporaires si présents
+                if (this.store.state.tempAvatarSelection?.circles) {
+                    const player = this.store.state.players.find(p => p.id === playerId);
+                    if (player) {
+                        player.circles = [...this.store.state.tempAvatarSelection.circles];
+                    }
+                }
             }
             
             // Nettoyer les données temporaires
@@ -926,6 +949,20 @@ class App {
         } else {
             this.showHelpPopup("Le nom est obligatoire");
         }
+    }
+
+    cancelPlayerForm() {
+        // Nettoyer les données temporaires
+        delete this.store.state.tempAvatarSelection;
+        this.store.save();
+        this.router.back();
+    }
+
+    navigateCreatePlayer() {
+        // Nettoyer les données temporaires avant d'aller sur la page de création
+        delete this.store.state.tempAvatarSelection;
+        this.store.save();
+        this.router.navigate('createPlayer');
     }
 
     // Maintenir la compatibilité avec l'ancien code
@@ -947,11 +984,15 @@ class App {
         const avatarInput = document.getElementById('player-avatar');
         const photoDataInput = document.getElementById('player-photo-data');
         
+        // Récupérer les cercles actuels si on en a (soit existants dans tempAvatarSelection, soit vide)
+        const currentCircles = this.store.state.tempAvatarSelection?.circles || [];
+        
         // Mettre à jour avec les valeurs actuelles du formulaire
         this.store.state.tempAvatarSelection = {
             name: nameInput ? nameInput.value.trim() : '',
             avatar: avatarInput ? avatarInput.value : '👤',
-            photo: photoDataInput ? photoDataInput.value : ''
+            photo: photoDataInput ? photoDataInput.value : '',
+            circles: currentCircles
         };
         this.store.save();
         
@@ -970,15 +1011,14 @@ class App {
             photo = photoDisplay.src;
         }
         
-        // Mettre à jour les données temporaires (préserver le nom qui était déjà sauvegardé)
+        // Mettre à jour les données temporaires (préserver le nom et les cercles qui étaient déjà sauvegardés)
         const existingData = this.store.state.tempAvatarSelection || {};
         this.store.state.tempAvatarSelection = {
             name: existingData.name || '',
             avatar: avatar,
-            photo: photo
+            photo: photo,
+            circles: existingData.circles || []
         };
-        // Définir un flag pour indiquer qu'on retourne de la sélection d'avatar
-        this.store.state.returningFromAvatarSelection = true;
         this.store.save();
         
         // Retourner à la page précédente
@@ -1155,13 +1195,12 @@ class App {
     }
 
     toggleFavoritesFilter() {
-        // Initialize if not exists
-        if (!window.app.homeFilterFavorites) {
-            window.app.homeFilterFavorites = false;
-        }
-        
         // Toggle the filter
-        window.app.homeFilterFavorites = !window.app.homeFilterFavorites;
+        this.homeFilterFavorites = !this.homeFilterFavorites;
+        
+        // Sauvegarder dans le store
+        this.store.state.homeFilterFavorites = this.homeFilterFavorites;
+        this.store.save();
         
         // Re-render the home view without transition
         this.router.history.pop();
@@ -1173,6 +1212,180 @@ class App {
         // Go back 2 levels: confirmation page + edit page, to return to player list
         this.router.back();
         this.router.back();
+    }
+
+    // Circle management methods
+    navigateCircleForm(returnPlayerId = null) {
+        // Sauvegarder les données du formulaire joueur avant de naviguer
+        this.savePlayerFormToTemp();
+        this.router.navigate('createCircle', { returnPlayerId });
+    }
+
+    navigateEditCircle(circleId, returnPlayerId = null) {
+        // Sauvegarder les données du formulaire joueur avant de naviguer
+        this.savePlayerFormToTemp();
+        this.router.navigate('editCircle', { circleId, returnPlayerId });
+    }
+
+    savePlayerFormToTemp() {
+        const nameInput = document.getElementById('player-name');
+        const avatarInput = document.getElementById('player-avatar');
+        const photoDataInput = document.getElementById('player-photo-data');
+        const idInput = document.getElementById('player-id');
+        
+        if (!this.store.state.tempAvatarSelection) {
+            this.store.state.tempAvatarSelection = {};
+        }
+        
+        // Sauvegarder les valeurs actuelles du formulaire
+        this.store.state.tempAvatarSelection.name = nameInput ? nameInput.value.trim() : (this.store.state.tempAvatarSelection.name || '');
+        this.store.state.tempAvatarSelection.avatar = avatarInput ? avatarInput.value : (this.store.state.tempAvatarSelection.avatar || '👤');
+        this.store.state.tempAvatarSelection.photo = photoDataInput ? photoDataInput.value : (this.store.state.tempAvatarSelection.photo || '');
+        
+        // Sauvegarder l'état des cercles cochés
+        const circles = this.store.getCircles();
+        const checkedCircles = [];
+        circles.forEach(c => {
+            const checkbox = document.getElementById(`circle-${c.id}`);
+            if (checkbox && checkbox.checked) {
+                checkedCircles.push(c.id);
+            }
+        });
+        this.store.state.tempAvatarSelection.circles = checkedCircles;
+        
+        this.store.save();
+    }
+
+    submitCircleForm() {
+        const nameInput = document.getElementById('circle-name');
+        const idInput = document.getElementById('circle-id');
+        const returnPlayerInput = document.getElementById('circle-return-player');
+        
+        const isEditMode = idInput && idInput.value;
+        const name = nameInput.value.trim();
+        
+        if (name) {
+            // Check for duplicate name (case-insensitive)
+            const circles = this.store.getCircles();
+            const duplicate = circles.find(c => 
+                c.name.toLowerCase() === name.toLowerCase() && 
+                (!isEditMode || c.id !== idInput.value)
+            );
+            
+            if (duplicate) {
+                this.showHelpPopup("Un cercle avec ce nom existe déjà");
+                return;
+            }
+            
+            if (isEditMode) {
+                this.store.updateCircle(idInput.value, name);
+            } else {
+                this.store.addCircle(name);
+            }
+            
+            // Return to player edit if we came from there
+            if (returnPlayerInput && returnPlayerInput.value) {
+                if (returnPlayerInput.value === 'null') {
+                    // Retour vers création de joueur
+                    this.router.navigate('createPlayer', {}, 'back');
+                } else {
+                    // Retour vers édition de joueur
+                    this.router.navigate('editPlayer', { playerId: returnPlayerInput.value }, 'back');
+                }
+            } else {
+                this.router.back();
+            }
+        } else {
+            this.showHelpPopup("Le nom est obligatoire");
+        }
+    }
+
+    confirmDeleteCircle(circleId, returnPlayerId = null) {
+        const circle = this.store.getCircles().find(c => c.id === circleId);
+        if (!circle) return;
+        
+        if (confirm(`Voulez-vous vraiment supprimer le cercle "${circle.name}" ? Il sera retiré de tous les joueurs.`)) {
+            this.store.deleteCircle(circleId);
+            
+            // Retirer le cercle des sélections temporaires
+            if (this.store.state.tempAvatarSelection?.circles) {
+                this.store.state.tempAvatarSelection.circles = this.store.state.tempAvatarSelection.circles.filter(id => id !== circleId);
+                this.store.save();
+            }
+            
+            // Refresh the view
+            if (returnPlayerId) {
+                if (returnPlayerId === 'null') {
+                    this.router.navigate('createPlayer', {}, 'none');
+                } else {
+                    this.router.navigate('editPlayer', { playerId: returnPlayerId }, 'none');
+                }
+            }
+        }
+    }
+
+    deleteCircle(circleId) {
+        const returnPlayerInput = document.getElementById('circle-return-player');
+        
+        if (confirm("Voulez-vous vraiment supprimer ce cercle ? Il sera retiré de tous les joueurs.")) {
+            this.store.deleteCircle(circleId);
+            
+            // Retirer le cercle des sélections temporaires
+            if (this.store.state.tempAvatarSelection?.circles) {
+                this.store.state.tempAvatarSelection.circles = this.store.state.tempAvatarSelection.circles.filter(id => id !== circleId);
+                this.store.save();
+            }
+            
+            // Return to player edit if we came from there
+            if (returnPlayerInput && returnPlayerInput.value) {
+                if (returnPlayerInput.value === 'null') {
+                    this.router.navigate('createPlayer', {}, 'back');
+                } else {
+                    this.router.navigate('editPlayer', { playerId: returnPlayerInput.value }, 'back');
+                }
+            } else {
+                this.router.back();
+            }
+        }
+    }
+
+    togglePlayerCircle(playerId, circleId) {
+        // Toujours utiliser tempAvatarSelection pour gérer les cercles en édition
+        const nameInput = document.getElementById('player-name');
+        const avatarInput = document.getElementById('player-avatar');
+        const photoDataInput = document.getElementById('player-photo-data');
+        
+        if (!this.store.state.tempAvatarSelection) {
+            this.store.state.tempAvatarSelection = {};
+        }
+        if (!this.store.state.tempAvatarSelection.circles) {
+            this.store.state.tempAvatarSelection.circles = [];
+        }
+        
+        // Sauvegarder les valeurs du formulaire
+        this.store.state.tempAvatarSelection.name = nameInput ? nameInput.value.trim() : '';
+        this.store.state.tempAvatarSelection.avatar = avatarInput ? avatarInput.value : '👤';
+        this.store.state.tempAvatarSelection.photo = photoDataInput ? photoDataInput.value : '';
+        
+        const index = this.store.state.tempAvatarSelection.circles.indexOf(circleId);
+        if (index > -1) {
+            this.store.state.tempAvatarSelection.circles.splice(index, 1);
+        } else {
+            this.store.state.tempAvatarSelection.circles.push(circleId);
+        }
+        this.store.save();
+    }
+
+    filterByCircle(circleId, gameId) {
+        this.selectedCircleFilter = circleId;
+        
+        // Sauvegarder dans le store
+        this.store.state.playerCircleFilter = circleId;
+        this.store.save();
+        
+        // Re-render the player select view without adding to history
+        this.router.history.pop();
+        this.router.navigate('playerSelect', { gameId }, 'none');
     }
 
     addRound() {
