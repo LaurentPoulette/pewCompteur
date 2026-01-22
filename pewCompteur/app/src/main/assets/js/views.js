@@ -1101,32 +1101,35 @@ export const OptionsView = (store) => `
         <h1>Options</h1>
     </header>
     
-    <div style="margin-bottom:20px;">
-        <h3 style="margin-bottom:15px; color:#333;">Navigation</h3>
-        <button onclick="window.app.router.navigate('statistics')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
-            Statistiques
+    <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+        <button onclick="window.app.router.navigate('statistics')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+            <span>Statistiques</span>
         </button>
-        <button onclick="window.app.router.navigate('about')" class="primary-button" style="width:100%; padding:15px; font-size:1em;">
-            A propos
+        
+        <button onclick="window.app.router.navigate('exportGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Exporter jeux</span>
         </button>
+        <button onclick="window.app.router.navigate('importGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:30px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>Importer jeux</span>
+        </button>
+        
+        <div>
+            <h3 style="margin-bottom:15px; color:#333;">Paramètres</h3>
+            <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
+                <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+                <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>
+            </label>
+        </div>
     </div>
     
-    <div style="margin-top:30px;">
-        <h3 style="margin-bottom:15px; color:#333;">Import / Export</h3>
-        <button onclick="window.app.router.navigate('exportGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
-            Exporter jeux
+    <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
+        <button onclick="window.app.router.navigate('about')" class="primary-button" style="width:100%; padding:15px; font-size:1em; display:flex; align-items:center; justify-content:center; gap:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>A propos</span>
         </button>
-        <button onclick="window.app.router.navigate('importGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em;">
-            Importer jeux
-        </button>
-    </div>
-    
-    <div style="margin-top:30px;">
-        <h3 style="margin-bottom:15px; color:#333;">Statistiques</h3>
-        <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer;">
-            <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
-            <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>
-        </label>
     </div>
 `;
 
@@ -1188,8 +1191,24 @@ export const StatisticsView = (store) => {
         };
     }
     const state = window.app.statsState;
-    const history = (store.state.history || []).sort((a, b) => b.startTime - a.startTime);
-    const games = store.getAllGames();
+    const hideDeletedGames = store.state.hideDeletedGamesInStats || false;
+    
+    // Filtrer les jeux supprimés si l'option est activée
+    let games = store.getAllGames();
+    if (hideDeletedGames) {
+        games = games.filter(g => !g.deleted);
+    }
+    
+    // Créer un Set des IDs de jeux visibles pour filtrer l'historique
+    const visibleGameIds = new Set(games.map(g => g.id));
+    
+    // Filtrer l'historique pour exclure les parties de jeux supprimés
+    let history = (store.state.history || []);
+    if (hideDeletedGames) {
+        history = history.filter(h => visibleGameIds.has(h.gameId));
+    }
+    history = history.sort((a, b) => b.startTime - a.startTime);
+    
     const players = store.getAllPlayers();
 
     // ----------------------
@@ -1222,7 +1241,7 @@ export const StatisticsView = (store) => {
                 <table style="width:100%; border-collapse:collapse;">
                     ${statsByGame.map(g => `
                         <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:10px; border-left: 4px solid ${g.color}">${g.name}</td>
+                            <td style="padding:10px;">${g.name}</td>
                             <td style="padding:10px; text-align:right; font-weight:bold;">${g.count}</td>
                         </tr>
                     `).join('')}
@@ -1431,7 +1450,7 @@ export const StatisticsView = (store) => {
                  <label style="font-weight:bold; font-size:0.9em; display:block; margin-bottom:5px;">Jeu</label>
                  <select onchange="window.app.updateStatisticsState('game', this.value)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; background:white;">
                     <option value="all">Tous les jeux</option>
-                    ${games.map(g => `<option value="${g.id}" ${filterGame === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
+                    ${games.filter(g => !hideDeletedGames || !g.deleted).map(g => `<option value="${g.id}" ${filterGame === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
                 </select>
             </div>
             <div>
