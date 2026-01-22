@@ -417,6 +417,7 @@ class App {
             this.selectedPlayers.push(playerId);
         }
         this.updateSelectedPlayersUI();
+        this.updateNextButtonCount();
     }
 
     movePlayer(index, direction) {
@@ -457,6 +458,14 @@ class App {
         }).join('');
 
         this.initDragAndDrop();
+    }
+
+    updateNextButtonCount() {
+        const nextButton = document.getElementById('next-button');
+        if (nextButton) {
+            const count = this.selectedPlayers.length;
+            nextButton.textContent = `Suivant (${count} joueur${count > 1 ? 's' : ''})`;
+        }
     }
 
     initDragAndDrop() {
@@ -1498,6 +1507,15 @@ class App {
 
     filterByCircle(circleId, gameId) {
         this.selectedCircleFilter = circleId;
+        
+        // Désélectionner les joueurs qui ne sont pas dans le cercle sélectionné
+        if (circleId !== 'all') {
+            const allPlayers = this.store.getPlayers();
+            this.selectedPlayers = this.selectedPlayers.filter(playerId => {
+                const player = allPlayers.find(p => p.id === playerId);
+                return player && player.circles && player.circles.includes(circleId);
+            });
+        }
         
         // Sauvegarder dans le store
         this.store.state.playerCircleFilter = circleId;

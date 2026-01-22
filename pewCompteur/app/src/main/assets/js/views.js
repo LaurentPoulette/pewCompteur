@@ -62,19 +62,27 @@ export const PlayerSelectView = (store, gameId) => {
     let players = allPlayers;
     if (selectedCircleFilter !== 'all') {
         players = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
+        
+        // Filtrer aussi les joueurs sélectionnés pour ne garder que ceux du cercle
+        if (window.app && window.app.selectedPlayers) {
+            window.app.selectedPlayers = window.app.selectedPlayers.filter(playerId => {
+                const player = allPlayers.find(p => p.id === playerId);
+                return player && player.circles && player.circles.includes(selectedCircleFilter);
+            });
+        }
     }
     
-    let subtitle = "Sélectionnez les joueurs";
+    let subtitle = "Choisir les joueurs";
     if (game && game.minPlayers && game.maxPlayers) {
         if (game.minPlayers === game.maxPlayers) {
-            subtitle = `Sélectionnez ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+            subtitle = `Choisir ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
         } else {
-            subtitle = `Sélectionnez entre ${game.minPlayers} et ${game.maxPlayers} joueurs`;
+            subtitle = `Choisir entre ${game.minPlayers} et ${game.maxPlayers} joueurs`;
         }
     } else if (game && game.minPlayers) {
-        subtitle = `Sélectionnez au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}`;
+        subtitle = `Choisir au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}`;
     } else if (game && game.maxPlayers) {
-        subtitle = `Sélectionnez au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+        subtitle = `Choisir au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
     }
     
     return `
@@ -128,13 +136,17 @@ export const PlayerSelectView = (store, gameId) => {
         </div>
         
         <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
-            <button onclick="window.app.navigatePlayerOrder('${gameId}')" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant</button>
+            <button id="next-button" onclick="window.app.navigatePlayerOrder('${gameId}')" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant (${window.app.selectedPlayers.length} joueur${window.app.selectedPlayers.length > 1 ? 's' : ''})</button>
         </div>
         <style>
             .player-card.selected { border: 2px solid var(--primary-color); background-color: #e0f2fe; }
             .selected-avatar { text-shadow: 0 0 3px var(--primary-color); }
             .selected-photo { border: 2px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
         </style>
+        <script>
+            // Mettre à jour le compteur au chargement de la vue
+            setTimeout(() => window.app.updateNextButtonCount(), 50);
+        </script>
 `;
 };
 
