@@ -1826,26 +1826,21 @@ class App {
             this.store.save();
         }
 
-        // Si on vient de GameOver, retourner à la partie, sinon back()
-        if (this.comingFromGameOver) {
-            this.comingFromGameOver = false;
+        // Vérifier si le dernier tour est complet, si oui créer un nouveau tour
+        if (session && session.history.length > 0) {
+            const lastRound = session.history[session.history.length - 1];
+            const isLastRoundComplete = session.players.every(p => 
+                lastRound[p.id] !== undefined && lastRound[p.id] !== ""
+            );
             
-            // Vérifier si le dernier tour est complet, si oui créer un nouveau tour
-            if (session && session.history.length > 0) {
-                const lastRound = session.history[session.history.length - 1];
-                const isLastRoundComplete = session.players.every(p => 
-                    lastRound[p.id] !== undefined && lastRound[p.id] !== ""
-                );
-                
-                if (isLastRoundComplete) {
-                    this.store.addEmptyRound();
-                }
+            if (isLastRoundComplete) {
+                this.store.addEmptyRound();
             }
-            
-            this.router.navigate('game');
-        } else {
-            this.router.back();
         }
+        
+        // Toujours retourner à la page de saisie des scores
+        this.comingFromGameOver = false;
+        this.router.navigate('game');
     }
 
     navigateReorderPlayers() {
@@ -1855,7 +1850,7 @@ class App {
 
     cancelReorderIngame() {
         this.reorderIngameState = null;
-        this.router.back();
+        this.router.navigate('gameActions');
     }
 
     saveReorderIngame() {
@@ -1863,7 +1858,7 @@ class App {
             this.store.reorderSessionPlayers(this.reorderIngameState);
         }
         this.reorderIngameState = null;
-        this.router.back();
+        this.router.navigate('game');
     }
 
     updateReorderIngameUI() {

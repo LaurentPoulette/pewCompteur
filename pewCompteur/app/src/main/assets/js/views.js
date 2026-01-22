@@ -110,13 +110,13 @@ export const PlayerSelectView = (store, gameId) => {
         const isPhotoSelected = p.photo && isSelected;
 
         return `
-                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" data-player-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:10px;">
-                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:5px;">
+                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" data-player-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
                         <div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
                              ${p.photo ? `<img src="${p.photo}" class="${isPhotoSelected ? 'selected-photo' : ''}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span class="${isAvatarSelected ? 'selected-avatar' : ''}" style="font-size:1.8em;">${p.avatar}</span>`}
                         </div>
                     </div>
-                    <div style="text-align:center;">
+                    <div style="text-align:center; width:100%;">
                         <h3 style="margin:0; font-size:1em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</h3>
                     </div>
                 </div>
@@ -236,11 +236,11 @@ export const ActiveGameView = (store) => {
             
             let limitText = '';
             if (effectiveRounds && effectiveTarget) {
-                limitText = `Limiter à ${effectiveTarget} points ou ${effectiveRounds} tours`;
+                limitText = `Limite à ${effectiveTarget} points ou ${effectiveRounds} tours`;
             } else if (effectiveTarget) {
-                limitText = `Limiter à ${effectiveTarget} points`;
+                limitText = `Limite à ${effectiveTarget} points`;
             } else if (effectiveRounds) {
-                limitText = `Limiter à ${effectiveRounds} tours`;
+                limitText = `Limite à ${effectiveRounds} tours`;
             }
             
             if (limitText) {
@@ -849,9 +849,11 @@ export const AddIngamePlayerView = (store) => {
                             </div>
 
                             ${availablePlayers.map(p => `
-            <div class="card" onclick="window.app.addPlayerToGame('${p.id}')" style="cursor:pointer; text-align:center;">
-                <span style="font-size:2em;">${p.avatar}</span>
-                <h3>${p.name}</h3>
+            <div class="card" onclick="window.app.addPlayerToGame('${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
+                <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
+                    ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${p.avatar}</span>`}
+                </div>
+                <h3 style="margin:0; font-size:1em; text-align:center;">${p.name}</h3>
             </div>
         `).join('')}
                         </div>
@@ -879,9 +881,11 @@ export const RemoveIngamePlayerView = (store) => {
                             <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Selectionnez le joueur à supprimer</h3>
                             <div class="grid">
                                 ${players.map(p => `
-                <div class="card" onclick="window.app.router.navigate('confirmRemoveIngamePlayer', { playerId: '${p.id}' })" style="cursor:pointer; text-align:center;">
-                    <span style="font-size:2em;">${p.avatar}</span>
-                    <h3>${p.name}</h3>
+                <div class="card" onclick="window.app.router.navigate('confirmRemoveIngamePlayer', { playerId: '${p.id}' })" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
+                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
+                        ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${p.avatar}</span>`}
+                    </div>
+                    <h3 style="margin:0; font-size:1em; text-align:center;">${p.name}</h3>
                 </div>
             `).join('')}
                             </div>
@@ -917,7 +921,7 @@ export const ReorderIngamePlayersView = (store) => {
 
     return `
                         <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.cancelReorderIngame()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <button onclick="window.app.router.navigate('gameActions')" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
                             <h1>Joueurs</h1>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
@@ -992,7 +996,7 @@ export const ConfirmCancelGameView = (store) => {
                             <p style="color:#666; margin-bottom:30px;">Attention, si vous annulez, <strong>aucune donnée ne sera sauvegardée</strong>. L'historique de cette partie sera perdu.</p>
 
                             <button onclick="window.app.executeCancelGame()" style="width:100%; background-color:#ef4444; margin-bottom:15px; padding:15px;">Annuler sans sauvegarder</button>
-                            <button onclick="window.app.router.back()" style="width:100%; background-color:#ddd; color:#333; padding:15px;">Retour au jeu</button>
+                            <button onclick="window.app.router.navigate('game')" style="width:100%; background-color:#ddd; color:#333; padding:15px;">Retour au jeu</button>
                         </div>
                     </div>
                     `;
@@ -1120,33 +1124,43 @@ export const GameActionsView = (store) => {
 
     return `
     <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <button onclick="window.app.router.navigate('game')" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
         <h1>Actions</h1>
     </header>
     
     <div style="margin-bottom:20px;">
+        <h3 style="margin-bottom:15px; color:#333;">Partie</h3>
+        <button onclick="window.app.navigateEndGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Terminer la partie</span>
+        </button>
+        <button onclick="window.app.navigateCancelGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; background:#dc3545; border-color:#dc3545; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Annuler la partie</span>
+        </button>
+    </div>
+    
+    <div style="margin-bottom:20px;">
         <h3 style="margin-bottom:15px; color:#333;">Joueurs</h3>
-        <button onclick="window.app.navigateAddPlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
-            Ajouter un joueur
+        <button onclick="window.app.navigateAddPlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <span>Ajouter un joueur</span>
         </button>
-        <button onclick="window.app.navigateRemovePlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
-            Supprimer un joueur
+        <button onclick="window.app.navigateRemovePlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <span>Supprimer un joueur</span>
         </button>
-        <button onclick="window.app.navigateReorderPlayers()" class="primary-button" style="width:100%; padding:15px; font-size:1em;">
-            Ordre des joueurs
+        <button onclick="window.app.navigateReorderPlayers()" class="primary-button" style="width:100%; padding:15px; font-size:1em; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
+            <span>Ordre des joueurs</span>
         </button>
     </div>
     
     <div style="margin-top:30px;">
-        <h3 style="margin-bottom:15px; color:#333;">Partie</h3>
-        <button onclick="window.app.navigateUpdateLimits()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
-            Modifier les limites
-        </button>
-        <button onclick="window.app.navigateEndGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
-            Terminer la partie
-        </button>
-        <button onclick="window.app.navigateCancelGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; background:#dc3545; border-color:#dc3545;">
-            Annuler la partie
+        <h3 style="margin-bottom:15px; color:#333;">Paramètres</h3>
+        <button onclick="window.app.navigateUpdateLimits()" class="primary-button" style="width:100%; padding:15px; font-size:1em; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4z"/></svg>
+            <span>Modifier les limites</span>
         </button>
     </div>
 `;
