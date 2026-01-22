@@ -251,7 +251,7 @@ select {
 
 /* Refactored Table Styles */
 .history-table .history-header {
-    padding: 5px;
+    padding: 5px 5px 0 5px;
 }
 
 .history-table .history-header-check {

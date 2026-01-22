@@ -272,14 +272,14 @@ export const ActiveGameView = (store) => {
 
         <div id="game-over-banner-top" style="display:none;"></div>
         
-        <div style="flex:1; overflow-y:auto; padding-bottom: 20px;">
-            <div class="card" style="overflow-x: auto; max-width: 100%;">
-                <table class="history-table" style="text-align: center;">
-                    <thead style="position: sticky; top: 0; background: var(--surface-color); z-index: 1;">
-                        <tr>
-                            <th class="history-header">#</th>
+        <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="card" style="flex:1; overflow-y:auto; overflow-x:auto; max-width:100%;">
+                <table class="history-table" style="text-align: center; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr style="background: #f8f9fa;">
+                            <th class="history-header" style="background: #f8f9fa; padding: 5px; border-bottom: none;">#</th>
                             ${tablePlayers.map(p => `
-                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="cursor:pointer;">
+                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="cursor:pointer; background: #f8f9fa; padding: 5px; border-bottom: none;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
@@ -290,12 +290,12 @@ export const ActiveGameView = (store) => {
                                 </th>
                             `).join('')}
                         </tr>
-                        <tr style="background: linear-gradient(135deg, #4facfe20 0%, #00f2fe20 100%); font-weight:bold;">
-                            <td class="history-header" onclick="${gameOverReason ? '' : 'window.app.addRound()'}" style="${gameOverReason ? '' : 'cursor:pointer;'}" title="${gameOverReason ? '' : 'Nouveau tour'}">
-                                ${gameOverReason ? '' : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>'}
+                        <tr style="background: #e3f2fd; font-weight:bold;">
+                            <td class="history-header" onclick="${gameOverReason ? '' : 'window.app.addRound()'}" style="${gameOverReason ? '' : 'cursor:pointer;'} background: #e3f2fd; padding: 5px; border-top: none;" title="${gameOverReason ? '' : 'Nouveau tour'}">
+                                ${gameOverReason ? '' : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>'}
                             </td>
                             ${tablePlayers.map(p => `
-                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color);">${p.score}</td>
+                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color); background: #e3f2fd; padding: 5px; border-top: none;">${p.score}</td>
                             `).join('')}
                         </tr>
                     </thead>
