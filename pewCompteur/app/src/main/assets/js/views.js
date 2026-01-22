@@ -178,27 +178,6 @@ export const ActiveGameView = (store) => {
         return { ...sp, ...info };
     });
 
-    // Check Game End
-    let gameOverReason = null;
-    const currentRound = session.history[session.history.length - 1];
-    const isRoundComplete = currentRound && players.every(p => currentRound[p.id] !== undefined && currentRound[p.id] !== "");
-
-    // Determine effective limits (session config overrides game defaults if present)
-    const effectiveRounds = (session.config && session.config.rounds) !== undefined ? session.config.rounds : game.rounds;
-    const effectiveTarget = (session.config && session.config.target) !== undefined ? session.config.target : game.target;
-
-    if (isRoundComplete) {
-        if (effectiveRounds && session.history.length >= effectiveRounds) {
-            gameOverReason = "Limite de tours atteinte";
-        } else if (effectiveTarget && effectiveTarget > 0) {
-            // Check if anyone reached the target
-            // Depending on winCondition (highest/lowest), logic might differ, 
-            // but usually 'target' is a threshold.
-            const anyReached = players.some(p => p.score >= effectiveTarget);
-            if (anyReached) gameOverReason = "Limite de score atteinte";
-        }
-    }
-
     // Players for columns (fixed order)
     const tablePlayers = [...players];
 
@@ -220,7 +199,7 @@ export const ActiveGameView = (store) => {
 
             return `
                             <td class="leaderboard-cell">
-                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="flex-direction:column; justify-content:center; cursor:pointer;">
+                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="flex-direction:column; justify-content:center; cursor:pointer;">
                                     <div style="margin-bottom:2px; font-weight:bold; font-size:0.9em;">
                                         <span class="leaderboard-rank">${i + 1}</span>:${p.score}
                                     </div>
@@ -269,8 +248,6 @@ export const ActiveGameView = (store) => {
             }
             return '';
         })()}
-
-        <div id="game-over-banner-top" style="display:none;"></div>
         
         <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
             <div class="card" style="flex:1; overflow-y:auto; overflow-x:auto; max-width:100%;">
@@ -279,7 +256,7 @@ export const ActiveGameView = (store) => {
                         <tr style="background: #f8f9fa;">
                             <th class="history-header" style="background: #f8f9fa; padding: 5px; border-bottom: none;">#</th>
                             ${tablePlayers.map(p => `
-                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="cursor:pointer; background: #f8f9fa; padding: 5px; border-bottom: none;">
+                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: #f8f9fa; padding: 5px; border-bottom: none;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
@@ -291,8 +268,8 @@ export const ActiveGameView = (store) => {
                             `).join('')}
                         </tr>
                         <tr style="background: #e3f2fd; font-weight:bold;">
-                            <td class="history-header" onclick="${gameOverReason ? '' : 'window.app.addRound()'}" style="${gameOverReason ? '' : 'cursor:pointer;'} background: #e3f2fd; padding: 5px; border-top: none;" title="${gameOverReason ? '' : 'Nouveau tour'}">
-                                ${gameOverReason ? '' : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>'}
+                            <td class="history-header" onclick="window.app.addRound()" style="cursor:pointer; background: #e3f2fd; padding: 5px; border-top: none;" title="Nouveau tour">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                             </td>
                             ${tablePlayers.map(p => `
                                 <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color); background: #e3f2fd; padding: 5px; border-top: none;">${p.score}</td>
@@ -329,18 +306,18 @@ export const ActiveGameView = (store) => {
                                                class="win-radio"
                                                ${isChecked ? 'checked' : ''}
                                                onchange="window.app.updateWinnerForRound('${roundIndex}', '${p.id}')"
-                                               onfocus="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"
+                                               onfocus="window.app.showPlayerNamePopupById('${p.id}')"
                                                style="width:20px; height:20px; cursor:pointer;">
                                     </td>
                                         `;
                                     } else {
                                         return `
                                     <td class="history-cell-score">
-                                        <input type="number" 
+                                        <input type="text" 
                                                class="score-input"
                                                value="${round[p.id] !== undefined ? round[p.id] : ''}" 
-                                               onchange="window.app.updateRound('${roundIndex}', '${p.id}', this.value)"
-                                               onfocus="this.select(); window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"
+                                               readonly
+                                               onclick="window.app.showNumericKeypadById('${roundIndex}', '${p.id}', this.value)"
                                                placeholder="-">
                                     </td>
                                         `;
@@ -354,21 +331,8 @@ export const ActiveGameView = (store) => {
 
         </div >
 
-    <div id="sticky-leaderboard">
-        <div style="padding:10px 10px 0 10px;">
-            <div id="game-over-banner-bottom" style="display:${gameOverReason ? 'block' : 'none'};">
-                <div style="background-color:var(--primary-color); color:white; padding:15px; border-radius:8px; margin-bottom:10px; text-align:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="font-size:1.2em; font-weight:bold;">🏁 Partie Terminée</div>
-                    <div style="opacity:0.9; margin-bottom:10px;">${gameOverReason}</div>
-                    <div style="display:flex; justify-content:center; gap:10px;">
-                        <button onclick="window.app.navigateUpdateLimits()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:8px 12px; font-size:0.9rem; border-radius:4px; flex:1;">Continuer</button>
-                        <button onclick="window.app.navigateEndGame()" style="background:white; color:var(--primary-color); border:none; padding:8px 12px; font-size:0.9rem; border-radius:4px; font-weight:bold; flex:1;">Terminer</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h3 style="margin: 20px 0 10px 0; padding: 10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 8px; text-align: center; font-size: 1.1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Classement</h3>
+    <div id="sticky-leaderboard" style="padding:0; margin:0; border-radius:0;">
+        <h3 style="margin: 10px 0 5px 0; padding: 8px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 8px; text-align: center; font-size: 1.1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Classement</h3>
         
         <div id="leaderboard-content" class="sticky-leaderboard-content">
             ${getLeaderboardHTML()}
@@ -377,6 +341,32 @@ export const ActiveGameView = (store) => {
             </div >
         </div >
     </div >
+    
+    <!-- Pavé numérique personnalisé -->
+    <div id="numeric-keypad" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target === this) window.app.closeNumericKeypad()">
+        <div style="background:white; border-radius:12px; padding:20px; max-width:320px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+            <div id="keypad-player-name" style="text-align:center; font-size:1.1em; font-weight:bold; margin-bottom:10px; color:#333;"></div>
+            <div id="keypad-display" style="background:#f0f0f0; padding:15px; border-radius:8px; text-align:center; font-size:2em; font-weight:bold; margin-bottom:15px; min-height:60px; display:flex; align-items:center; justify-content:center; color:#333;">0</div>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:15px;">
+                <button onclick="window.app.keypadInput('7')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">7</button>
+                <button onclick="window.app.keypadInput('8')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">8</button>
+                <button onclick="window.app.keypadInput('9')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">9</button>
+                <button onclick="window.app.keypadInput('4')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">4</button>
+                <button onclick="window.app.keypadInput('5')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">5</button>
+                <button onclick="window.app.keypadInput('6')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">6</button>
+                <button onclick="window.app.keypadInput('1')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">1</button>
+                <button onclick="window.app.keypadInput('2')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">2</button>
+                <button onclick="window.app.keypadInput('3')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">3</button>
+                <button onclick="window.app.keypadToggleSign()" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">+/-</button>
+                <button onclick="window.app.keypadInput('0')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">0</button>
+                <button onclick="window.app.keypadBackspace()" style="padding:15px; font-size:1.2em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="window.app.closeNumericKeypad()" style="flex:1; padding:15px; font-size:1.1em; border:1px solid #ddd; border-radius:8px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Annuler</button>
+                <button onclick="window.app.validateKeypadInput()" style="flex:1; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:var(--primary-color); color:white; cursor:pointer; font-weight:bold;">Valider</button>
+            </div>
+        </div>
+    </div>
     `;
 };
 export const GameFormView = (store, gameId) => {
@@ -1014,6 +1004,7 @@ export const GameOverView = (store) => {
 
     const game = store.getGames().find(g => g.id === session.gameId);
     const isLowestWin = game && game.winCondition === 'lowest';
+    const gameOverReason = session.gameOverReason || 'Partie terminée';
 
     // Sort players
     const players = session.players.map(sp => {
@@ -1028,7 +1019,7 @@ export const GameOverView = (store) => {
                     <div class="gameover-container">
                         <div class="gameover-icon">🏆</div>
                         <h1 class="gameover-title">${winner.name} a gagné !</h1>
-                        <p class="gameover-subtitle">Partie terminée</p>
+                        <p class="gameover-subtitle">${gameOverReason}</p>
 
                         <div class="card">
                             <h3 class="gameover-section-title">Classement Final</h3>
@@ -1063,7 +1054,13 @@ export const GameOverView = (store) => {
                             </table>
                         </div>
 
-                        <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem;">Retour à l'accueil</button>
+                        ${gameOverReason === "Terminé manuellement" ? `
+                            <button onclick="window.app.continueGame()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem; background-color:#4caf50;">Continuer la partie</button>
+                            <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:10px; padding:15px; font-size:1.1rem; background-color:#ddd; color:#333;">Retour à l'accueil</button>
+                        ` : `
+                            <button onclick="window.app.navigateUpdateLimitsFromGameOver()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem; background-color:var(--primary-color);">Modifier les limites</button>
+                            <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:10px; padding:15px; font-size:1.1rem;">Retour à l'accueil</button>
+                        `}
                     </div>
                     </div>
                     `;
