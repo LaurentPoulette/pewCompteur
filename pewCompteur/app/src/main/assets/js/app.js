@@ -1412,6 +1412,14 @@ class App {
         const session = this.store.restoreSession();
         const game = this.store.getGames().find(g => g.id === session.gameId);
 
+        // Update total scores in header row
+        session.players.forEach(sp => {
+            const scoreCell = document.querySelector(`td.history-header[data-player-id="${sp.id}"]`);
+            if (scoreCell) {
+                scoreCell.textContent = sp.score;
+            }
+        });
+
         // Update Check Value in Round Column if exists
         const checkValSpan = document.getElementById(`check-val-${roundIndex}`);
         const hasFixedScore = game && (game.fixedRoundScore !== null && game.fixedRoundScore !== undefined && game.fixedRoundScore !== 0);

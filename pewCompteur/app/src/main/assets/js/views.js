@@ -241,7 +241,7 @@ export const ActiveGameView = (store) => {
     return `
     <div style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; z-index:1001; position:relative; flex-shrink:0;">
-            <h1 style="margin:0;">Partie en cours</h1>
+            <h1 style="margin:0;">${session.title}</h1>
             <button onclick="window.app.router.navigate('gameActions')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px;" title="Actions">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -251,13 +251,24 @@ export const ActiveGameView = (store) => {
             </button>
         </header>
 
-        <div style="margin-bottom: 15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0;">
-            <h3 style="margin:0 0 8px 0; font-size:1.2rem; text-align:center;">${session.title}</h3>
-            <div style="display:flex; justify-content:center; gap:15px; font-size:0.95em;">
-                <span><span style="font-size:1.2em;">🔄</span> ${((session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds) || '∞'} tours</span>
-                <span><span style="font-size:1.2em;">🔢</span> ${((session.config && session.config.target !== undefined) ? session.config.target : game.target) || '∞'} points</span>
-            </div>
-        </div>
+        ${(() => {
+            const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
+            const effectiveTarget = (session.config && session.config.target !== undefined) ? session.config.target : game.target;
+            
+            let limitText = '';
+            if (effectiveRounds && effectiveTarget) {
+                limitText = `Limiter à ${effectiveTarget} points ou ${effectiveRounds} tours`;
+            } else if (effectiveTarget) {
+                limitText = `Limiter à ${effectiveTarget} points`;
+            } else if (effectiveRounds) {
+                limitText = `Limiter à ${effectiveRounds} tours`;
+            }
+            
+            if (limitText) {
+                return `<div style="margin-bottom: 15px; padding:10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0; text-align:center; font-size:0.95em;">${limitText}</div>`;
+            }
+            return '';
+        })()}
 
         <div id="game-over-banner-top" style="display:none;"></div>
         
@@ -277,6 +288,14 @@ export const ActiveGameView = (store) => {
                                         <span class="name-initial">${p.name.charAt(0).toUpperCase()}</span>
                                     </div>
                                 </th>
+                            `).join('')}
+                        </tr>
+                        <tr style="background: linear-gradient(135deg, #4facfe20 0%, #00f2fe20 100%); font-weight:bold;">
+                            <td class="history-header" onclick="${gameOverReason ? '' : 'window.app.addRound()'}" style="${gameOverReason ? '' : 'cursor:pointer;'}" title="${gameOverReason ? '' : 'Nouveau tour'}">
+                                ${gameOverReason ? '' : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>'}
+                            </td>
+                            ${tablePlayers.map(p => `
+                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color);">${p.score}</td>
                             `).join('')}
                         </tr>
                     </thead>
@@ -347,9 +366,10 @@ export const ActiveGameView = (store) => {
                     </div>
                 </div>
             </div>
-            <button id="btn-new-round" onclick="window.app.addRound()" style="width:100%; padding: 12px; font-size: 1.1rem; margin-bottom:10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:${gameOverReason ? 'none' : 'block'};">+ Nouveau Tour</button>
         </div>
 
+        <h3 style="margin: 20px 0 10px 0; padding: 10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 8px; text-align: center; font-size: 1.1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Classement</h3>
+        
         <div id="leaderboard-content" class="sticky-leaderboard-content">
             ${getLeaderboardHTML()}
         </div>
