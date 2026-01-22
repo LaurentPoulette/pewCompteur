@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, OptionsView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, OptionsView, GameActionsView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -72,6 +72,7 @@ class App {
         this.router.register('gameOver', () => GameOverView(this.store));
         this.router.register('about', () => AboutView());
         this.router.register('options', () => OptionsView(this.store));
+        this.router.register('gameActions', () => GameActionsView(this.store));
         this.router.register('statistics', () => StatisticsView(this.store));
         this.router.register('editGame', ({ gameId }) => GameFormView(this.store, gameId));
         this.router.register('confirmDeleteGame', ({ gameId }) => ConfirmDeleteGameView(this.store, gameId));

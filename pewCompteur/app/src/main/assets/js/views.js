@@ -240,37 +240,26 @@ export const ActiveGameView = (store) => {
 
     return `
     <div style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; z-index:1001; position:relative; flex-shrink:0;">
-
-            <div style="display:flex; align-items:center; gap:10px; overflow:hidden; flex:1;">
-
-                <h3 style="margin:0; font-size:1.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:1;">${session.title}</h3>
-                
-                <div style="font-size:0.9em; color:#666; display:flex; align-items:center; gap:8px; white-space:nowrap; flex-shrink:0;">
-                    <span style="border-left:1px solid #ccc; padding-left:8px;"><span style="font-size:1.2em;">🔄</span> ${((session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds) || '∞'}</span>
-                    <span><span style="font-size:1.2em;">🔢</span> ${((session.config && session.config.target !== undefined) ? session.config.target : game.target) || '∞'}</span>
-                </div>
-            </div>
-            <button onclick="document.getElementById('game-menu').classList.toggle('active')" style="background:none; color:var(--text-color); padding:0; font-size:1.8rem; margin-left:10px;">&#9776;</button> 
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; z-index:1001; position:relative; flex-shrink:0;">
+            <h1 style="margin:0;">Partie en cours</h1>
+            <button onclick="window.app.router.navigate('gameActions')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px;" title="Actions">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </header>
 
-        <div id="game-over-banner-top" style="display:none;"></div>
-
-        <!--Menu dropdown-->
-        <div id="game-menu" class="menu-overlay" onclick="if(event.target === this) this.classList.remove('active')">
-            <div class="menu-content">
-                <div style="font-size:0.8em; color:#999; margin:5px 10px; font-weight:bold;">JOUEUR</div>
-                <button class="menu-item" onclick="window.app.navigateAddPlayerInGame()">Ajouter un joueur</button>
-                <button class="menu-item" onclick="window.app.navigateRemovePlayerInGame()">Supprimer un joueur</button>
-                <button class="menu-item" onclick="window.app.navigateReorderPlayers()">Ordre des joueurs</button>
-                
-                <div style="height:1px; background:#eee; margin:5px 0;"></div>
-                <div style="font-size:0.8em; color:#999; margin:5px 10px; font-weight:bold;">PARTIE</div>
-                <button class="menu-item" onclick="window.app.navigateUpdateLimits()">Modifier les limites</button>
-                <button class="menu-item" onclick="window.app.navigateEndGame()">Terminer la partie</button>
-                <button class="menu-item danger" onclick="window.app.navigateCancelGame()">Annuler la partie</button>
+        <div style="margin-bottom: 15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0;">
+            <h3 style="margin:0 0 8px 0; font-size:1.2rem; text-align:center;">${session.title}</h3>
+            <div style="display:flex; justify-content:center; gap:15px; font-size:0.95em;">
+                <span><span style="font-size:1.2em;">🔄</span> ${((session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds) || '∞'} tours</span>
+                <span><span style="font-size:1.2em;">🔢</span> ${((session.config && session.config.target !== undefined) ? session.config.target : game.target) || '∞'} points</span>
             </div>
         </div>
+
+        <div id="game-over-banner-top" style="display:none;"></div>
         
         <div style="flex:1; overflow-y:auto; padding-bottom: 20px;">
             <div class="card" style="overflow-x: auto; max-width: 100%;">
@@ -1107,6 +1096,44 @@ export const OptionsView = (store) => `
         </label>
     </div>
 `;
+
+export const GameActionsView = (store) => {
+    const session = store.restoreSession();
+    if (!session) return `<div class="card">Erreur: Pas de session active.</div>`;
+
+    return `
+    <header style="display:flex; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1>Actions</h1>
+    </header>
+    
+    <div style="margin-bottom:20px;">
+        <h3 style="margin-bottom:15px; color:#333;">Joueurs</h3>
+        <button onclick="window.app.navigateAddPlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
+            Ajouter un joueur
+        </button>
+        <button onclick="window.app.navigateRemovePlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
+            Supprimer un joueur
+        </button>
+        <button onclick="window.app.navigateReorderPlayers()" class="primary-button" style="width:100%; padding:15px; font-size:1em;">
+            Ordre des joueurs
+        </button>
+    </div>
+    
+    <div style="margin-top:30px;">
+        <h3 style="margin-bottom:15px; color:#333;">Partie</h3>
+        <button onclick="window.app.navigateUpdateLimits()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
+            Modifier les limites
+        </button>
+        <button onclick="window.app.navigateEndGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
+            Terminer la partie
+        </button>
+        <button onclick="window.app.navigateCancelGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; background:#dc3545; border-color:#dc3545;">
+            Annuler la partie
+        </button>
+    </div>
+`;
+};
 
 export const StatisticsView = (store) => {
     // Initialize statsState if needed
