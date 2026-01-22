@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, OptionsView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -71,6 +71,7 @@ class App {
         this.router.register('confirmCancelGame', () => ConfirmCancelGameView(this.store));
         this.router.register('gameOver', () => GameOverView(this.store));
         this.router.register('about', () => AboutView());
+        this.router.register('options', () => OptionsView(this.store));
         this.router.register('statistics', () => StatisticsView(this.store));
         this.router.register('editGame', ({ gameId }) => GameFormView(this.store, gameId));
         this.router.register('confirmDeleteGame', ({ gameId }) => ConfirmDeleteGameView(this.store, gameId));
@@ -1205,6 +1206,11 @@ class App {
         // Re-render the home view without transition
         this.router.history.pop();
         this.router.navigate('home', {}, 'none');
+    }
+
+    toggleHideDeletedGames(checked) {
+        this.store.state.hideDeletedGamesInStats = checked;
+        this.store.save();
     }
 
     executeDeletePlayer(playerId) {

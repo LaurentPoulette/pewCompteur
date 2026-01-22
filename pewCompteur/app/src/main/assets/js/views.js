@@ -7,20 +7,13 @@ export const HomeView = (store, showOnlyFavorites = false) => {
     return `
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; z-index:1001; position:relative;">
             <h1>Jeux</h1>
-            <button onclick="document.getElementById('home-menu').classList.toggle('active')" style="background:none; color:var(--text-color); padding:0; font-size:1.5rem;">&#9776;</button>
+            <button onclick="window.app.router.navigate('options')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px;" title="Options">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
         </header>
-
-        <!-- Menu dropdown -->
-        <div id="home-menu" class="menu-overlay" onclick="if(event.target === this) this.classList.remove('active')">
-            <div class="menu-content">
-                <button class="menu-item" onclick="window.app.router.navigate('statistics')">Statistiques</button>
-                <div style="height:1px; background:#eee; margin:5px 0;"></div>
-                <button class="menu-item" onclick="window.app.router.navigate('exportGames')">Exporter jeux</button>
-                <button class="menu-item" onclick="window.app.router.navigate('importGames')">Importer jeux</button>
-                <div style="height:1px; background:#eee; margin:5px 0;"></div>
-                <button class="menu-item" onclick="window.app.router.navigate('about')">A propos</button>
-            </div>
-        </div>
 
         <div style="flex:1; overflow-y:auto; width:100%;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -1077,6 +1070,41 @@ export const AboutView = () => `
         <p>Version ${APP_VERSION}</p>
         <p style="margin-top:20px;">Une application simple et efficace pour compter les points de vos jeux de société favoris (Tarot, Belote, UNO, et bien d'autres).</p>
         <p style="margin-top:20px;">Développé avec passion.</p>
+    </div>
+`;
+
+export const OptionsView = (store) => `
+    <header style="display:flex; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1>Options</h1>
+    </header>
+    
+    <div style="margin-bottom:20px;">
+        <h3 style="margin-bottom:15px; color:#333;">Navigation</h3>
+        <button onclick="window.app.router.navigate('statistics')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
+            Statistiques
+        </button>
+        <button onclick="window.app.router.navigate('about')" class="primary-button" style="width:100%; padding:15px; font-size:1em;">
+            A propos
+        </button>
+    </div>
+    
+    <div style="margin-top:30px;">
+        <h3 style="margin-bottom:15px; color:#333;">Import / Export</h3>
+        <button onclick="window.app.router.navigate('exportGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px;">
+            Exporter jeux
+        </button>
+        <button onclick="window.app.router.navigate('importGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em;">
+            Importer jeux
+        </button>
+    </div>
+    
+    <div style="margin-top:30px;">
+        <h3 style="margin-bottom:15px; color:#333;">Statistiques</h3>
+        <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer;">
+            <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+            <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>
+        </label>
     </div>
 `;
 
