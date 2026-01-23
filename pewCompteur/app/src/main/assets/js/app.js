@@ -1665,6 +1665,22 @@ class App {
         this.router.navigate('playerSelect', { gameId }, 'none');
     }
 
+    filterIngamePlayersByCircle(circleId, oldPlayerId = null) {
+        this.selectedCircleFilter = circleId;
+        
+        // Sauvegarder dans le store
+        this.store.state.playerCircleFilter = circleId;
+        this.store.save();
+        
+        // Re-render the view without adding to history
+        this.router.history.pop();
+        if (oldPlayerId) {
+            this.router.navigate('replaceIngamePlayer', { oldPlayerId }, 'none');
+        } else {
+            this.router.navigate('addIngamePlayer', {}, 'none');
+        }
+    }
+
     addRound() {
         const session = this.store.restoreSession();
         if (!session) return;
@@ -2367,6 +2383,62 @@ class App {
         // Réinitialiser l'état de réorganisation pour inclure le nouveau joueur
         this.reorderIngameState = this.store.restoreSession().players.map(p => p.id);
         this.router.navigate('reorderPlayers', {}, 'back');
+    }
+
+    confirmReplacePlayer(oldPlayerId, newPlayerId) {
+        const session = this.store.restoreSession();
+        const allPlayers = this.store.getPlayers();
+        const oldPlayer = allPlayers.find(p => p.id === oldPlayerId);
+        const newPlayer = allPlayers.find(p => p.id === newPlayerId);
+        
+        if (!oldPlayer || !newPlayer) return;
+        
+        // Créer la popup de confirmation
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:10000;';
+        
+        const popup = document.createElement('div');
+        popup.style.cssText = 'background:white; border-radius:12px; padding:24px; max-width:90%; width:400px; box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+        
+        popup.innerHTML = `
+            <h2 style="margin:0 0 16px 0; color:#333; font-size:1.3em; text-align:center;">Confirmer le remplacement</h2>
+            <div style="text-align:center; margin-bottom:20px; line-height:1.6;">
+                <p style="margin:0 0 12px 0;">Remplacer</p>
+                <div style="font-weight:bold; font-size:1.1em; color:#dc3545; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                    ${oldPlayer.photo ? `<img src="${oldPlayer.photo}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${oldPlayer.avatar}</span>`}
+                    <span>${oldPlayer.name}</span>
+                </div>
+                <p style="margin:0 0 12px 0;">par</p>
+                <div style="font-weight:bold; font-size:1.1em; color:#28a745; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                    ${newPlayer.photo ? `<img src="${newPlayer.photo}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${newPlayer.avatar}</span>`}
+                    <span>${newPlayer.name}</span>
+                </div>
+                <p style="margin:0; font-size:0.9em; color:#666;">Les scores seront conservés</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="confirm-replace-btn" style="flex:1; padding:12px; background:#28a745; color:white; border:none; border-radius:8px; font-size:1em; cursor:pointer; font-weight:bold;">Confirmer</button>
+                <button id="cancel-replace-btn" style="flex:1; padding:12px; background:#6c757d; color:white; border:none; border-radius:8px; font-size:1em; cursor:pointer;">Annuler</button>
+            </div>
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        // Gérer les clics
+        document.getElementById('confirm-replace-btn').onclick = () => {
+            document.body.removeChild(overlay);
+            this.replacePlayerInGame(oldPlayerId, newPlayerId);
+        };
+        
+        document.getElementById('cancel-replace-btn').onclick = () => {
+            document.body.removeChild(overlay);
+        };
+        
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        };
     }
 
     replacePlayerInGame(oldPlayerId, newPlayerId) {

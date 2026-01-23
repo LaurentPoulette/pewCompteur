@@ -951,7 +951,16 @@ export const AddIngamePlayerView = (store) => {
     if (!session) return '<div>Erreur</div>';
 
     const existingIds = new Set(session.players.map(p => p.id));
-    const availablePlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const allPlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const circles = store.getCircles();
+    const selectedCircleFilter = window.app?.selectedCircleFilter || 'all';
+    
+    // Filter players based on selected circle
+    let availablePlayers = allPlayers;
+    if (selectedCircleFilter !== 'all') {
+        availablePlayers = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
+    }
+    
     const game = store.getGames().find(g => g.id === session.gameId);
     const gameTitle = game ? game.name : 'Joueurs';
 
@@ -963,6 +972,14 @@ export const AddIngamePlayerView = (store) => {
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
                         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Joueurs disponibles</h3>
+                        ${circles.length > 0 ? `
+                        <div style="margin-bottom:15px;">
+                            <select id="circle-filter" onchange="window.app.filterIngamePlayersByCircle(this.value)" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1em; background:white;">
+                                <option value="all" ${selectedCircleFilter === 'all' ? 'selected' : ''}>Tous les joueurs</option>
+                                ${circles.map(c => `<option value="${c.id}" ${selectedCircleFilter === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        ` : ''}
                         <div class="grid">
                             <!-- Option to create new -->
                             <div class="card" onclick="window.app.navigateCreatePlayer()" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:100px; border: 2px dashed #ccc; background:transparent;">
@@ -990,7 +1007,16 @@ export const ReplaceIngamePlayerView = (store, oldPlayerId) => {
     if (!session) return '<div>Erreur</div>';
 
     const existingIds = new Set(session.players.map(p => p.id));
-    const availablePlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const allPlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const circles = store.getCircles();
+    const selectedCircleFilter = window.app?.selectedCircleFilter || 'all';
+    
+    // Filter players based on selected circle
+    let availablePlayers = allPlayers;
+    if (selectedCircleFilter !== 'all') {
+        availablePlayers = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
+    }
+    
     const game = store.getGames().find(g => g.id === session.gameId);
     const gameTitle = game ? game.name : 'Joueurs';
 
@@ -1002,6 +1028,14 @@ export const ReplaceIngamePlayerView = (store, oldPlayerId) => {
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
                         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Remplacer par</h3>
+                        ${circles.length > 0 ? `
+                        <div style="margin-bottom:15px;">
+                            <select id="circle-filter" onchange="window.app.filterIngamePlayersByCircle(this.value, '${oldPlayerId}')" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1em; background:white;">
+                                <option value="all" ${selectedCircleFilter === 'all' ? 'selected' : ''}>Tous les joueurs</option>
+                                ${circles.map(c => `<option value="${c.id}" ${selectedCircleFilter === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        ` : ''}
                         <div class="grid">
                             <!-- Option to create new -->
                             <div class="card" onclick="window.app.navigateCreatePlayer()" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:100px; border: 2px dashed #ccc; background:transparent;">
@@ -1011,7 +1045,7 @@ export const ReplaceIngamePlayerView = (store, oldPlayerId) => {
                             </div>
 
                             ${availablePlayers.map(p => `
-            <div class="card" onclick="window.app.replacePlayerInGame('${oldPlayerId}', '${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
+            <div class="card" onclick="window.app.confirmReplacePlayer('${oldPlayerId}', '${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
                 <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
                     ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${p.avatar}</span>`}
                 </div>
