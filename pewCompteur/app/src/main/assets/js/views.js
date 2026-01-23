@@ -311,11 +311,11 @@ export const ActiveGameView = (store) => {
             
             let limitText = '';
             if (effectiveRounds && effectiveTarget) {
-                limitText = `Limite à ${effectiveTarget} points ou ${effectiveRounds} tours`;
+                limitText = `Limité à ${effectiveTarget} points ou ${effectiveRounds} tours`;
             } else if (effectiveTarget) {
-                limitText = `Limite à ${effectiveTarget} points`;
+                limitText = `Limité à ${effectiveTarget} points`;
             } else if (effectiveRounds) {
-                limitText = `Limite à ${effectiveRounds} tours`;
+                limitText = `Limité à ${effectiveRounds} tours`;
             } else {
                 limitText = `Aucune limite de point ni de tour`;
             }
@@ -346,12 +346,12 @@ export const ActiveGameView = (store) => {
                                 <span>Joueurs</span>
                             </th>
                         </tr>
-                        <tr style="background: #f8f9fa;">
-                            <th class="history-header" style="background: #f8f9fa; padding: 5px; border-bottom: none;">#</th>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <th class="history-header" style="background: transparent; padding: 2px; border-bottom: none; color: white;">#</th>
                             ${tablePlayers.map(p => `
-                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: #f8f9fa; padding: 5px; border-bottom: none;">
+                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: transparent; padding: 2px; border-bottom: none; color: white;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
-                                        ${p.photo ? `<img src="${p.photo}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
+                                        ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
                                     <div style="font-size:0.8em;">
                                         <span class="name-full">${p.name}</span>
@@ -360,10 +360,10 @@ export const ActiveGameView = (store) => {
                                 </th>
                             `).join('')}
                         </tr>
-                        <tr style="background: #e3f2fd; font-weight:bold;">
-                            <td class="history-header" style="background: #e3f2fd; padding: 5px; border-top: none; font-size: 1.3em;">Σ</td>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-weight:bold;">
+                            <td class="history-header" style="background: transparent; padding: 2px; border-top: none; font-size: 1.3em; color: white;">Σ</td>
                             ${tablePlayers.map(p => `
-                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color); background: #e3f2fd; padding: 5px; border-top: none;">${p.score}</td>
+                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color: white; background: transparent; padding: 2px; border-top: none;">${p.score}</td>
                             `).join('')}
                         </tr>
                         <tr style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
