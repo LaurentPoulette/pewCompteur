@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, OptionsView, GameActionsView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -71,6 +71,8 @@ class App {
         this.router.register('confirmCancelGame', () => ConfirmCancelGameView(this.store));
         this.router.register('gameOver', () => GameOverView(this.store));
         this.router.register('about', () => AboutView());
+        this.router.register('options', () => OptionsView(this.store));
+        this.router.register('gameActions', () => GameActionsView(this.store));
         this.router.register('statistics', () => StatisticsView(this.store));
         this.router.register('editGame', ({ gameId }) => GameFormView(this.store, gameId));
         this.router.register('confirmDeleteGame', ({ gameId }) => ConfirmDeleteGameView(this.store, gameId));
@@ -415,6 +417,7 @@ class App {
             this.selectedPlayers.push(playerId);
         }
         this.updateSelectedPlayersUI();
+        this.updateNextButtonCount();
     }
 
     movePlayer(index, direction) {
@@ -455,6 +458,14 @@ class App {
         }).join('');
 
         this.initDragAndDrop();
+    }
+
+    updateNextButtonCount() {
+        const nextButton = document.getElementById('next-button');
+        if (nextButton) {
+            const count = this.selectedPlayers.length;
+            nextButton.textContent = `Suivant (${count} joueur${count > 1 ? 's' : ''})`;
+        }
     }
 
     initDragAndDrop() {
@@ -1113,6 +1124,119 @@ class App {
         });
     }
 
+    // Pavé numérique personnalisé
+    showNumericKeypadById(roundIndex, playerId, currentValue) {
+        const session = this.store.restoreSession();
+        if (!session) return;
+        
+        const sessionPlayer = session.players.find(sp => sp.id === playerId);
+        if (!sessionPlayer) return;
+        
+        const player = this.store.getPlayers().find(p => p.id === playerId);
+        const playerName = player ? player.name : sessionPlayer.name || 'Joueur';
+        
+        this.showNumericKeypad(roundIndex, playerId, currentValue, playerName);
+    }
+
+    showNumericKeypad(roundIndex, playerId, currentValue, playerName) {
+        const keypad = document.getElementById('numeric-keypad');
+        const display = document.getElementById('keypad-display');
+        const nameDisplay = document.getElementById('keypad-player-name');
+        
+        // Stocker les informations de contexte
+        keypad.dataset.roundIndex = roundIndex;
+        keypad.dataset.playerId = playerId;
+        
+        // Stocker l'élément input qui a déclenché le pavé
+        this.currentInputElement = event.target;
+        
+        // Afficher le nom du joueur
+        nameDisplay.textContent = playerName;
+        
+        // Initialiser l'affichage avec la valeur actuelle
+        display.textContent = currentValue || '0';
+        
+        // Afficher le pavé
+        keypad.style.display = 'flex';
+    }
+
+    keypadInput(digit) {
+        const display = document.getElementById('keypad-display');
+        let current = display.textContent;
+        
+        // Si c'est zéro, remplacer par le chiffre
+        if (current === '0' || current === '-0') {
+            const isNegative = current.startsWith('-');
+            display.textContent = isNegative ? '-' + digit : digit;
+        } else {
+            display.textContent = current + digit;
+        }
+    }
+
+    keypadBackspace() {
+        const display = document.getElementById('keypad-display');
+        let current = display.textContent;
+        
+        if (current.length > 1) {
+            display.textContent = current.slice(0, -1);
+        } else {
+            display.textContent = '0';
+        }
+    }
+
+    keypadToggleSign() {
+        const display = document.getElementById('keypad-display');
+        let current = display.textContent;
+        
+        if (current === '0') return;
+        
+        if (current.startsWith('-')) {
+            display.textContent = current.slice(1);
+        } else {
+            display.textContent = '-' + current;
+        }
+    }
+
+    validateKeypadInput() {
+        const keypad = document.getElementById('numeric-keypad');
+        const display = document.getElementById('keypad-display');
+        const roundIndex = keypad.dataset.roundIndex;
+        const playerId = keypad.dataset.playerId;
+        const value = display.textContent;
+        
+        // Mettre à jour le score dans le store
+        this.updateRound(roundIndex, playerId, value);
+        
+        // Mettre à jour l'affichage de l'input dans le tableau
+        if (this.currentInputElement && this.currentInputElement.tagName === 'INPUT') {
+            this.currentInputElement.value = value;
+        }
+        
+        // Fermer le pavé
+        this.closeNumericKeypad();
+    }
+
+    closeNumericKeypad() {
+        const keypad = document.getElementById('numeric-keypad');
+        keypad.style.display = 'none';
+        
+        // Réinitialiser l'affichage
+        document.getElementById('keypad-display').textContent = '0';
+    }
+
+    showPlayerNamePopupById(playerId) {
+        const session = this.store.restoreSession();
+        if (!session) return;
+        
+        const sessionPlayer = session.players.find(sp => sp.id === playerId);
+        if (!sessionPlayer) return;
+        
+        const player = this.store.getPlayers().find(p => p.id === playerId);
+        const playerName = player ? player.name : sessionPlayer.name || 'Joueur';
+        
+        this.showPlayerNamePopup(playerName);
+    }
+
     showPlayerNamePopup(playerName) {
         // Remove any existing popup
         const existingPopup = document.getElementById('player-name-popup');
@@ -1205,6 +1329,11 @@ class App {
         // Re-render the home view without transition
         this.router.history.pop();
         this.router.navigate('home', {}, 'none');
+    }
+
+    toggleHideDeletedGames(checked) {
+        this.store.state.hideDeletedGamesInStats = checked;
+        this.store.save();
     }
 
     executeDeletePlayer(playerId) {
@@ -1379,6 +1508,15 @@ class App {
     filterByCircle(circleId, gameId) {
         this.selectedCircleFilter = circleId;
         
+        // Désélectionner les joueurs qui ne sont pas dans le cercle sélectionné
+        if (circleId !== 'all') {
+            const allPlayers = this.store.getPlayers();
+            this.selectedPlayers = this.selectedPlayers.filter(playerId => {
+                const player = allPlayers.find(p => p.id === playerId);
+                return player && player.circles && player.circles.includes(circleId);
+            });
+        }
+        
         // Sauvegarder dans le store
         this.store.state.playerCircleFilter = circleId;
         this.store.save();
@@ -1404,6 +1542,14 @@ class App {
         // Refresh Leaderboard Only
         const session = this.store.restoreSession();
         const game = this.store.getGames().find(g => g.id === session.gameId);
+
+        // Update total scores in header row
+        session.players.forEach(sp => {
+            const scoreCell = document.querySelector(`td.history-header[data-player-id="${sp.id}"]`);
+            if (scoreCell) {
+                scoreCell.textContent = sp.score;
+            }
+        });
 
         // Update Check Value in Round Column if exists
         const checkValSpan = document.getElementById(`check-val-${roundIndex}`);
@@ -1465,39 +1611,38 @@ class App {
         if (container) container.innerHTML = html;
 
         // CHECK FOR GAME OVER CONDITIONS
-        const reason = this.checkGameEndCondition(session, game);
+        const currentRoundData = session.history[roundIndex];
+        const isLastRound = parseInt(roundIndex) === session.history.length - 1;
 
-        // AUTO-ADD NEW ROUND LOGIC
-        // If NO game over and the LAST round is fully filled, add a new one automatically.
-        if (!reason) {
-            const currentRoundData = session.history[roundIndex];
-            // We only care if we just updated the *last* round
-            const isLastRound = parseInt(roundIndex) === session.history.length - 1;
+        if (isLastRound) {
+            const isRoundComplete = session.players.every(p => currentRoundData[p.id] !== undefined && currentRoundData[p.id] !== "");
+            
+            if (isRoundComplete) {
+                // Vérifier les conditions de fin de partie
+                const effectiveRounds = (session.config && session.config.rounds) !== undefined ? session.config.rounds : game.rounds;
+                const effectiveTarget = (session.config && session.config.target) !== undefined ? session.config.target : game.target;
 
-            if (isLastRound) {
-                const isRoundComplete = session.players.every(p => currentRoundData[p.id] !== undefined && currentRoundData[p.id] !== "");
-                if (isRoundComplete) {
-                    // Auto-add new round
-                    // Warning: if we just update innerHTML of the whole view, focus will be lost.
-                    // The requirement "when entering LAST score... create new round".
-                    // Ideally we want to just append the row to the table without full re-render, 
-                    // OR re-render but put focus on the first cell of the new row?
+                let gameOverReason = null;
+                
+                if (effectiveRounds && session.history.length >= effectiveRounds) {
+                    gameOverReason = "Limite de tours atteinte";
+                } else if (effectiveTarget && effectiveTarget > 0) {
+                    const anyReached = session.players.some(p => p.score >= effectiveTarget);
+                    if (anyReached) gameOverReason = "Limite de score atteinte";
+                }
 
-                    // Adding a round updates store history.
+                if (gameOverReason) {
+                    // Sauvegarder la raison et naviguer vers GameOver
+                    session.gameOverReason = gameOverReason;
+                    this.store.save();
+                    setTimeout(() => {
+                        this.router.navigate('gameOver');
+                    }, 100);
+                } else {
+                    // Auto-ajouter un nouveau tour
                     this.store.addEmptyRound();
-
-                    // Re-render view to show new round
-                    // To avoid jarring experience, maybe small delay? 
-                    // Or immediate.
-                    // IMPORTANT: We need to preserve focus or at least scrolling.
-                    // Full re-render kills focus. 
-
-                    // Let's re-render. User has finished typing. They might be looking for next box.
                     const content = ActiveGameView(this.store);
                     document.querySelector('.view:last-child').innerHTML = content;
-
-                    // Attempt to scroll to bottom or focus new row?
-                    // Let's rely on standard render.
                 }
             }
         }
@@ -1657,6 +1802,28 @@ class App {
         this.router.navigate('updateLimits');
     }
 
+    navigateUpdateLimitsFromGameOver() {
+        // Effacer la raison de fin de partie pour pouvoir continuer
+        const session = this.store.restoreSession();
+        if (session) {
+            delete session.gameOverReason;
+            this.store.save();
+        }
+        // Marquer qu'on vient de GameOver pour retourner à la partie après modification
+        this.comingFromGameOver = true;
+        this.router.navigate('updateLimits');
+    }
+
+    continueGame() {
+        // Effacer la raison de fin de partie pour continuer à jouer
+        const session = this.store.restoreSession();
+        if (session) {
+            delete session.gameOverReason;
+            this.store.save();
+        }
+        this.router.navigate('game');
+    }
+
     submitUpdateLimits() {
         const scoreLimitInput = document.getElementById('update-score-limit');
         const roundLimitInput = document.getElementById('update-round-limit');
@@ -1670,7 +1837,28 @@ class App {
             rounds: newRounds
         });
 
-        this.router.back();
+        // Effacer la raison de fin de partie si elle existait
+        const session = this.store.restoreSession();
+        if (session && session.gameOverReason) {
+            delete session.gameOverReason;
+            this.store.save();
+        }
+
+        // Vérifier si le dernier tour est complet, si oui créer un nouveau tour
+        if (session && session.history.length > 0) {
+            const lastRound = session.history[session.history.length - 1];
+            const isLastRoundComplete = session.players.every(p => 
+                lastRound[p.id] !== undefined && lastRound[p.id] !== ""
+            );
+            
+            if (isLastRoundComplete) {
+                this.store.addEmptyRound();
+            }
+        }
+        
+        // Toujours retourner à la page de saisie des scores
+        this.comingFromGameOver = false;
+        this.router.navigate('game');
     }
 
     navigateReorderPlayers() {
@@ -1680,7 +1868,7 @@ class App {
 
     cancelReorderIngame() {
         this.reorderIngameState = null;
-        this.router.back();
+        this.router.navigate('gameActions');
     }
 
     saveReorderIngame() {
@@ -1688,7 +1876,7 @@ class App {
             this.store.reorderSessionPlayers(this.reorderIngameState);
         }
         this.reorderIngameState = null;
-        this.router.back();
+        this.router.navigate('game');
     }
 
     updateReorderIngameUI() {
@@ -1933,7 +2121,15 @@ class App {
 
     // Navigate to confirmation page
     navigateEndGame() {
-        this.router.navigate('confirmEndGame');
+        // Sauvegarder la raison de fin de partie comme "Terminé manuellement"
+        const session = this.store.restoreSession();
+        if (session && !session.gameOverReason) {
+            session.gameOverReason = "Terminé manuellement";
+            this.store.save();
+        }
+        
+        // Naviguer directement vers la page de fin de partie
+        this.router.navigate('gameOver');
     }
 
     // Actual execution

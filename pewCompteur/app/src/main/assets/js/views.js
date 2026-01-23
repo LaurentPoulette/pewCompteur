@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.7';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.10';
 
 export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
@@ -7,20 +7,13 @@ export const HomeView = (store, showOnlyFavorites = false) => {
     return `
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; z-index:1001; position:relative;">
             <h1>Jeux</h1>
-            <button onclick="document.getElementById('home-menu').classList.toggle('active')" style="background:none; color:var(--text-color); padding:0; font-size:1.5rem;">&#9776;</button>
+            <button onclick="window.app.router.navigate('options')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px;" title="Options">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
         </header>
-
-        <!-- Menu dropdown -->
-        <div id="home-menu" class="menu-overlay" onclick="if(event.target === this) this.classList.remove('active')">
-            <div class="menu-content">
-                <button class="menu-item" onclick="window.app.router.navigate('statistics')">Statistiques</button>
-                <div style="height:1px; background:#eee; margin:5px 0;"></div>
-                <button class="menu-item" onclick="window.app.router.navigate('exportGames')">Exporter jeux</button>
-                <button class="menu-item" onclick="window.app.router.navigate('importGames')">Importer jeux</button>
-                <div style="height:1px; background:#eee; margin:5px 0;"></div>
-                <button class="menu-item" onclick="window.app.router.navigate('about')">A propos</button>
-            </div>
-        </div>
 
         <div style="flex:1; overflow-y:auto; width:100%;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -69,19 +62,27 @@ export const PlayerSelectView = (store, gameId) => {
     let players = allPlayers;
     if (selectedCircleFilter !== 'all') {
         players = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
+        
+        // Filtrer aussi les joueurs sélectionnés pour ne garder que ceux du cercle
+        if (window.app && window.app.selectedPlayers) {
+            window.app.selectedPlayers = window.app.selectedPlayers.filter(playerId => {
+                const player = allPlayers.find(p => p.id === playerId);
+                return player && player.circles && player.circles.includes(selectedCircleFilter);
+            });
+        }
     }
     
-    let subtitle = "Sélectionnez les joueurs";
+    let subtitle = "Choisir les joueurs";
     if (game && game.minPlayers && game.maxPlayers) {
         if (game.minPlayers === game.maxPlayers) {
-            subtitle = `Sélectionnez ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+            subtitle = `Choisir ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
         } else {
-            subtitle = `Sélectionnez entre ${game.minPlayers} et ${game.maxPlayers} joueurs`;
+            subtitle = `Choisir entre ${game.minPlayers} et ${game.maxPlayers} joueurs`;
         }
     } else if (game && game.minPlayers) {
-        subtitle = `Sélectionnez au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}`;
+        subtitle = `Choisir au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}`;
     } else if (game && game.maxPlayers) {
-        subtitle = `Sélectionnez au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+        subtitle = `Choisir au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
     }
     
     return `
@@ -117,13 +118,13 @@ export const PlayerSelectView = (store, gameId) => {
         const isPhotoSelected = p.photo && isSelected;
 
         return `
-                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" data-player-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:10px;">
-                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:5px;">
+                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" data-player-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
                         <div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
                              ${p.photo ? `<img src="${p.photo}" class="${isPhotoSelected ? 'selected-photo' : ''}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span class="${isAvatarSelected ? 'selected-avatar' : ''}" style="font-size:1.8em;">${p.avatar}</span>`}
                         </div>
                     </div>
-                    <div style="text-align:center;">
+                    <div style="text-align:center; width:100%;">
                         <h3 style="margin:0; font-size:1em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</h3>
                     </div>
                 </div>
@@ -135,13 +136,17 @@ export const PlayerSelectView = (store, gameId) => {
         </div>
         
         <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
-            <button onclick="window.app.navigatePlayerOrder('${gameId}')" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant</button>
+            <button id="next-button" onclick="window.app.navigatePlayerOrder('${gameId}')" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant (${window.app.selectedPlayers.length} joueur${window.app.selectedPlayers.length > 1 ? 's' : ''})</button>
         </div>
         <style>
             .player-card.selected { border: 2px solid var(--primary-color); background-color: #e0f2fe; }
             .selected-avatar { text-shadow: 0 0 3px var(--primary-color); }
             .selected-photo { border: 2px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
         </style>
+        <script>
+            // Mettre à jour le compteur au chargement de la vue
+            setTimeout(() => window.app.updateNextButtonCount(), 50);
+        </script>
 `;
 };
 
@@ -185,27 +190,6 @@ export const ActiveGameView = (store) => {
         return { ...sp, ...info };
     });
 
-    // Check Game End
-    let gameOverReason = null;
-    const currentRound = session.history[session.history.length - 1];
-    const isRoundComplete = currentRound && players.every(p => currentRound[p.id] !== undefined && currentRound[p.id] !== "");
-
-    // Determine effective limits (session config overrides game defaults if present)
-    const effectiveRounds = (session.config && session.config.rounds) !== undefined ? session.config.rounds : game.rounds;
-    const effectiveTarget = (session.config && session.config.target) !== undefined ? session.config.target : game.target;
-
-    if (isRoundComplete) {
-        if (effectiveRounds && session.history.length >= effectiveRounds) {
-            gameOverReason = "Limite de tours atteinte";
-        } else if (effectiveTarget && effectiveTarget > 0) {
-            // Check if anyone reached the target
-            // Depending on winCondition (highest/lowest), logic might differ, 
-            // but usually 'target' is a threshold.
-            const anyReached = players.some(p => p.score >= effectiveTarget);
-            if (anyReached) gameOverReason = "Limite de score atteinte";
-        }
-    }
-
     // Players for columns (fixed order)
     const tablePlayers = [...players];
 
@@ -227,7 +211,7 @@ export const ActiveGameView = (store) => {
 
             return `
                             <td class="leaderboard-cell">
-                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="flex-direction:column; justify-content:center; cursor:pointer;">
+                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="flex-direction:column; justify-content:center; cursor:pointer;">
                                     <div style="margin-bottom:2px; font-weight:bold; font-size:0.9em;">
                                         <span class="leaderboard-rank">${i + 1}</span>:${p.score}
                                     </div>
@@ -247,46 +231,44 @@ export const ActiveGameView = (store) => {
 
     return `
     <div style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; z-index:1001; position:relative; flex-shrink:0;">
-
-            <div style="display:flex; align-items:center; gap:10px; overflow:hidden; flex:1;">
-
-                <h3 style="margin:0; font-size:1.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:1;">${session.title}</h3>
-                
-                <div style="font-size:0.9em; color:#666; display:flex; align-items:center; gap:8px; white-space:nowrap; flex-shrink:0;">
-                    <span style="border-left:1px solid #ccc; padding-left:8px;"><span style="font-size:1.2em;">🔄</span> ${((session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds) || '∞'}</span>
-                    <span><span style="font-size:1.2em;">🔢</span> ${((session.config && session.config.target !== undefined) ? session.config.target : game.target) || '∞'}</span>
-                </div>
-            </div>
-            <button onclick="document.getElementById('game-menu').classList.toggle('active')" style="background:none; color:var(--text-color); padding:0; font-size:1.8rem; margin-left:10px;">&#9776;</button> 
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; z-index:1001; position:relative; flex-shrink:0;">
+            <h1 style="margin:0;">${session.title}</h1>
+            <button onclick="window.app.router.navigate('gameActions')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px;" title="Actions">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </header>
 
-        <div id="game-over-banner-top" style="display:none;"></div>
-
-        <!--Menu dropdown-->
-        <div id="game-menu" class="menu-overlay" onclick="if(event.target === this) this.classList.remove('active')">
-            <div class="menu-content">
-                <div style="font-size:0.8em; color:#999; margin:5px 10px; font-weight:bold;">JOUEUR</div>
-                <button class="menu-item" onclick="window.app.navigateAddPlayerInGame()">Ajouter un joueur</button>
-                <button class="menu-item" onclick="window.app.navigateRemovePlayerInGame()">Supprimer un joueur</button>
-                <button class="menu-item" onclick="window.app.navigateReorderPlayers()">Ordre des joueurs</button>
-                
-                <div style="height:1px; background:#eee; margin:5px 0;"></div>
-                <div style="font-size:0.8em; color:#999; margin:5px 10px; font-weight:bold;">PARTIE</div>
-                <button class="menu-item" onclick="window.app.navigateUpdateLimits()">Modifier les limites</button>
-                <button class="menu-item" onclick="window.app.navigateEndGame()">Terminer la partie</button>
-                <button class="menu-item danger" onclick="window.app.navigateCancelGame()">Annuler la partie</button>
-            </div>
-        </div>
+        ${(() => {
+            const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
+            const effectiveTarget = (session.config && session.config.target !== undefined) ? session.config.target : game.target;
+            
+            let limitText = '';
+            if (effectiveRounds && effectiveTarget) {
+                limitText = `Limite à ${effectiveTarget} points ou ${effectiveRounds} tours`;
+            } else if (effectiveTarget) {
+                limitText = `Limite à ${effectiveTarget} points`;
+            } else if (effectiveRounds) {
+                limitText = `Limite à ${effectiveRounds} tours`;
+            }
+            
+            if (limitText) {
+                return `<div style="margin-bottom: 15px; padding:10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0; text-align:center; font-size:0.95em;">${limitText}</div>`;
+            }
+            return '';
+        })()}
         
-        <div style="flex:1; overflow-y:auto; padding-bottom: 20px;">
-            <div class="card" style="overflow-x: auto; max-width: 100%;">
-                <table class="history-table" style="text-align: center;">
-                    <thead style="position: sticky; top: 0; background: var(--surface-color); z-index: 1;">
-                        <tr>
-                            <th class="history-header">#</th>
+        <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="card" style="flex:1; overflow-y:auto; overflow-x:auto; max-width:100%;">
+                <table class="history-table" style="text-align: center; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr style="background: #f8f9fa;">
+                            <th class="history-header" style="background: #f8f9fa; padding: 5px; border-bottom: none;">#</th>
                             ${tablePlayers.map(p => `
-                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"; style="cursor:pointer;">
+                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: #f8f9fa; padding: 5px; border-bottom: none;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
@@ -295,6 +277,14 @@ export const ActiveGameView = (store) => {
                                         <span class="name-initial">${p.name.charAt(0).toUpperCase()}</span>
                                     </div>
                                 </th>
+                            `).join('')}
+                        </tr>
+                        <tr style="background: #e3f2fd; font-weight:bold;">
+                            <td class="history-header" onclick="window.app.addRound()" style="cursor:pointer; background: #e3f2fd; padding: 5px; border-top: none;" title="Nouveau tour">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                            </td>
+                            ${tablePlayers.map(p => `
+                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color); background: #e3f2fd; padding: 5px; border-top: none;">${p.score}</td>
                             `).join('')}
                         </tr>
                     </thead>
@@ -328,18 +318,18 @@ export const ActiveGameView = (store) => {
                                                class="win-radio"
                                                ${isChecked ? 'checked' : ''}
                                                onchange="window.app.updateWinnerForRound('${roundIndex}', '${p.id}')"
-                                               onfocus="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"
+                                               onfocus="window.app.showPlayerNamePopupById('${p.id}')"
                                                style="width:20px; height:20px; cursor:pointer;">
                                     </td>
                                         `;
                                     } else {
                                         return `
                                     <td class="history-cell-score">
-                                        <input type="number" 
+                                        <input type="text" 
                                                class="score-input"
                                                value="${round[p.id] !== undefined ? round[p.id] : ''}" 
-                                               onchange="window.app.updateRound('${roundIndex}', '${p.id}', this.value)"
-                                               onfocus="this.select(); window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')"
+                                               readonly
+                                               onclick="window.app.showNumericKeypadById('${roundIndex}', '${p.id}', this.value)"
                                                placeholder="-">
                                     </td>
                                         `;
@@ -353,21 +343,9 @@ export const ActiveGameView = (store) => {
 
         </div >
 
-    <div id="sticky-leaderboard">
-        <div style="padding:10px 10px 0 10px;">
-            <div id="game-over-banner-bottom" style="display:${gameOverReason ? 'block' : 'none'};">
-                <div style="background-color:var(--primary-color); color:white; padding:15px; border-radius:8px; margin-bottom:10px; text-align:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="font-size:1.2em; font-weight:bold;">🏁 Partie Terminée</div>
-                    <div style="opacity:0.9; margin-bottom:10px;">${gameOverReason}</div>
-                    <div style="display:flex; justify-content:center; gap:10px;">
-                        <button onclick="window.app.navigateUpdateLimits()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:8px 12px; font-size:0.9rem; border-radius:4px; flex:1;">Continuer</button>
-                        <button onclick="window.app.navigateEndGame()" style="background:white; color:var(--primary-color); border:none; padding:8px 12px; font-size:0.9rem; border-radius:4px; font-weight:bold; flex:1;">Terminer</button>
-                    </div>
-                </div>
-            </div>
-            <button id="btn-new-round" onclick="window.app.addRound()" style="width:100%; padding: 12px; font-size: 1.1rem; margin-bottom:10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:${gameOverReason ? 'none' : 'block'};">+ Nouveau Tour</button>
-        </div>
-
+    <div id="sticky-leaderboard" style="padding:0; margin:0; border-radius:0;">
+        <h3 style="margin: 10px 0 5px 0; padding: 8px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 8px; text-align: center; font-size: 1.1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Classement</h3>
+        
         <div id="leaderboard-content" class="sticky-leaderboard-content">
             ${getLeaderboardHTML()}
         </div>
@@ -375,6 +353,32 @@ export const ActiveGameView = (store) => {
             </div >
         </div >
     </div >
+    
+    <!-- Pavé numérique personnalisé -->
+    <div id="numeric-keypad" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target === this) window.app.closeNumericKeypad()">
+        <div style="background:white; border-radius:12px; padding:20px; max-width:320px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+            <div id="keypad-player-name" style="text-align:center; font-size:1.1em; font-weight:bold; margin-bottom:10px; color:#333;"></div>
+            <div id="keypad-display" style="background:#f0f0f0; padding:15px; border-radius:8px; text-align:center; font-size:2em; font-weight:bold; margin-bottom:15px; min-height:60px; display:flex; align-items:center; justify-content:center; color:#333;">0</div>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:15px;">
+                <button onclick="window.app.keypadInput('7')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">7</button>
+                <button onclick="window.app.keypadInput('8')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">8</button>
+                <button onclick="window.app.keypadInput('9')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">9</button>
+                <button onclick="window.app.keypadInput('4')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">4</button>
+                <button onclick="window.app.keypadInput('5')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">5</button>
+                <button onclick="window.app.keypadInput('6')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">6</button>
+                <button onclick="window.app.keypadInput('1')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">1</button>
+                <button onclick="window.app.keypadInput('2')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">2</button>
+                <button onclick="window.app.keypadInput('3')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">3</button>
+                <button onclick="window.app.keypadToggleSign()" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">+/-</button>
+                <button onclick="window.app.keypadInput('0')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">0</button>
+                <button onclick="window.app.keypadBackspace()" style="padding:15px; font-size:1.2em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="window.app.closeNumericKeypad()" style="flex:1; padding:15px; font-size:1.1em; border:1px solid #ddd; border-radius:8px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Annuler</button>
+                <button onclick="window.app.validateKeypadInput()" style="flex:1; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:var(--primary-color); color:white; cursor:pointer; font-weight:bold;">Valider</button>
+            </div>
+        </div>
+    </div>
     `;
 };
 export const GameFormView = (store, gameId) => {
@@ -857,9 +861,11 @@ export const AddIngamePlayerView = (store) => {
                             </div>
 
                             ${availablePlayers.map(p => `
-            <div class="card" onclick="window.app.addPlayerToGame('${p.id}')" style="cursor:pointer; text-align:center;">
-                <span style="font-size:2em;">${p.avatar}</span>
-                <h3>${p.name}</h3>
+            <div class="card" onclick="window.app.addPlayerToGame('${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
+                <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
+                    ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${p.avatar}</span>`}
+                </div>
+                <h3 style="margin:0; font-size:1em; text-align:center;">${p.name}</h3>
             </div>
         `).join('')}
                         </div>
@@ -887,9 +893,11 @@ export const RemoveIngamePlayerView = (store) => {
                             <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Selectionnez le joueur à supprimer</h3>
                             <div class="grid">
                                 ${players.map(p => `
-                <div class="card" onclick="window.app.router.navigate('confirmRemoveIngamePlayer', { playerId: '${p.id}' })" style="cursor:pointer; text-align:center;">
-                    <span style="font-size:2em;">${p.avatar}</span>
-                    <h3>${p.name}</h3>
+                <div class="card" onclick="window.app.router.navigate('confirmRemoveIngamePlayer', { playerId: '${p.id}' })" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
+                    <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
+                        ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${p.avatar}</span>`}
+                    </div>
+                    <h3 style="margin:0; font-size:1em; text-align:center;">${p.name}</h3>
                 </div>
             `).join('')}
                             </div>
@@ -925,7 +933,7 @@ export const ReorderIngamePlayersView = (store) => {
 
     return `
                         <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.cancelReorderIngame()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <button onclick="window.app.router.navigate('gameActions')" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
                             <h1>Joueurs</h1>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
@@ -1000,7 +1008,7 @@ export const ConfirmCancelGameView = (store) => {
                             <p style="color:#666; margin-bottom:30px;">Attention, si vous annulez, <strong>aucune donnée ne sera sauvegardée</strong>. L'historique de cette partie sera perdu.</p>
 
                             <button onclick="window.app.executeCancelGame()" style="width:100%; background-color:#ef4444; margin-bottom:15px; padding:15px;">Annuler sans sauvegarder</button>
-                            <button onclick="window.app.router.back()" style="width:100%; background-color:#ddd; color:#333; padding:15px;">Retour au jeu</button>
+                            <button onclick="window.app.router.navigate('game')" style="width:100%; background-color:#ddd; color:#333; padding:15px;">Retour au jeu</button>
                         </div>
                     </div>
                     `;
@@ -1012,6 +1020,7 @@ export const GameOverView = (store) => {
 
     const game = store.getGames().find(g => g.id === session.gameId);
     const isLowestWin = game && game.winCondition === 'lowest';
+    const gameOverReason = session.gameOverReason || 'Partie terminée';
 
     // Sort players
     const players = session.players.map(sp => {
@@ -1026,7 +1035,7 @@ export const GameOverView = (store) => {
                     <div class="gameover-container">
                         <div class="gameover-icon">🏆</div>
                         <h1 class="gameover-title">${winner.name} a gagné !</h1>
-                        <p class="gameover-subtitle">Partie terminée</p>
+                        <p class="gameover-subtitle">${gameOverReason}</p>
 
                         <div class="card">
                             <h3 class="gameover-section-title">Classement Final</h3>
@@ -1061,7 +1070,13 @@ export const GameOverView = (store) => {
                             </table>
                         </div>
 
-                        <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem;">Retour à l'accueil</button>
+                        ${gameOverReason === "Terminé manuellement" ? `
+                            <button onclick="window.app.continueGame()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem; background-color:#4caf50;">Continuer la partie</button>
+                            <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:10px; padding:15px; font-size:1.1rem; background-color:#ddd; color:#333;">Retour à l'accueil</button>
+                        ` : `
+                            <button onclick="window.app.navigateUpdateLimitsFromGameOver()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem; background-color:var(--primary-color);">Modifier les limites</button>
+                            <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:10px; padding:15px; font-size:1.1rem;">Retour à l'accueil</button>
+                        `}
                     </div>
                     </div>
                     `;
@@ -1080,6 +1095,92 @@ export const AboutView = () => `
     </div>
 `;
 
+export const OptionsView = (store) => `
+    <header style="display:flex; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1>Options</h1>
+    </header>
+    
+    <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+        <button onclick="window.app.router.navigate('statistics')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+            <span>Statistiques</span>
+        </button>
+        
+        <button onclick="window.app.router.navigate('exportGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Exporter jeux</span>
+        </button>
+        <button onclick="window.app.router.navigate('importGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:30px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>Importer jeux</span>
+        </button>
+        
+        <div>
+            <h3 style="margin-bottom:15px; color:#333;">Paramètres</h3>
+            <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
+                <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+                <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>
+            </label>
+        </div>
+    </div>
+    
+    <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
+        <button onclick="window.app.router.navigate('about')" class="primary-button" style="width:100%; padding:15px; font-size:1em; display:flex; align-items:center; justify-content:center; gap:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>A propos</span>
+        </button>
+    </div>
+`;
+
+export const GameActionsView = (store) => {
+    const session = store.restoreSession();
+    if (!session) return `<div class="card">Erreur: Pas de session active.</div>`;
+
+    return `
+    <header style="display:flex; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.navigate('game')" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1>Actions</h1>
+    </header>
+    
+    <div style="margin-bottom:20px;">
+        <h3 style="margin-bottom:15px; color:#333;">Partie</h3>
+        <button onclick="window.app.navigateEndGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Terminer la partie</span>
+        </button>
+        <button onclick="window.app.navigateCancelGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; background:#dc3545; border-color:#dc3545; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Annuler la partie</span>
+        </button>
+    </div>
+    
+    <div style="margin-bottom:20px;">
+        <h3 style="margin-bottom:15px; color:#333;">Joueurs</h3>
+        <button onclick="window.app.navigateAddPlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <span>Ajouter un joueur</span>
+        </button>
+        <button onclick="window.app.navigateRemovePlayerInGame()" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <span>Supprimer un joueur</span>
+        </button>
+        <button onclick="window.app.navigateReorderPlayers()" class="primary-button" style="width:100%; padding:15px; font-size:1em; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
+            <span>Ordre des joueurs</span>
+        </button>
+    </div>
+    
+    <div style="margin-top:30px;">
+        <h3 style="margin-bottom:15px; color:#333;">Paramètres</h3>
+        <button onclick="window.app.navigateUpdateLimits()" class="primary-button" style="width:100%; padding:15px; font-size:1em; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4z"/></svg>
+            <span>Modifier les limites</span>
+        </button>
+    </div>
+`;
+};
+
 export const StatisticsView = (store) => {
     // Initialize statsState if needed
     if (!window.app.statsState) {
@@ -1090,8 +1191,24 @@ export const StatisticsView = (store) => {
         };
     }
     const state = window.app.statsState;
-    const history = (store.state.history || []).sort((a, b) => b.startTime - a.startTime);
-    const games = store.getAllGames();
+    const hideDeletedGames = store.state.hideDeletedGamesInStats || false;
+    
+    // Filtrer les jeux supprimés si l'option est activée
+    let games = store.getAllGames();
+    if (hideDeletedGames) {
+        games = games.filter(g => !g.deleted);
+    }
+    
+    // Créer un Set des IDs de jeux visibles pour filtrer l'historique
+    const visibleGameIds = new Set(games.map(g => g.id));
+    
+    // Filtrer l'historique pour exclure les parties de jeux supprimés
+    let history = (store.state.history || []);
+    if (hideDeletedGames) {
+        history = history.filter(h => visibleGameIds.has(h.gameId));
+    }
+    history = history.sort((a, b) => b.startTime - a.startTime);
+    
     const players = store.getAllPlayers();
 
     // ----------------------
@@ -1124,7 +1241,7 @@ export const StatisticsView = (store) => {
                 <table style="width:100%; border-collapse:collapse;">
                     ${statsByGame.map(g => `
                         <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:10px; border-left: 4px solid ${g.color}">${g.name}</td>
+                            <td style="padding:10px;">${g.name}</td>
                             <td style="padding:10px; text-align:right; font-weight:bold;">${g.count}</td>
                         </tr>
                     `).join('')}
@@ -1298,7 +1415,7 @@ export const StatisticsView = (store) => {
                     </div>`;
 
             return `
-                    <div class="card" onclick="window.app.toggleHistoryDetails('${session.sessionId}')" style="border-left: 4px solid ${gameColor}; margin-bottom:10px; padding:10px; cursor:pointer;">
+                    <div class="card" onclick="window.app.toggleHistoryDetails('${session.sessionId}')" style="margin-bottom:10px; padding:10px; cursor:pointer;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                             <div>
                                 <div style="font-weight:bold; font-size:1.1em;">${gameName}</div>
@@ -1333,7 +1450,7 @@ export const StatisticsView = (store) => {
                  <label style="font-weight:bold; font-size:0.9em; display:block; margin-bottom:5px;">Jeu</label>
                  <select onchange="window.app.updateStatisticsState('game', this.value)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; background:white;">
                     <option value="all">Tous les jeux</option>
-                    ${games.map(g => `<option value="${g.id}" ${filterGame === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
+                    ${games.filter(g => !hideDeletedGames || !g.deleted).map(g => `<option value="${g.id}" ${filterGame === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
                 </select>
             </div>
             <div>

@@ -8,7 +8,8 @@ export class Store {
             history: [], // Past games
             lastSelectedPlayers: [], // IDs of players selected in the last game
             homeFilterFavorites: false, // Filter favorites on home page
-            playerCircleFilter: 'all' // Filter players by circle
+            playerCircleFilter: 'all', // Filter players by circle
+            hideDeletedGamesInStats: false // Hide deleted games in statistics
         };
         this.load();
     }
@@ -26,7 +27,8 @@ export class Store {
                 history: loadedState.history || [],
                 lastSelectedPlayers: loadedState.lastSelectedPlayers || [],
                 homeFilterFavorites: loadedState.homeFilterFavorites || false,
-                playerCircleFilter: loadedState.playerCircleFilter || 'all'
+                playerCircleFilter: loadedState.playerCircleFilter || 'all',
+                hideDeletedGamesInStats: loadedState.hideDeletedGamesInStats || false
             };
         } else {
             this.seedDefaults();

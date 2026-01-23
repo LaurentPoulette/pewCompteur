@@ -83,12 +83,14 @@ body {
     position: relative;
     width: 100%;
     background: var(--surface-color);
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
+    box-shadow: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
     z-index: 100;
     /* Remove padding calc hack if using flex layout in view */
     flex-shrink: 0;
+    padding: 0;
+    margin: 0;
 }
 
 /* Slide Transitions */
@@ -135,10 +137,6 @@ select {
     background: var(--surface-color);
     margin-bottom: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.card div h3 {
-    padding-left: 0.5em;
 }
 
 .grid {
@@ -192,11 +190,36 @@ select {
     font-size: 1rem;
     background-color: var(--surface-color);
     color: var(--text-color);
+    cursor: pointer;
 }
 
 .score-input:focus {
     outline: 2px solid var(--primary-color);
     border-color: var(--primary-color);
+}
+
+/* Numeric Keypad */
+#numeric-keypad {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+#numeric-keypad button:active {
+    transform: scale(0.95);
+    background: #f0f0f0 !important;
+}
+
+#numeric-keypad button:last-child:active {
+    background: var(--primary-color) !important;
+    opacity: 0.9;
 }
 
 /* Burger Menu */
@@ -251,7 +274,7 @@ select {
 
 /* Refactored Table Styles */
 .history-table .history-header {
-    padding: 5px;
+    padding: 5px 5px 0 5px;
 }
 
 .history-table .history-header-check {
@@ -390,7 +413,7 @@ select {
 }
 
 .sticky-leaderboard-content {
-    padding: 0 10px 10px 10px;
+    
     overflow-x: auto;
 }
 
