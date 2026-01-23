@@ -50,13 +50,29 @@ export const HomeView = (store, showOnlyFavorites = false) => {
     `;
 };
 
-export const PlayerSelectView = (store, gameId) => {
+export const PlayerSelectView = (store, gameId, options = {}) => {
+    const { 
+        mode = 'game', // 'game' ou 'stats'
+        onBack = null,
+        onNext = null,
+        subtitle = null
+    } = options;
+
     const allPlayers = store.getPlayers();
-    const game = store.getGames().find(g => g.id === gameId);
+    const game = mode === 'game' ? store.getGames().find(g => g.id === gameId) : null;
     const circles = store.getCircles();
     
     // Get current filter from app state (will be set by filter dropdown)
     const selectedCircleFilter = window.app?.selectedCircleFilter || 'all';
+    
+    // Utiliser statsState.players pour le mode stats, selectedPlayers pour le mode game
+    const selectedPlayersList = mode === 'stats' 
+        ? (window.app.statsState?.players || [])
+        : (window.app.selectedPlayers || []);
+    
+    console.log('PlayerSelectView mode:', mode);
+    console.log('PlayerSelectView selectedPlayersList:', selectedPlayersList);
+    console.log('PlayerSelectView window.app.statsState:', window.app.statsState);
     
     // Filter players based on selected circle
     let players = allPlayers;
@@ -64,7 +80,12 @@ export const PlayerSelectView = (store, gameId) => {
         players = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
         
         // Filtrer aussi les joueurs sélectionnés pour ne garder que ceux du cercle
-        if (window.app && window.app.selectedPlayers) {
+        if (mode === 'stats' && window.app.statsState) {
+            window.app.statsState.players = window.app.statsState.players.filter(playerId => {
+                const player = allPlayers.find(p => p.id === playerId);
+                return player && player.circles && player.circles.includes(selectedCircleFilter);
+            });
+        } else if (mode === 'game' && window.app && window.app.selectedPlayers) {
             window.app.selectedPlayers = window.app.selectedPlayers.filter(playerId => {
                 const player = allPlayers.find(p => p.id === playerId);
                 return player && player.circles && player.circles.includes(selectedCircleFilter);
@@ -72,28 +93,37 @@ export const PlayerSelectView = (store, gameId) => {
         }
     }
     
-    let subtitle = "Choisir les joueurs";
-    if (game && game.minPlayers && game.maxPlayers) {
+    let subtitleText = subtitle || "Choisir les joueurs";
+    if (mode === 'game' && game && game.minPlayers && game.maxPlayers) {
         if (game.minPlayers === game.maxPlayers) {
-            subtitle = `Choisir ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+            subtitleText = `Choisir ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
         } else {
-            subtitle = `Choisir entre ${game.minPlayers} et ${game.maxPlayers} joueurs`;
+            subtitleText = `Choisir entre ${game.minPlayers} et ${game.maxPlayers} joueurs`;
         }
-    } else if (game && game.minPlayers) {
-        subtitle = `Choisir au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}`;
-    } else if (game && game.maxPlayers) {
-        subtitle = `Choisir au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
+    } else if (mode === 'game' && game && game.minPlayers) {
+        subtitleText = `Choisir au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}`;
+    } else if (mode === 'game' && game && game.maxPlayers) {
+        subtitleText = `Choisir au maximum ${game.maxPlayers} joueur${game.maxPlayers > 1 ? 's' : ''}`;
     }
+
+    const backAction = onBack || "window.app.router.back()";
+    const toggleAction = mode === 'stats' 
+        ? `this.classList.toggle('selected'); window.app.toggleStatsPlayer('` 
+        : `this.classList.toggle('selected'); window.app.togglePlayer('`;
+    
+    const showNewPlayerCard = mode === 'game';
+    const showCircleFilter = mode === 'game' && circles.length > 0;
+    const showLongPressHint = mode === 'game';
     
     return `
         <header style="display:flex; align-items:center; margin-bottom: 20px;">
-            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+            <button onclick="${backAction}" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
             <h1>Joueurs</h1>
         </header>
         <div style="flex:1; overflow-y:auto; width:100%;">
-        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">${subtitle}</h3>
+        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">${subtitleText}</h3>
         
-        ${circles.length > 0 ? `
+        ${showCircleFilter ? `
         <div style="margin-bottom:15px;">
             <select id="circle-filter" onchange="window.app.filterByCircle(this.value, '${gameId}')" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1em; background:white;">
                 <option value="all" ${selectedCircleFilter === 'all' ? 'selected' : ''}>Tous les joueurs</option>
@@ -102,23 +132,25 @@ export const PlayerSelectView = (store, gameId) => {
         </div>
         ` : ''}
         
-        <p style="text-align:center; color:#999; font-size:0.9em; margin:-10px 0 15px 0;">Appui long pour modifier</p>
+        ${showLongPressHint ? `<p style="text-align:center; color:#999; font-size:0.9em; margin:-10px 0 15px 0;">Appui long pour modifier</p>` : ''}
+        
         <div class="grid" id="player-grid" style="padding-bottom: 100px;">
+            ${showNewPlayerCard ? `
             <!-- New Player Card -->
             <div class="card" onclick="window.app.navigateCreatePlayer()" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:80px; border: 2px dashed #ccc; background:transparent;">
                  <div style="text-align:center; color:#888;">
                     <span style="font-size:2em;">+</span><br>Nouveau
                  </div>
             </div>
+            ` : ''}
 
             ${players.map(p => {
-        const isSelected = window.app.selectedPlayers.includes(p.id);
-        // Determine if the selected element is an avatar or a photo
+        const isSelected = selectedPlayersList.includes(p.id);
         const isAvatarSelected = !p.photo && isSelected;
         const isPhotoSelected = p.photo && isSelected;
 
         return `
-                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" data-player-id="${p.id}" onclick="this.classList.toggle('selected'); window.app.togglePlayer('${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div class="card player-card ${isSelected ? 'selected' : ''}" data-id="${p.id}" data-player-id="${p.id}" data-mode="${mode}" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                     <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
                         <div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
                              ${p.photo ? `<img src="${p.photo}" class="${isPhotoSelected ? 'selected-photo' : ''}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span class="${isAvatarSelected ? 'selected-avatar' : ''}" style="font-size:1.8em;">${p.avatar}</span>`}
@@ -135,18 +167,40 @@ export const PlayerSelectView = (store, gameId) => {
         </div>
         </div>
         
+        ${mode === 'game' ? `
         <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
-            <button id="next-button" onclick="window.app.navigatePlayerOrder('${gameId}')" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant (${window.app.selectedPlayers.length} joueur${window.app.selectedPlayers.length > 1 ? 's' : ''})</button>
+            <button id="next-button" onclick="${onNext || `window.app.navigatePlayerOrder('${gameId}')`}" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Suivant (${selectedPlayersList.length} joueur${selectedPlayersList.length > 1 ? 's' : ''})</button>
         </div>
+        <script>
+            setTimeout(() => window.app.updateNextButtonCount(), 50);
+        </script>
+        ` : `
+        <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
+            <button class="player-select-button" onclick="${onNext || 'window.app.router.back()'}" style="width:100%; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Valider (${selectedPlayersList.length} joueur${selectedPlayersList.length > 1 ? 's' : ''})</button>
+        </div>
+        `}
+        
+        <script>
+            // Attacher les event listeners aux cartes de joueurs
+            document.querySelectorAll('.player-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const playerId = this.dataset.playerId;
+                    const mode = this.dataset.mode;
+                    this.classList.toggle('selected');
+                    if (mode === 'stats') {
+                        window.app.toggleStatsPlayer(playerId);
+                    } else {
+                        window.app.togglePlayer(playerId);
+                    }
+                });
+            });
+        </script>
+        
         <style>
             .player-card.selected { border: 2px solid var(--primary-color); background-color: #e0f2fe; }
             .selected-avatar { text-shadow: 0 0 3px var(--primary-color); }
             .selected-photo { border: 2px solid var(--primary-color); box-shadow: 0 0 5px var(--primary-color); }
         </style>
-        <script>
-            // Mettre à jour le compteur au chargement de la vue
-            setTimeout(() => window.app.updateNextButtonCount(), 50);
-        </script>
 `;
 };
 
@@ -1187,7 +1241,7 @@ export const StatisticsView = (store) => {
         window.app.statsState = {
             game: 'all',
             players: [],
-            tab: 'comparator' // 'comparator', 'history', 'global'
+            tab: 'global' // 'comparator', 'history', 'global'
         };
     }
     const state = window.app.statsState;
@@ -1222,22 +1276,15 @@ export const StatisticsView = (store) => {
     // ----------------------
     let globalContent = '';
     if (state.tab === 'global') {
+        // L'onglet Global n'est jamais filtré
         const statsByGame = games.map(g => {
-            const count = history.filter(h => {
-                const gameMatch = h.gameId === g.id;
-                let playerMatch = true;
-                if (filterPlayers.length > 0) {
-                    const sessionPlayerIds = new Set(h.players.map(p => p.id));
-                    playerMatch = filterPlayers.every(id => sessionPlayerIds.has(id));
-                }
-                return gameMatch && playerMatch;
-            }).length;
+            const count = history.filter(h => h.gameId === g.id).length;
             return { ...g, count };
         }).sort((a, b) => b.count - a.count);
 
         globalContent = `
             <div class="card">
-                <h3 style="margin-bottom:10px;">Parties Jouées (${filterPlayers.length > 0 ? 'Filtré' : 'Global'})</h3>
+                <h3 style="margin-bottom:10px;">Parties Jouées</h3>
                 <table style="width:100%; border-collapse:collapse;">
                     ${statsByGame.map(g => `
                         <tr style="border-bottom:1px solid #eee;">
@@ -1255,75 +1302,137 @@ export const StatisticsView = (store) => {
     // ----------------------
     let comparatorContent = '';
     if (state.tab === 'comparator') {
-        // Computation Logic
-        // Filter games where ALL selected players participated AND match game filter
-        const commonGames = history.filter(h => {
-            const playerIdsInGame = new Set(h.players.map(p => p.id));
-            const playersMatch = filterPlayers.length > 0 ? filterPlayers.every(id => playerIdsInGame.has(id)) : false; // If no players selected, showing nothing or global? Logic says "Select players..."
-            // If no player selected, we show help text.
-
-            const gameMatch = (filterGame === 'all') || (h.gameId === filterGame);
-
-            if (filterPlayers.length === 0) return false;
-            return playersMatch && gameMatch;
-        });
-
         let resultsHtml = '';
-        if (filterPlayers.length === 0) {
-            resultsHtml = '<p style="text-align:center; color:#999; font-style:italic;">Sélectionnez au moins un joueur ci-dessus...</p>';
-        } else if (commonGames.length === 0) {
-            resultsHtml = '<p style="text-align:center; color:#999;">Aucune partie commune trouvée.</p>';
-        } else {
-            // Helper to compute
-            const stats = {};
-            filterPlayers.forEach(id => { stats[id] = { wins: 0, sumRank: 0, count: 0 }; });
+        
+        if (filterPlayers.length > 0) {
+            // Si des joueurs sont sélectionnés : parties communes uniquement
+            const commonGames = history.filter(h => {
+                const playerIdsInGame = new Set(h.players.map(p => p.id));
+                const playersMatch = filterPlayers.every(id => playerIdsInGame.has(id));
+                const gameMatch = (filterGame === 'all') || (h.gameId === filterGame);
+                return playersMatch && gameMatch;
+            });
 
-            commonGames.forEach(g => {
-                const gameDef = games.find(gd => gd.id === g.gameId);
-                const isLowest = gameDef && gameDef.winCondition === 'lowest';
-                const sorted = [...g.players].sort((a, b) => isLowest ? a.score - b.score : b.score - a.score);
+            if (commonGames.length === 0) {
+                resultsHtml = '<p style="text-align:center; color:#999;">Aucune partie commune trouvée.</p>';
+            } else {
+                const stats = {};
+                filterPlayers.forEach(id => { stats[id] = { wins: 0, sumRank: 0, count: 0 }; });
+
+                commonGames.forEach(g => {
+                    const gameDef = games.find(gd => gd.id === g.gameId);
+                    const isLowest = gameDef && gameDef.winCondition === 'lowest';
+                    const sorted = [...g.players].sort((a, b) => isLowest ? a.score - b.score : b.score - a.score);
+
+                    filterPlayers.forEach(id => {
+                        const rankIndex = sorted.findIndex(p => p.id === id);
+                        if (rankIndex !== -1) {
+                            stats[id].count++;
+                            stats[id].sumRank += (rankIndex + 1);
+                            if (rankIndex === 0) stats[id].wins++;
+                        }
+                    });
+                });
+
+                resultsHtml = `
+                    <div style="margin-bottom:20px; text-align:center; font-weight:bold;">
+                        ${commonGames.length} partie(s) commune(s)
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                        <thead>
+                            <tr style="background:#eee; font-size:0.9em;">
+                                <th style="padding:5px;">Joueur</th>
+                                <th style="padding:5px; text-align:center;">Victoires</th>
+                                <th style="padding:5px; text-align:center;">Rang Moyen</th>
+                                <th style="padding:5px; text-align:center;">Win %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
 
                 filterPlayers.forEach(id => {
-                    const rankIndex = sorted.findIndex(p => p.id === id);
-                    if (rankIndex !== -1) {
-                        stats[id].count++;
-                        stats[id].sumRank += (rankIndex + 1);
-                        if (rankIndex === 0) stats[id].wins++;
+                    const s = stats[id];
+                    const pDef = players.find(p => p.id === id);
+                    const avgRank = s.count ? (s.sumRank / s.count).toFixed(1) : '-';
+                    const winRate = s.count ? Math.round((s.wins / s.count) * 100) : 0;
+                    resultsHtml += `
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:5px;">${pDef.avatar} ${pDef.name}</td>
+                            <td style="padding:5px; text-align:center; font-weight:bold;">${s.wins}</td>
+                            <td style="padding:5px; text-align:center;">${avgRank}</td>
+                            <td style="padding:5px; text-align:center;">${winRate}%</td>
+                        </tr>
+                    `;
+                });
+                resultsHtml += `</tbody></table>`;
+            }
+        } else {
+            // Si aucun joueur sélectionné : stats individuelles pour tous les joueurs
+            const relevantGames = history.filter(h => (filterGame === 'all') || (h.gameId === filterGame));
+            
+            if (relevantGames.length === 0) {
+                resultsHtml = '<p style="text-align:center; color:#999;">Aucune partie trouvée.</p>';
+            } else {
+                const stats = {};
+                
+                // Calculer les stats pour chaque joueur
+                relevantGames.forEach(g => {
+                    const gameDef = games.find(gd => gd.id === g.gameId);
+                    const isLowest = gameDef && gameDef.winCondition === 'lowest';
+                    const sorted = [...g.players].sort((a, b) => isLowest ? a.score - b.score : b.score - a.score);
+
+                    g.players.forEach(p => {
+                        if (!stats[p.id]) {
+                            stats[p.id] = { wins: 0, sumRank: 0, count: 0 };
+                        }
+                        const rankIndex = sorted.findIndex(sp => sp.id === p.id);
+                        if (rankIndex !== -1) {
+                            stats[p.id].count++;
+                            stats[p.id].sumRank += (rankIndex + 1);
+                            if (rankIndex === 0) stats[p.id].wins++;
+                        }
+                    });
+                });
+
+                // Trier les joueurs par nombre de victoires
+                const sortedPlayers = Object.keys(stats).sort((a, b) => stats[b].wins - stats[a].wins);
+
+                resultsHtml = `
+                    <div style="margin-bottom:20px; text-align:center; font-weight:bold;">
+                        ${relevantGames.length} partie(s) analysée(s)
+                    </div>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                        <thead>
+                            <tr style="background:#eee; font-size:0.9em;">
+                                <th style="padding:5px;">Joueur</th>
+                                <th style="padding:5px; text-align:center;">Parties</th>
+                                <th style="padding:5px; text-align:center;">Victoires</th>
+                                <th style="padding:5px; text-align:center;">Rang Moyen</th>
+                                <th style="padding:5px; text-align:center;">Win %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                sortedPlayers.forEach(id => {
+                    const s = stats[id];
+                    const pDef = players.find(p => p.id === id);
+                    if (pDef) {
+                        const avgRank = s.count ? (s.sumRank / s.count).toFixed(1) : '-';
+                        const winRate = s.count ? Math.round((s.wins / s.count) * 100) : 0;
+                        resultsHtml += `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:5px;">${pDef.avatar} ${pDef.name}</td>
+                                <td style="padding:5px; text-align:center;">${s.count}</td>
+                                <td style="padding:5px; text-align:center; font-weight:bold;">${s.wins}</td>
+                                <td style="padding:5px; text-align:center;">${avgRank}</td>
+                                <td style="padding:5px; text-align:center;">${winRate}%</td>
+                            </tr>
+                        `;
                     }
                 });
-            });
-
-            resultsHtml = `
-                <div style="margin-bottom:20px; text-align:center; font-weight:bold;">
-                    ${commonGames.length} partie(s) commune(s)
-                </div>
-                <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
-                    <thead>
-                        <tr style="background:#eee; font-size:0.9em;">
-                            <th style="padding:5px;">Joueur</th>
-                            <th style="padding:5px; text-align:center;">Victoires</th>
-                            <th style="padding:5px; text-align:center;">Rang Moyen</th>
-                            <th style="padding:5px; text-align:center;">Win %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-             `;
-
-            filterPlayers.forEach(id => {
-                const s = stats[id];
-                const pDef = players.find(p => p.id === id);
-                const avgRank = s.count ? (s.sumRank / s.count).toFixed(1) : '-';
-                const winRate = s.count ? Math.round((s.wins / s.count) * 100) : 0;
-                resultsHtml += `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:5px;">${pDef.avatar} ${pDef.name}</td>
-                        <td style="padding:5px; text-align:center; font-weight:bold;">${s.wins}</td>
-                        <td style="padding:5px; text-align:center;">${avgRank}</td>
-                        <td style="padding:5px; text-align:center;">${winRate}%</td>
-                    </tr>
-                `;
-            });
-            resultsHtml += `</tbody></table>`;
+                resultsHtml += `</tbody></table>`;
+            }
         }
 
         comparatorContent = `
@@ -1355,10 +1464,22 @@ export const StatisticsView = (store) => {
             return gameMatch && playerMatch;
         });
 
+        let historyMessage = '';
+        if (filterPlayers.length > 0) {
+            if (filteredHistory.length === 0) {
+                historyMessage = '<p style="text-align:center; color:#999;">Aucune partie commune trouvée.</p>';
+            } else {
+                historyMessage = `<div style="margin-bottom:20px; text-align:center; font-weight:bold;">
+                    ${filteredHistory.length} partie(s) commune(s)
+                </div>`;
+            }
+        }
+
         historyContent = `
             <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+                ${historyMessage}
                 <div id="history-list">
-                    ${filteredHistory.length === 0 ? '<p style="text-align:center; color:#666;">Aucune partie trouvée.</p>' : filteredHistory.map(session => {
+                    ${filteredHistory.length === 0 && filterPlayers.length === 0 ? '<p style="text-align:center; color:#666;">Aucune partie trouvée.</p>' : filteredHistory.map(session => {
             const game = games.find(g => g.id === session.gameId);
             const gameName = game ? game.name : 'Jeu inconnu';
             const gameColor = game ? game.color : '#ccc';
@@ -1442,38 +1563,13 @@ export const StatisticsView = (store) => {
                 <h1>Statistiques</h1>
             </header>
 
-            <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overflow-x:hidden; padding: 0 2px 20px 2px;">
-
-        <!-- FILTERS -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div style="margin-bottom:10px;">
-                 <label style="font-weight:bold; font-size:0.9em; display:block; margin-bottom:5px;">Jeu</label>
-                 <select onchange="window.app.updateStatisticsState('game', this.value)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; background:white;">
-                    <option value="all">Tous les jeux</option>
-                    ${games.filter(g => !hideDeletedGames || !g.deleted).map(g => `<option value="${g.id}" ${filterGame === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
-                </select>
-            </div>
-            <div>
-                <label style="font-weight:bold; font-size:0.9em; display:block; margin-bottom:5px;">Joueurs (filtre)</label>
-                <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap:5px;">
-                     ${players.map(p => {
-        const isSelected = filterPlayers.includes(p.id);
-        return `
-                            <div onclick="window.app.updateStatisticsState('togglePlayer', '${p.id}')" style="cursor:pointer; text-align:center; padding:5px; border:1px solid ${isSelected ? 'var(--primary-color)' : '#eee'}; background-color: ${isSelected ? '#e0f2fe' : 'transparent'}; border-radius:8px;">
-                                <div style="font-size:1.5em;">${p.avatar}</div>
-                                <div style="font-size:0.7em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${p.name}</div>
-                            </div>
-                         `;
-    }).join('')}
-                </div>
-            </div>
-        </div>
+            <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overflow-x:hidden; padding: 0 2px 180px 2px;">
 
         <!-- TABS -->
         <div style="display:flex; margin-bottom:20px; border-bottom:1px solid #ccc;">
-            <button onclick="window.app.updateStatisticsState('tab', 'comparator')" style="flex:1; padding:10px; border:none; background:${state.tab === 'comparator' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'comparator' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'comparator' ? 'bold' : 'normal'}; cursor:pointer;">Comparateur</button>
-            <button onclick="window.app.updateStatisticsState('tab', 'history')" style="flex:1; padding:10px; border:none; background:${state.tab === 'history' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'history' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'history' ? 'bold' : 'normal'}; cursor:pointer;">Historique</button>
             <button onclick="window.app.updateStatisticsState('tab', 'global')" style="flex:1; padding:10px; border:none; background:${state.tab === 'global' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'global' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'global' ? 'bold' : 'normal'}; cursor:pointer;">Global</button>
+            <button onclick="window.app.updateStatisticsState('tab', 'history')" style="flex:1; padding:10px; border:none; background:${state.tab === 'history' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'history' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'history' ? 'bold' : 'normal'}; cursor:pointer;">Historique</button>
+            <button onclick="window.app.updateStatisticsState('tab', 'comparator')" style="flex:1; padding:10px; border:none; background:${state.tab === 'comparator' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'comparator' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'comparator' ? 'bold' : 'normal'}; cursor:pointer;">Comparaison</button>
         </div>
 
         <!-- CONTENT -->
@@ -1483,6 +1579,35 @@ export const StatisticsView = (store) => {
             ${state.tab === 'global' ? globalContent : ''}
         </div>
 
+            </div>
+
+            <!-- STICKY FILTERS -->
+            <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100; background:var(--surface-color); padding:15px; border-radius:10px; box-shadow: 0 -4px 10px rgba(0,0,0,0.2);">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <select onchange="window.app.updateStatisticsState('game', this.value)" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px; background:white; font-size:1em;">
+                        <option value="all">Tous les jeux</option>
+                        ${games.filter(g => !hideDeletedGames || !g.deleted).map(g => `<option value="${g.id}" ${filterGame === g.id ? 'selected' : ''}>${g.name}</option>`).join('')}
+                    </select>
+                    <button onclick="window.app.navigateStatsPlayerSelect()" class="primary-button" style="flex:1; padding:10px; font-size:1em; display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        <span>Joueurs (${filterPlayers.length})</span>
+                    </button>
+                </div>
+                ${filterPlayers.length > 0 ? `
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        ${filterPlayers.map(pid => {
+                            const p = players.find(pl => pl.id === pid);
+                            if (!p) return '';
+                            return `
+                                <div style="display:flex; align-items:center; gap:5px; padding:5px 10px; background:#e0f2fe; border:1px solid var(--primary-color); border-radius:15px; font-size:0.9em;">
+                                    <span>${p.avatar}</span>
+                                    <span>${p.name}</span>
+                                    <button onclick="window.app.updateStatisticsState('togglePlayer', '${pid}'); event.stopPropagation();" style="background:none; border:none; color:#666; padding:0; margin-left:5px; cursor:pointer; font-size:1.2em; line-height:1;">×</button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                ` : ''}
             </div>
         </div>
     `;
