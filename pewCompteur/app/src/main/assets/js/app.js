@@ -488,10 +488,17 @@ class App {
             originalIndex = index;
             e.dataTransfer?.setData('text/plain', index);
             draggedItem.classList.add('dragging-source');
+            // Delay pour permettre au navigateur de capturer l'image du drag
+            setTimeout(() => {
+                draggedItem.style.opacity = '0.4';
+            }, 0);
         };
 
         const onDragEnd = () => {
-            if (draggedItem) draggedItem.classList.remove('dragging-source');
+            if (draggedItem) {
+                draggedItem.classList.remove('dragging-source');
+                draggedItem.style.opacity = '1';
+            }
             draggedItem = null;
             originalIndex = null;
             items.forEach(item => item.classList.remove('drag-over'));
@@ -500,28 +507,40 @@ class App {
         const onDragOver = (e) => {
             e.preventDefault();
             const target = e.target.closest('.draggable-item');
-            if (target && target !== draggedItem) {
+            if (target && target !== draggedItem && draggedItem) {
                 // Remove drag-over from all others
-                items.forEach(item => item !== target && item.classList.remove('drag-over'));
-                target.classList.add('drag-over');
+                items.forEach(item => item.classList.remove('drag-over'));
+                
+                // Insérer visuellement le draggedItem à la position du target
+                const allItems = Array.from(container.querySelectorAll('.draggable-item'));
+                const draggedIndex = allItems.indexOf(draggedItem);
+                const targetIndex = allItems.indexOf(target);
+                
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    if (draggedIndex < targetIndex) {
+                        // Insérer après le target
+                        target.parentNode.insertBefore(draggedItem, target.nextSibling);
+                    } else {
+                        // Insérer avant le target
+                        target.parentNode.insertBefore(draggedItem, target);
+                    }
+                }
             }
         };
 
         const onDrop = (e) => {
             e.preventDefault();
-            const target = e.target.closest('.draggable-item');
-            if (target && draggedItem) {
-                const targetIndex = parseInt(target.dataset.index);
-                const sourceIndex = originalIndex;
+            if (draggedItem) {
+                // Récupérer les nouveaux indices après le déplacement visuel
+                const allItems = Array.from(container.querySelectorAll('.draggable-item'));
+                const newOrder = allItems.map(item => parseInt(item.dataset.index));
+                
+                // Réorganiser le tableau selectedPlayers selon le nouvel ordre visuel
+                const reorderedPlayers = newOrder.map(idx => this.selectedPlayers[idx]);
+                this.selectedPlayers = reorderedPlayers;
 
-                if (sourceIndex !== targetIndex) {
-                    // Update array - Remove from source, insert at target
-                    const [removed] = this.selectedPlayers.splice(sourceIndex, 1);
-                    this.selectedPlayers.splice(targetIndex, 0, removed);
-
-                    // Allow UI update
-                    this.updateSelectedPlayersUI();
-                }
+                // Mettre à jour l'UI pour refléter le nouvel ordre
+                this.updateSelectedPlayersUI();
             }
         };
 
@@ -580,10 +599,21 @@ class App {
             const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
             const targetItem = elementUnder ? elementUnder.closest('.draggable-item') : null;
 
-            // Visual feedback on potential target
-            items.forEach(item => item.classList.remove('drag-over'));
+            // Réorganiser visuellement pendant le drag
             if (targetItem && targetItem !== touchedItem) {
-                targetItem.classList.add('drag-over');
+                const allItems = Array.from(container.querySelectorAll('.draggable-item'));
+                const draggedIndex = allItems.indexOf(touchedItem);
+                const targetIndex = allItems.indexOf(targetItem);
+                
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    if (draggedIndex < targetIndex) {
+                        // Insérer après le target
+                        targetItem.parentNode.insertBefore(touchedItem, targetItem.nextSibling);
+                    } else {
+                        // Insérer avant le target
+                        targetItem.parentNode.insertBefore(touchedItem, targetItem);
+                    }
+                }
             }
         };
 
@@ -591,25 +621,23 @@ class App {
             if (!touchedItem) return;
 
             touchedItem.classList.remove('dragging-source');
-            items.forEach(item => item.classList.remove('drag-over'));
 
             if (mirrorElement) {
                 mirrorElement.remove();
                 mirrorElement = null;
             }
 
-            const changedTouch = e.changedTouches[0];
-            const elementUnder = document.elementFromPoint(changedTouch.clientX, changedTouch.clientY);
-            const targetItem = elementUnder ? elementUnder.closest('.draggable-item') : null;
+            // Récupérer les nouveaux indices après le déplacement visuel
+            const allItems = Array.from(container.querySelectorAll('.draggable-item'));
+            const newOrder = allItems.map(item => parseInt(item.dataset.index));
+            
+            // Réorganiser le tableau selectedPlayers selon le nouvel ordre visuel
+            const reorderedPlayers = newOrder.map(idx => this.selectedPlayers[idx]);
+            this.selectedPlayers = reorderedPlayers;
 
-            if (targetItem) {
-                const targetIndex = parseInt(targetItem.dataset.index);
-                if (touchStartIndex !== null && targetIndex !== null && touchStartIndex !== targetIndex && !isNaN(targetIndex)) {
-                    const [removed] = this.selectedPlayers.splice(touchStartIndex, 1);
-                    this.selectedPlayers.splice(targetIndex, 0, removed);
-                    this.updateSelectedPlayersUI();
-                }
-            }
+            // Mettre à jour l'UI pour refléter le nouvel ordre
+            this.updateSelectedPlayersUI();
+
             touchedItem = null;
             touchStartIndex = null;
         };
@@ -1130,6 +1158,59 @@ class App {
         });
     }
 
+    showConfirmPopup(title, message, onConfirm, onCancel) {
+        // Créer la popup modale
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-popup-overlay';
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;';
+        
+        const popup = document.createElement('div');
+        popup.style.cssText = 'background:white; border-radius:12px; padding:25px; max-width:400px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.3); animation:slideIn 0.3s ease;';
+        
+        popup.innerHTML = `
+            <style>
+                @keyframes slideIn {
+                    from { transform: translateY(-20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            </style>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                <span style="font-size:1.8em; color:#f59e0b;">⚠️</span>
+                <h3 style="margin:0; color:#333;">${title}</h3>
+            </div>
+            <p style="color:#666; line-height:1.5; margin-bottom:20px;">${message}</p>
+            <div style="display:flex; gap:10px;">
+                <button class="cancel-btn" style="flex:1; padding:12px; background:#e5e7eb; color:#333; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:1rem;">Annuler</button>
+                <button class="confirm-btn" style="flex:1; padding:12px; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:1rem;">Confirmer</button>
+            </div>
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        // Gérer les boutons
+        const confirmBtn = popup.querySelector('.confirm-btn');
+        const cancelBtn = popup.querySelector('.cancel-btn');
+        
+        confirmBtn.addEventListener('click', () => {
+            overlay.remove();
+            if (onConfirm) onConfirm();
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            overlay.remove();
+            if (onCancel) onCancel();
+        });
+        
+        // Fermer en cliquant sur l'overlay
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                if (onCancel) onCancel();
+            }
+        });
+    }
+
     // Pavé numérique personnalisé
     showNumericKeypadById(roundIndex, playerId, currentValue) {
         const session = this.store.restoreSession();
@@ -1220,6 +1301,57 @@ class App {
         
         // Fermer le pavé
         this.closeNumericKeypad();
+    }
+
+    validateKeypadInputAndNext() {
+        const keypad = document.getElementById('numeric-keypad');
+        const display = document.getElementById('keypad-display');
+        const roundIndex = keypad.dataset.roundIndex;
+        const playerId = keypad.dataset.playerId;
+        const value = display.textContent;
+        
+        // Mettre à jour le score dans le store
+        this.updateRound(roundIndex, playerId, value);
+        
+        // Trouver et mettre à jour l'input visuel du joueur actuel dans le tableau
+        const currentInput = document.querySelector(`input.score-input[onclick*="'${roundIndex}', '${playerId}'"]`);
+        if (currentInput) {
+            currentInput.value = value;
+        }
+        
+        // Trouver le joueur suivant dans le même tour
+        const session = this.store.restoreSession();
+        if (!session) {
+            this.closeNumericKeypad();
+            return;
+        }
+        
+        const currentPlayerIndex = session.players.findIndex(p => p.id === playerId);
+        if (currentPlayerIndex === -1) {
+            this.closeNumericKeypad();
+            return;
+        }
+        
+        // Passer au joueur suivant (ou au premier si on est au dernier)
+        const nextPlayerIndex = (currentPlayerIndex + 1) % session.players.length;
+        const nextPlayer = session.players[nextPlayerIndex];
+        
+        // Ouvrir le pavé pour le joueur suivant
+        const nextPlayerInfo = this.store.getPlayers().find(p => p.id === nextPlayer.id);
+        const currentValue = session.history[roundIndex]?.[nextPlayer.id];
+        
+        // Réinitialiser l'affichage pour le joueur suivant
+        document.getElementById('keypad-display').textContent = currentValue !== undefined && currentValue !== '' ? currentValue.toString() : '0';
+        document.getElementById('keypad-player-name').textContent = nextPlayerInfo ? nextPlayerInfo.name : nextPlayer.name;
+        
+        // Mettre à jour les données du keypad
+        keypad.dataset.roundIndex = roundIndex;
+        keypad.dataset.playerId = nextPlayer.id;
+        
+        // Trouver et stocker l'input du prochain joueur
+        this.currentInputElement = document.querySelector(`input.score-input[onclick*="'${roundIndex}', '${nextPlayer.id}'"]`);
+        
+        // Garder le pavé ouvert
     }
 
     closeNumericKeypad() {
@@ -1533,6 +1665,37 @@ class App {
     }
 
     addRound() {
+        const session = this.store.restoreSession();
+        if (!session) return;
+
+        // Vérifier si le dernier tour a tous ses scores saisis
+        if (session.history.length > 0) {
+            const lastRound = session.history[session.history.length - 1];
+            const hasEmptyScores = session.players.some(p => {
+                const score = lastRound[p.id];
+                return score === undefined || score === null || score === '';
+            });
+
+            if (hasEmptyScores) {
+                // Afficher une popup de confirmation
+                this.showConfirmPopup(
+                    'Tour incomplet',
+                    'Tous les scores du tour en cours n\'ont pas été saisis. Voulez-vous vraiment ajouter un nouveau tour ?',
+                    () => {
+                        // Confirmer : ajouter le tour
+                        this.store.addEmptyRound();
+                        const content = ActiveGameView(this.store);
+                        document.querySelector('.view:last-child').innerHTML = content;
+                    },
+                    () => {
+                        // Annuler : ne rien faire
+                    }
+                );
+                return;
+            }
+        }
+
+        // Aucun problème, ajouter le tour directement
         this.store.addEmptyRound();
         const content = ActiveGameView(this.store);
         document.querySelector('.view:last-child').innerHTML = content;
@@ -1922,10 +2085,17 @@ class App {
             originalIndex = index;
             e.dataTransfer?.setData('text/plain', index);
             draggedItem.classList.add('dragging-source');
+            // Delay pour permettre au navigateur de capturer l'image du drag
+            setTimeout(() => {
+                draggedItem.style.opacity = '0.4';
+            }, 0);
         };
 
         const onDragEnd = () => {
-            if (draggedItem) draggedItem.classList.remove('dragging-source');
+            if (draggedItem) {
+                draggedItem.classList.remove('dragging-source');
+                draggedItem.style.opacity = '1';
+            }
             draggedItem = null;
             originalIndex = null;
             items.forEach(item => item.classList.remove('drag-over'));
@@ -1934,24 +2104,40 @@ class App {
         const onDragOver = (e) => {
             e.preventDefault();
             const target = e.target.closest('.draggable-ingame-item');
-            if (target && target !== draggedItem) {
-                items.forEach(item => item !== target && item.classList.remove('drag-over'));
-                target.classList.add('drag-over');
+            if (target && target !== draggedItem && draggedItem) {
+                // Remove drag-over from all others
+                items.forEach(item => item.classList.remove('drag-over'));
+                
+                // Insérer visuellement le draggedItem à la position du target
+                const allItems = Array.from(container.querySelectorAll('.draggable-ingame-item'));
+                const draggedIndex = allItems.indexOf(draggedItem);
+                const targetIndex = allItems.indexOf(target);
+                
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    if (draggedIndex < targetIndex) {
+                        // Insérer après le target
+                        target.parentNode.insertBefore(draggedItem, target.nextSibling);
+                    } else {
+                        // Insérer avant le target
+                        target.parentNode.insertBefore(draggedItem, target);
+                    }
+                }
             }
         };
 
         const onDrop = (e) => {
             e.preventDefault();
-            const target = e.target.closest('.draggable-ingame-item');
-            if (target && draggedItem) {
-                const targetIndex = parseInt(target.dataset.index);
-                const sourceIndex = originalIndex;
+            if (draggedItem) {
+                // Récupérer les nouveaux indices après le déplacement visuel
+                const allItems = Array.from(container.querySelectorAll('.draggable-ingame-item'));
+                const newOrder = allItems.map(item => parseInt(item.dataset.index));
+                
+                // Réorganiser le tableau reorderIngameState selon le nouvel ordre visuel
+                const reorderedPlayers = newOrder.map(idx => this.reorderIngameState[idx]);
+                this.reorderIngameState = reorderedPlayers;
 
-                if (sourceIndex !== targetIndex) {
-                    const [removed] = this.reorderIngameState.splice(sourceIndex, 1);
-                    this.reorderIngameState.splice(targetIndex, 0, removed);
-                    this.updateReorderIngameUI();
-                }
+                // Mettre à jour l'UI pour refléter le nouvel ordre
+                this.updateReorderIngameUI();
             }
         };
 
@@ -1973,15 +2159,20 @@ class App {
             const item = e.target.closest('.draggable-ingame-item');
             if (!item) return;
 
+            e.preventDefault();
+
             touchedItem = item;
             touchStartIndex = parseInt(item.dataset.index);
 
             mirrorElement = item.cloneNode(true);
             mirrorElement.classList.add('draggable-mirror');
             const rect = item.getBoundingClientRect();
-            mirrorElement.style.width = scrollX + rect.width + 'px'; // Fix width
-            mirrorElement.style.left = rect.left + 'px';
-            mirrorElement.style.top = rect.top + 'px';
+            mirrorElement.style.position = 'fixed';
+            mirrorElement.style.zIndex = '9999';
+            mirrorElement.style.width = `${rect.width}px`;
+            mirrorElement.style.left = `${rect.left}px`;
+            mirrorElement.style.top = `${rect.top}px`;
+            mirrorElement.style.pointerEvents = 'none';
 
             document.body.appendChild(mirrorElement);
             item.classList.add('dragging-source');
@@ -1997,9 +2188,21 @@ class App {
             const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
             const targetItem = elementUnder ? elementUnder.closest('.draggable-ingame-item') : null;
 
-            items.forEach(item => item.classList.remove('drag-over'));
+            // Réorganiser visuellement pendant le drag
             if (targetItem && targetItem !== touchedItem) {
-                targetItem.classList.add('drag-over');
+                const allItems = Array.from(container.querySelectorAll('.draggable-ingame-item'));
+                const draggedIndex = allItems.indexOf(touchedItem);
+                const targetIndex = allItems.indexOf(targetItem);
+                
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    if (draggedIndex < targetIndex) {
+                        // Insérer après le target
+                        targetItem.parentNode.insertBefore(touchedItem, targetItem.nextSibling);
+                    } else {
+                        // Insérer avant le target
+                        targetItem.parentNode.insertBefore(touchedItem, targetItem);
+                    }
+                }
             }
         };
 
@@ -2007,25 +2210,23 @@ class App {
             if (!touchedItem) return;
 
             touchedItem.classList.remove('dragging-source');
-            items.forEach(item => item.classList.remove('drag-over'));
 
             if (mirrorElement) {
                 mirrorElement.remove();
                 mirrorElement = null;
             }
 
-            const changedTouch = e.changedTouches[0];
-            const elementUnder = document.elementFromPoint(changedTouch.clientX, changedTouch.clientY);
-            const targetItem = elementUnder ? elementUnder.closest('.draggable-ingame-item') : null;
+            // Récupérer les nouveaux indices après le déplacement visuel
+            const allItems = Array.from(container.querySelectorAll('.draggable-ingame-item'));
+            const newOrder = allItems.map(item => parseInt(item.dataset.index));
+            
+            // Réorganiser le tableau reorderIngameState selon le nouvel ordre visuel
+            const reorderedPlayers = newOrder.map(idx => this.reorderIngameState[idx]);
+            this.reorderIngameState = reorderedPlayers;
 
-            if (targetItem) {
-                const targetIndex = parseInt(targetItem.dataset.index);
-                if (touchStartIndex !== null && targetIndex !== null && touchStartIndex !== targetIndex && !isNaN(targetIndex)) {
-                    const [removed] = this.reorderIngameState.splice(touchStartIndex, 1);
-                    this.reorderIngameState.splice(targetIndex, 0, removed);
-                    this.updateReorderIngameUI();
-                }
-            }
+            // Mettre à jour l'UI pour refléter le nouvel ordre
+            this.updateReorderIngameUI();
+
             touchedItem = null;
             touchStartIndex = null;
         };

@@ -358,8 +358,8 @@ export const ActiveGameView = (store) => {
                             <tr class="${rowClass}">
                                 <td class="history-cell-round" id="round-cell-${roundIndex}">
                                     <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                        <span>${roundIndex + 1}</span>
-                                        ${hasFixedScore ? `<span id="check-val-${roundIndex}" style="font-size:0.8em; font-weight:bold; color:${checkValue === 0 ? 'var(--primary-color)' : '#ef4444'}">${checkValue === 0 ? 'OK' : checkValue}</span>` : '<br>'}
+                                        <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:2px solid var(--primary-color); border-radius:50%; font-weight:bold; color:var(--primary-color);">${roundIndex + 1}</span>
+                                        ${hasFixedScore ? `<span id="check-val-${roundIndex}" style="font-size:0.8em; font-weight:bold; color:${checkValue === 0 ? 'var(--primary-color)' : '#ef4444'}; margin-top:2px;">${checkValue === 0 ? 'OK' : checkValue}</span>` : ''}
                                     </div>
                                 </td>
                                 ${tablePlayers.map(p => {
@@ -427,9 +427,12 @@ export const ActiveGameView = (store) => {
                 <button onclick="window.app.keypadInput('0')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">0</button>
                 <button onclick="window.app.keypadBackspace()" style="padding:15px; font-size:1.2em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
             </div>
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <button onclick="window.app.closeNumericKeypad()" style="flex:1; padding:15px; font-size:1.1em; border:1px solid #ddd; border-radius:8px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Annuler</button>
                 <button onclick="window.app.validateKeypadInput()" style="flex:1; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:var(--primary-color); color:white; cursor:pointer; font-weight:bold;">Valider</button>
+            </div>
+            <div style="display:flex;">
+                <button onclick="window.app.validateKeypadInputAndNext()" style="width:100%; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:bold;">Valider et suivant ➜</button>
             </div>
         </div>
     </div>
@@ -1085,17 +1088,18 @@ export const GameOverView = (store) => {
     const winner = players[0];
 
     return `
-                    <div style="flex:1; overflow-y:auto; width:100%;">
-                    <div class="gameover-container">
+                    <div style="flex:1; display:flex; flex-direction:column; width:100%;">
+                    <div class="gameover-container" style="flex-shrink:0;">
                         <div class="gameover-icon">🏆</div>
                         <h1 class="gameover-title">${winner.name} a gagné !</h1>
                         <p class="gameover-subtitle">${gameOverReason}</p>
 
-                        <div class="card">
+                        <div class="card" style="margin-bottom:20px;">
                             <h3 class="gameover-section-title">Classement Final</h3>
-                            <table class="leaderboard-table">
-                                <tbody>
-                                    ${players.map((p, i) => {
+                            <div style="max-height:400px; overflow-y:auto;">
+                                <table class="leaderboard-table">
+                                    <tbody>
+                                        ${players.map((p, i) => {
         let rankIcon = `#${i + 1}`;
         let size = '1em';
 
@@ -1120,18 +1124,24 @@ export const GameOverView = (store) => {
                             <td class="gameover-score-cell">${p.score}</td>
                         </tr>
                  `}).join('')}
-                                </tbody>
-                            </table>
+                                        <tr>
+                                            <td colspan="3" style="height:100px;"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-
-                        ${gameOverReason === "Terminé manuellement" ? `
-                            <button onclick="window.app.continueGame()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem; background-color:#4caf50;">Continuer la partie</button>
-                            <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:10px; padding:15px; font-size:1.1rem; background-color:#ddd; color:#333;">Retour à l'accueil</button>
-                        ` : `
-                            <button onclick="window.app.navigateUpdateLimitsFromGameOver()" style="width:100%; margin-top:20px; padding:15px; font-size:1.1rem; background-color:var(--primary-color);">Modifier les limites</button>
-                            <button onclick="window.app.executeEndGame()" style="width:100%; margin-top:10px; padding:15px; font-size:1.1rem;">Retour à l'accueil</button>
-                        `}
                     </div>
+                    </div>
+                    
+                    <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100; background:white; padding:10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-radius:8px;">
+                        ${gameOverReason === "Terminé manuellement" ? `
+                            <button onclick="window.app.continueGame()" style="width:100%; margin-bottom:10px; padding:15px; font-size:1.1rem; background-color:#4caf50; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Continuer la partie</button>
+                            <button onclick="window.app.executeEndGame()" style="width:100%; padding:15px; font-size:1.1rem; background-color:#ddd; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Retour à l'accueil</button>
+                        ` : `
+                            <button onclick="window.app.navigateUpdateLimitsFromGameOver()" style="width:100%; margin-bottom:10px; padding:15px; font-size:1.1rem; background-color:var(--primary-color); border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Modifier les limites</button>
+                            <button onclick="window.app.executeEndGame()" style="width:100%; padding:15px; font-size:1.1rem; background-color:#ddd; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Retour à l'accueil</button>
+                        `}
                     </div>
                     `;
 };
