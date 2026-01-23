@@ -277,14 +277,21 @@ select {
     padding: 5px 5px 0 5px;
 }
 
+.history-table .history-header:first-child {
+    width: 55px;
+    min-width: 55px;
+}
+
 .history-table .history-header-check {
     padding: 5px;
     color: #666;
 }
 
 .history-table .history-cell-round {
-    /*padding: 10px;*/
+    padding-top: 5px;
     border-bottom: 1px solid #eee;
+    width: 55px;
+    min-width: 55px;
 }
 
 .history-table .history-cell-score {
