@@ -5,9 +5,10 @@ export const HomeView = (store, showOnlyFavorites = false) => {
     const games = showOnlyFavorites ? allGames.filter(g => g.favorite) : allGames;
     
     return `
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; z-index:1001; position:relative;">
-            <h1>Jeux</h1>
-            <button onclick="window.app.router.navigate('options')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px;" title="Options">
+        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px; z-index:1001; position:relative;">
+            <div></div>
+            <h1 style="margin:0; text-align:center;">Jeux</h1>
+            <button onclick="window.app.router.navigate('options')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px; justify-self:end;" title="Options">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -115,10 +116,13 @@ export const PlayerSelectView = (store, gameId, options = {}) => {
     const showCircleFilter = mode === 'game' && circles.length > 0;
     const showLongPressHint = mode === 'game';
     
+    const pageTitle = mode === 'game' && game ? game.name : 'Joueurs';
+    
     return `
-        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-            <button onclick="${backAction}" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <h1>Joueurs</h1>
+        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+            <button onclick="${backAction}" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+            <h1 style="margin:0; text-align:center;">${pageTitle}</h1>
+            <div></div>
         </header>
         <div style="flex:1; overflow-y:auto; width:100%;">
         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">${subtitleText}</h3>
@@ -205,10 +209,14 @@ export const PlayerSelectView = (store, gameId, options = {}) => {
 };
 
 export const PlayerOrderView = (store, gameId) => {
+    const game = store.getGames().find(g => g.id === gameId);
+    const pageTitle = game ? game.name : 'Ordre';
+    
     return `
-        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-             <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <h1>Ordre</h1>
+        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+             <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+            <h1 style="margin:0; text-align:center;">${pageTitle}</h1>
+            <div></div>
         </header>
         <div style="flex:1; overflow-y:auto; width:100%;">
         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Glissez pour changer l'ordre</h3>
@@ -285,9 +293,10 @@ export const ActiveGameView = (store) => {
 
     return `
     <div style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; z-index:1001; position:relative; flex-shrink:0;">
-            <h1 style="margin:0;">${session.title}</h1>
-            <button onclick="window.app.router.navigate('gameActions')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px;" title="Actions">
+        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 10px; z-index:1001; position:relative; flex-shrink:0;">
+            <div></div>
+            <h1 style="margin:0; text-align:center;">${session.title}</h1>
+            <button onclick="window.app.router.navigate('gameActions')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px; justify-self:end;" title="Actions">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -449,9 +458,10 @@ export const GameFormView = (store, gameId) => {
     const winCondition = game?.winCondition || 'highest';
     
     return `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>${isEditMode ? 'Modifier Jeu' : 'Nouveau Jeu'}</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">${isEditMode ? 'Modifier Jeu' : 'Nouveau Jeu'}</h1>
+        <div></div>
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
@@ -557,9 +567,10 @@ export const ConfirmDeleteGameView = (store, gameId) => {
     if (!game) return '<div>Jeu introuvable</div>';
 
     return `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>Supprimer Jeu</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">Supprimer Jeu</h1>
+        <div></div>
     </header>
     <div style="flex:1; overflow-y:auto; width:100%;">
     <div class="card" style="text-align:center; padding: 40px 20px;">
@@ -582,9 +593,10 @@ export const AvatarSelectionView = (store) => {
     const hasPhoto = !!currentPhoto;
     
     return `
-    <header style="display:flex; align-items:center; margin-bottom: 15px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>Choix de l'avatar</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 15px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">Choix de l'avatar</h1>
+        <div></div>
     </header>
     <div style="flex:1; overflow-y:auto; width:100%;">
     <div class="card" style="padding-bottom:80px;">
@@ -672,9 +684,10 @@ export const PlayerFormView = (store, playerId) => {
     const playerCircles = tempData.circles !== undefined ? tempData.circles : (player?.circles || []);
     
     return `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.cancelPlayerForm()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>${isEditMode ? 'Modifier Joueur' : 'Nouveau Joueur'}</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.cancelPlayerForm()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">${isEditMode ? 'Modifier Joueur' : 'Nouveau Joueur'}</h1>
+        <div></div>
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
@@ -791,9 +804,10 @@ export const CircleFormView = (store, circleId, returnPlayerId) => {
     if (isEditMode && !circle) return '<div>Cercle introuvable</div>';
 
     return `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>${isEditMode ? 'Modifier Cercle' : 'Nouveau Cercle'}</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">${isEditMode ? 'Modifier Cercle' : 'Nouveau Cercle'}</h1>
+        <div></div>
     </header>
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
     <div class="card">
@@ -831,9 +845,10 @@ export const GameSetupView = (store, gameId) => {
     const defaultTarget = game.target || '';
 
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Fin de partie</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${game.name}</h1>
+                            <div></div>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
                         <div class="card" style="margin-bottom: 80px;">
@@ -865,11 +880,13 @@ export const UpdateLimitsView = (store) => {
     const game = store.getGames().find(g => g.id === session.gameId);
     const currentRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : (game.rounds || '');
     const currentTarget = (session.config && session.config.target !== undefined) ? session.config.target : (game.target || '');
+    const gameTitle = game ? game.name : 'Fin de partie';
 
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Fin de partie</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
                         <div class="card" style="margin-bottom: 80px;">
@@ -901,11 +918,14 @@ export const AddIngamePlayerView = (store) => {
 
     const existingIds = new Set(session.players.map(p => p.id));
     const availablePlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const game = store.getGames().find(g => g.id === session.gameId);
+    const gameTitle = game ? game.name : 'Joueurs';
 
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Joueurs</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
                         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Joueurs disponibles</h3>
@@ -940,10 +960,14 @@ export const RemoveIngamePlayerView = (store) => {
         return { ...sp, ...info };
     });
 
+    const game = store.getGames().find(g => g.id === session.gameId);
+    const gameTitle = game ? game.name : 'Supprimer un joueur';
+
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Supprimer un joueur</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
                         <div class="card">
@@ -988,10 +1012,14 @@ export const ReorderIngamePlayersView = (store) => {
     // The view will be static initially, then populated by updateReorderIngameUI()
     // We can call updateReorderIngameUI() immediately after render (like we did for navigate).
 
+    const game = store.getGames().find(g => g.id === session.gameId);
+    const gameTitle = game ? game.name : 'Joueurs';
+
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.navigate('gameActions')" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Joueurs</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.navigate('gameActions')" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
                         <div class="card" style="margin-bottom:80px;"> <!-- Margin bottom for fixed footer button space -->
@@ -1018,10 +1046,14 @@ export const ConfirmRemoveIngamePlayerView = (store, playerId) => {
 
     if (!player) return '<div>Erreur: Joueur introuvable</div>';
 
+    const game = store.getGames().find(g => g.id === session.gameId);
+    const gameTitle = game ? game.name : 'Confirmation';
+
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Confirmation</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%;">
                         <div class="card" style="text-align:center; padding: 40px 20px;">
@@ -1037,10 +1069,15 @@ export const ConfirmRemoveIngamePlayerView = (store, playerId) => {
 };
 
 export const ConfirmEndGameView = (store) => {
+    const session = store.restoreSession();
+    const game = session ? store.getGames().find(g => g.id === session.gameId) : null;
+    const gameTitle = game ? game.name : 'Fin de partie';
+
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Fin de partie</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
                         </header>
                         <div class="card" style="text-align:center; padding: 40px 20px;">
                             <div style="font-size:4em; margin-bottom:10px;">🏁</div>
@@ -1054,10 +1091,15 @@ export const ConfirmEndGameView = (store) => {
 };
 
 export const ConfirmCancelGameView = (store) => {
+    const session = store.restoreSession();
+    const game = session ? store.getGames().find(g => g.id === session.gameId) : null;
+    const gameTitle = game ? game.name : 'Annuler la partie';
+
     return `
-                        <header style="display:flex; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                            <h1>Annuler la partie</h1>
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
                         </header>
                         <div class="card" style="text-align:center; padding: 40px 20px;">
                             <div style="font-size:4em; margin-bottom:10px; color:#ef4444;">🗑️</div>
@@ -1147,9 +1189,10 @@ export const GameOverView = (store) => {
 };
 
 export const AboutView = () => `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>A propos</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">A propos</h1>
+        <div></div>
     </header>
     <div class="card">
         <h3>Compteur de Points</h3>
@@ -1160,9 +1203,10 @@ export const AboutView = () => `
 `;
 
 export const OptionsView = (store) => `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>Options</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">Options</h1>
+        <div></div>
     </header>
     
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
@@ -1201,10 +1245,14 @@ export const GameActionsView = (store) => {
     const session = store.restoreSession();
     if (!session) return `<div class="card">Erreur: Pas de session active.</div>`;
 
+    const game = store.getGames().find(g => g.id === session.gameId);
+    const gameTitle = game ? game.name : 'Actions';
+
     return `
-    <header style="display:flex; align-items:center; margin-bottom: 20px;">
-        <button onclick="window.app.router.navigate('game')" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-        <h1>Actions</h1>
+    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+        <button onclick="window.app.router.navigate('game')" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+        <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+        <div></div>
     </header>
     
     <div style="margin-bottom:20px;">
@@ -1568,9 +1616,10 @@ export const StatisticsView = (store) => {
 
     return `
         <div style="position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; overflow:hidden;">
-            <header style="display:flex; align-items:center; margin-bottom: 20px; flex-shrink: 0; padding: 2px;">
-                <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                <h1>Statistiques</h1>
+            <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px; flex-shrink: 0; padding: 2px;">
+                <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                <h1 style="margin:0; text-align:center;">Statistiques</h1>
+                <div></div>
             </header>
 
             <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overflow-x:hidden; padding: 0 2px 180px 2px;">
@@ -1626,9 +1675,10 @@ export const StatisticsView = (store) => {
 export const ExportGamesView = (store) => {
     const games = store.getGames();
     return `
-        <header style="display:flex; align-items:center; margin-bottom:20px;">
-            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <h1 style="margin:0;">Exporter jeux</h1>
+        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:20px;">
+            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+            <h1 style="margin:0; text-align:center;">Exporter jeux</h1>
+            <div></div>
         </header>
 
         ${games.length === 0 ? `
@@ -1654,9 +1704,10 @@ export const ExportGamesView = (store) => {
 
 export const ImportGamesView = (store) => {
     return `
-        <header style="display:flex; align-items:center; margin-bottom:20px;">
-            <button onclick="window.app.router.back()" style="padding: 8px 12px; margin-right: 10px; display:flex; align-items:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-            <h1 style="margin:0;">Importer jeux</h1>
+        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:20px;">
+            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+            <h1 style="margin:0; text-align:center;">Importer jeux</h1>
+            <div></div>
         </header>
 
         <p style="color:#666; margin-bottom:15px;">Collez le JSON des jeux à importer :</p>
