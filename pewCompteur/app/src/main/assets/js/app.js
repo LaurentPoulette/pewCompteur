@@ -74,6 +74,12 @@ class App {
         this.router.register('options', () => OptionsView(this.store));
         this.router.register('gameActions', () => GameActionsView(this.store));
         this.router.register('statistics', () => StatisticsView(this.store));
+        this.router.register('statsPlayerSelect', () => PlayerSelectView(this.store, null, { 
+            mode: 'stats', 
+            subtitle: 'Filtrer par joueurs',
+            onBack: 'window.app.router.back()',
+            onNext: 'window.app.validateStatsPlayerSelection()'
+        }));
         this.router.register('editGame', ({ gameId }) => GameFormView(this.store, gameId));
         this.router.register('confirmDeleteGame', ({ gameId }) => ConfirmDeleteGameView(this.store, gameId));
         this.router.register('updateLimits', () => UpdateLimitsView(this.store));
@@ -2089,7 +2095,7 @@ class App {
 
     updateStatisticsState(action, value) {
         if (!this.statsState) {
-            this.statsState = { game: 'all', players: [], tab: 'comparator' };
+            this.statsState = { game: 'all', players: [], tab: 'global' };
         }
 
         if (action === 'game') {
@@ -2110,6 +2116,42 @@ class App {
         const html = StatisticsView(this.store);
         const app = document.getElementById('app');
         if (app) app.innerHTML = html;
+    }
+
+    navigateStatsPlayerSelect() {
+        // S'assurer que statsState est initialisé
+        if (!this.statsState) {
+            this.statsState = { game: 'all', players: [], tab: 'global' };
+        }
+        this.router.navigate('statsPlayerSelect');
+    }
+
+    validateStatsPlayerSelection() {
+        // Retour à la page statistiques et forçage du re-render
+        this.router.history.pop(); // Retirer statsPlayerSelect de l'historique
+        this.router.navigate('statistics', {}, 'none'); // Re-naviguer sans animation pour forcer le re-render
+    }
+
+    toggleStatsPlayer(playerId) {
+        if (!this.statsState) {
+            this.statsState = { game: 'all', players: [], tab: 'global' };
+        }
+        console.log('toggleStatsPlayer avant:', this.statsState.players);
+        const index = this.statsState.players.indexOf(playerId);
+        if (index === -1) {
+            this.statsState.players.push(playerId);
+        } else {
+            this.statsState.players.splice(index, 1);
+        }
+        console.log('toggleStatsPlayer après:', this.statsState.players);
+        console.log('window.app.statsState:', window.app.statsState);
+        
+        // Mettre à jour uniquement le compteur du bouton
+        const button = document.querySelector('.player-select-button');
+        if (button) {
+            const count = this.statsState.players.length;
+            button.textContent = `Valider (${count} joueur${count > 1 ? 's' : ''})`;
+        }
     }
 
     toggleHistoryDetails(sessionId) {
