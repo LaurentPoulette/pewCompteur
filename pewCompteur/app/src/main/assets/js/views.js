@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.7';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.10';
 
 export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
@@ -1415,7 +1415,7 @@ export const StatisticsView = (store) => {
                     </div>`;
 
             return `
-                    <div class="card" onclick="window.app.toggleHistoryDetails('${session.sessionId}')" style="border-left: 4px solid ${gameColor}; margin-bottom:10px; padding:10px; cursor:pointer;">
+                    <div class="card" onclick="window.app.toggleHistoryDetails('${session.sessionId}')" style="margin-bottom:10px; padding:10px; cursor:pointer;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                             <div>
                                 <div style="font-weight:bold; font-size:1.1em;">${gameName}</div>
