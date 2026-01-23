@@ -296,11 +296,10 @@ export const ActiveGameView = (store) => {
         <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 10px; z-index:1001; position:relative; flex-shrink:0;">
             <div></div>
             <h1 style="margin:0; text-align:center;">${session.title}</h1>
-            <button onclick="window.app.router.navigate('gameActions')" style="background:none; color:var(--text-color); padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px; justify-self:end;" title="Actions">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
+            <button onclick="window.app.showEndGamePopup()" style="background:#dc3545; color:white; padding:8px; font-size:1.2rem; display:flex; align-items:center; gap:5px; justify-self:end; border-radius:6px; border:none; cursor:pointer;" title="Fermer la partie">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
         </header>
@@ -308,32 +307,51 @@ export const ActiveGameView = (store) => {
         ${(() => {
             const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
             const effectiveTarget = (session.config && session.config.target !== undefined) ? session.config.target : game.target;
+            const currentRoundsCount = session.history.length;
             
             let limitText = '';
             if (effectiveRounds && effectiveTarget) {
-                limitText = `Limite à ${effectiveTarget} points ou ${effectiveRounds} tours`;
+                limitText = `Limité à ${effectiveTarget} points ou ${effectiveRounds} tours`;
             } else if (effectiveTarget) {
-                limitText = `Limite à ${effectiveTarget} points`;
+                limitText = `Limité à ${effectiveTarget} points`;
             } else if (effectiveRounds) {
-                limitText = `Limite à ${effectiveRounds} tours`;
+                limitText = `Limité à ${effectiveRounds} tours`;
+            } else {
+                limitText = `Aucune limite de point ni de tour`;
             }
             
-            if (limitText) {
-                return `<div style="margin-bottom: 15px; padding:10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0; text-align:center; font-size:0.95em;">${limitText}</div>`;
-            }
-            return '';
+            return `<div style="margin-bottom: 15px; padding:10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0; font-size:0.95em; display: flex; align-items: center; justify-content: center; position: relative;">
+                <button onclick="window.app.navigateUpdateLimits()" style="position: absolute; left: 10px; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Modifier les limites">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <span>${limitText}</span>
+            </div>`;
         })()}
         
         <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
             <div class="card" style="flex:1; overflow-y:auto; overflow-x:auto; max-width:100%;">
                 <table class="history-table" style="text-align: center; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; z-index: 10;">
-                        <tr style="background: #f8f9fa;">
-                            <th class="history-header" style="background: #f8f9fa; padding: 5px; border-bottom: none;">#</th>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em; position: relative;">
+                                <button onclick="window.app.router.navigate('reorderPlayers')" style="position: absolute; left: 10px; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Gérer les joueurs">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                                <span>Joueurs</span>
+                            </th>
+                        </tr>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <th class="history-header" style="background: transparent; padding: 2px; border-bottom: none; color: white;">#</th>
                             ${tablePlayers.map(p => `
-                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: #f8f9fa; padding: 5px; border-bottom: none;">
+                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: transparent; padding: 2px; border-bottom: none; color: white;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
-                                        ${p.photo ? `<img src="${p.photo}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
+                                        ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
                                     <div style="font-size:0.8em;">
                                         <span class="name-full">${p.name}</span>
@@ -342,13 +360,29 @@ export const ActiveGameView = (store) => {
                                 </th>
                             `).join('')}
                         </tr>
-                        <tr style="background: #e3f2fd; font-weight:bold;">
-                            <td class="history-header" onclick="window.app.addRound()" style="cursor:pointer; background: #e3f2fd; padding: 5px; border-top: none;" title="Nouveau tour">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                            </td>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-weight:bold;">
+                            <td class="history-header" style="background: transparent; padding: 2px; border-top: none; font-size: 1.3em; color: white;">Σ</td>
                             ${tablePlayers.map(p => `
-                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color); background: #e3f2fd; padding: 5px; border-top: none;">${p.score}</td>
+                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color: white; background: transparent; padding: 2px; border-top: none;">${p.score}</td>
                             `).join('')}
+                        </tr>
+                        <tr style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em;">
+                                <div style="display: flex; justify-content: center; align-items: center; position: relative;">
+                                    <button onclick="window.app.addRound()" style="position: absolute; left: 0; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Nouveau tour">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                    </button>
+                                    <span>${(() => {
+                                        const currentRoundsCount = session.history.length;
+                                        const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
+                                        if (effectiveRounds) {
+                                            return `Tours ${currentRoundsCount} sur ${effectiveRounds}`;
+                                        } else {
+                                            return `Tours (${currentRoundsCount})`;
+                                        }
+                                    })()}</span>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
     <tbody>
@@ -917,7 +951,16 @@ export const AddIngamePlayerView = (store) => {
     if (!session) return '<div>Erreur</div>';
 
     const existingIds = new Set(session.players.map(p => p.id));
-    const availablePlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const allPlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const circles = store.getCircles();
+    const selectedCircleFilter = window.app?.selectedCircleFilter || 'all';
+    
+    // Filter players based on selected circle
+    let availablePlayers = allPlayers;
+    if (selectedCircleFilter !== 'all') {
+        availablePlayers = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
+    }
+    
     const game = store.getGames().find(g => g.id === session.gameId);
     const gameTitle = game ? game.name : 'Joueurs';
 
@@ -929,6 +972,14 @@ export const AddIngamePlayerView = (store) => {
                         </header>
                         <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
                         <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Joueurs disponibles</h3>
+                        ${circles.length > 0 ? `
+                        <div style="margin-bottom:15px;">
+                            <select id="circle-filter" onchange="window.app.filterIngamePlayersByCircle(this.value)" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1em; background:white;">
+                                <option value="all" ${selectedCircleFilter === 'all' ? 'selected' : ''}>Tous les joueurs</option>
+                                ${circles.map(c => `<option value="${c.id}" ${selectedCircleFilter === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        ` : ''}
                         <div class="grid">
                             <!-- Option to create new -->
                             <div class="card" onclick="window.app.navigateCreatePlayer()" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:100px; border: 2px dashed #ccc; background:transparent;">
@@ -939,6 +990,62 @@ export const AddIngamePlayerView = (store) => {
 
                             ${availablePlayers.map(p => `
             <div class="card" onclick="window.app.addPlayerToGame('${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
+                <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
+                    ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${p.avatar}</span>`}
+                </div>
+                <h3 style="margin:0; font-size:1em; text-align:center;">${p.name}</h3>
+            </div>
+        `).join('')}
+                        </div>
+                        </div>
+                        `;
+};
+
+export const ReplaceIngamePlayerView = (store, oldPlayerId) => {
+    // Show players NOT in current session
+    const session = store.restoreSession();
+    if (!session) return '<div>Erreur</div>';
+
+    const existingIds = new Set(session.players.map(p => p.id));
+    const allPlayers = store.getPlayers().filter(p => !existingIds.has(p.id));
+    const circles = store.getCircles();
+    const selectedCircleFilter = window.app?.selectedCircleFilter || 'all';
+    
+    // Filter players based on selected circle
+    let availablePlayers = allPlayers;
+    if (selectedCircleFilter !== 'all') {
+        availablePlayers = allPlayers.filter(p => p.circles && p.circles.includes(selectedCircleFilter));
+    }
+    
+    const game = store.getGames().find(g => g.id === session.gameId);
+    const gameTitle = game ? game.name : 'Joueurs';
+
+    return `
+                        <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
+                            <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                            <div></div>
+                        </header>
+                        <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+                        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Remplacer par</h3>
+                        ${circles.length > 0 ? `
+                        <div style="margin-bottom:15px;">
+                            <select id="circle-filter" onchange="window.app.filterIngamePlayersByCircle(this.value, '${oldPlayerId}')" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:1em; background:white;">
+                                <option value="all" ${selectedCircleFilter === 'all' ? 'selected' : ''}>Tous les joueurs</option>
+                                ${circles.map(c => `<option value="${c.id}" ${selectedCircleFilter === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        ` : ''}
+                        <div class="grid">
+                            <!-- Option to create new -->
+                            <div class="card" onclick="window.app.navigateCreatePlayer()" style="display:flex; align-items:center; justify-content:center; cursor:pointer; min-height:100px; border: 2px dashed #ccc; background:transparent;">
+                                <div style="text-align:center; color:#888;">
+                                    <span style="font-size:2em;">+</span><br>Nouveau
+                                </div>
+                            </div>
+
+                            ${availablePlayers.map(p => `
+            <div class="card" onclick="window.app.confirmReplacePlayer('${oldPlayerId}', '${p.id}')" style="cursor:pointer; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100px;">
                 <div style="display:flex; justify-content:center; align-items:center; margin-bottom:8px;">
                     ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:2em;">${p.avatar}</span>`}
                 </div>
@@ -1017,7 +1124,7 @@ export const ReorderIngamePlayersView = (store) => {
 
     return `
                         <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
-                            <button onclick="window.app.router.navigate('gameActions')" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                            <button onclick="window.app.saveReorderIngame()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
                             <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
                             <div></div>
                         </header>
@@ -1029,7 +1136,13 @@ export const ReorderIngamePlayersView = (store) => {
                         </div>
 
                         <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
-                            <button onclick="window.app.saveReorderIngame()" style="width:100%; padding: 15px; background:var(--primary-color); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Enregistrer l'ordre</button>
+                            <button onclick="window.app.router.navigate('addIngamePlayer')" style="width:100%; padding: 15px; background:var(--primary-color); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1.1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; gap:10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Ajouter un joueur
+                            </button>
                         </div>
 
                         <!-- Script to init UI -->
@@ -1101,13 +1214,16 @@ export const ConfirmCancelGameView = (store) => {
                             <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
                             <div></div>
                         </header>
-                        <div class="card" style="text-align:center; padding: 40px 20px;">
+                        <div style="flex:1; overflow-y:auto; width:100%;">
+                        <div class="card" style="text-align:center; padding: 40px 20px; margin-bottom:100px;">
                             <div style="font-size:4em; margin-bottom:10px; color:#ef4444;">🗑️</div>
                             <h2 style="margin-bottom:10px;">Tout effacer ?</h2>
-                            <p style="color:#666; margin-bottom:30px;">Attention, si vous annulez, <strong>aucune donnée ne sera sauvegardée</strong>. L'historique de cette partie sera perdu.</p>
-
-                            <button onclick="window.app.executeCancelGame()" style="width:100%; background-color:#ef4444; margin-bottom:15px; padding:15px;">Annuler sans sauvegarder</button>
-                            <button onclick="window.app.router.navigate('game')" style="width:100%; background-color:#ddd; color:#333; padding:15px;">Retour au jeu</button>
+                            <p style="color:#666;">Attention, si vous annulez, <strong>aucune donnée ne sera sauvegardée</strong>. L'historique de cette partie sera perdu.</p>
+                        </div>
+                        </div>
+                        
+                        <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
+                            <button onclick="window.app.executeCancelGame()" style="width:100%; padding:15px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">Annuler sans sauvegarder</button>
                         </div>
                     </div>
                     `;
@@ -1120,6 +1236,7 @@ export const GameOverView = (store) => {
     const game = store.getGames().find(g => g.id === session.gameId);
     const isLowestWin = game && game.winCondition === 'lowest';
     const gameOverReason = session.gameOverReason || 'Partie terminée';
+    const gameTitle = game ? game.name : 'Fin de partie';
 
     // Sort players
     const players = session.players.map(sp => {
@@ -1130,6 +1247,11 @@ export const GameOverView = (store) => {
     const winner = players[0];
 
     return `
+                    <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px; flex-shrink:0;">
+                        <button onclick="window.app.router.navigate('game')" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                        <h1 style="margin:0; text-align:center;">${gameTitle}</h1>
+                        <div></div>
+                    </header>
                     <div style="flex:1; display:flex; flex-direction:column; width:100%;">
                     <div class="gameover-container" style="flex-shrink:0;">
                         <div class="gameover-icon">🏆</div>
@@ -1159,7 +1281,7 @@ export const GameOverView = (store) => {
                             <td class="gameover-rank-cell ${rankClass}">${rankIcon}</td>
                             <td class="gameover-name-cell">
                                 <div class="gameover-name-flex">
-                                    <span class="gameover-avatar">${p.avatar}</span>
+                                    ${p.photo ? `<img src="${p.photo}" class="gameover-avatar" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">` : `<span class="gameover-avatar">${p.avatar}</span>`}
                                     <span class="gameover-name">${p.name}</span>
                                 </div>
                             </td>
@@ -1177,13 +1299,7 @@ export const GameOverView = (store) => {
                     </div>
                     
                     <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100; background:white; padding:10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-radius:8px;">
-                        ${gameOverReason === "Terminé manuellement" ? `
-                            <button onclick="window.app.continueGame()" style="width:100%; margin-bottom:10px; padding:15px; font-size:1.1rem; background-color:#4caf50; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Continuer la partie</button>
-                            <button onclick="window.app.executeEndGame()" style="width:100%; padding:15px; font-size:1.1rem; background-color:#ddd; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Retour à l'accueil</button>
-                        ` : `
-                            <button onclick="window.app.navigateUpdateLimitsFromGameOver()" style="width:100%; margin-bottom:10px; padding:15px; font-size:1.1rem; background-color:var(--primary-color); border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Modifier les limites</button>
-                            <button onclick="window.app.executeEndGame()" style="width:100%; padding:15px; font-size:1.1rem; background-color:#ddd; color:#333; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Retour à l'accueil</button>
-                        `}
+                        <button onclick="window.app.executeEndGame()" style="width:100%; padding:15px; font-size:1.1rem; background-color:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Retour à l'accueil</button>
                     </div>
                     `;
 };
