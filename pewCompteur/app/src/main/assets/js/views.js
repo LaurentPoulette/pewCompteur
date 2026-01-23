@@ -308,6 +308,7 @@ export const ActiveGameView = (store) => {
         ${(() => {
             const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
             const effectiveTarget = (session.config && session.config.target !== undefined) ? session.config.target : game.target;
+            const currentRoundsCount = session.history.length;
             
             let limitText = '';
             if (effectiveRounds && effectiveTarget) {
@@ -328,6 +329,9 @@ export const ActiveGameView = (store) => {
             <div class="card" style="flex:1; overflow-y:auto; overflow-x:auto; max-width:100%;">
                 <table class="history-table" style="text-align: center; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em; text-align: center;">Joueurs</th>
+                        </tr>
                         <tr style="background: #f8f9fa;">
                             <th class="history-header" style="background: #f8f9fa; padding: 5px; border-bottom: none;">#</th>
                             ${tablePlayers.map(p => `
@@ -343,12 +347,28 @@ export const ActiveGameView = (store) => {
                             `).join('')}
                         </tr>
                         <tr style="background: #e3f2fd; font-weight:bold;">
-                            <td class="history-header" onclick="window.app.addRound()" style="cursor:pointer; background: #e3f2fd; padding: 5px; border-top: none;" title="Nouveau tour">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                            </td>
+                            <td class="history-header" style="background: #e3f2fd; padding: 5px; border-top: none; font-size: 1.3em;">Σ</td>
                             ${tablePlayers.map(p => `
                                 <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color:var(--primary-color); background: #e3f2fd; padding: 5px; border-top: none;">${p.score}</td>
                             `).join('')}
+                        </tr>
+                        <tr style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em;">
+                                <div style="display: flex; justify-content: center; align-items: center; position: relative;">
+                                    <span>${(() => {
+                                        const currentRoundsCount = session.history.length;
+                                        const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
+                                        if (effectiveRounds) {
+                                            return `Tours ${currentRoundsCount} sur ${effectiveRounds}`;
+                                        } else {
+                                            return `Tours (${currentRoundsCount})`;
+                                        }
+                                    })()}</span>
+                                    <button onclick="window.app.addRound()" style="position: absolute; right: 0; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Nouveau tour">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                    </button>
+                                </div>
+                            </th>
                         </tr>
                     </thead>
     <tbody>
