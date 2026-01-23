@@ -1,6 +1,6 @@
 import { Store } from './store.js';
 import { Router } from './router.js';
-import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, OptionsView, GameActionsView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
+import { HomeView, PlayerSelectView, PlayerOrderView, ActiveGameView, GameFormView, PlayerFormView, AvatarSelectionView, ConfirmDeletePlayerView, CircleFormView, GameSetupView, AddIngamePlayerView, ReplaceIngamePlayerView, RemoveIngamePlayerView, ReorderIngamePlayersView, ConfirmRemoveIngamePlayerView, ConfirmEndGameView, AboutView, OptionsView, GameActionsView, StatisticsView, ConfirmDeleteGameView, ConfirmCancelGameView, GameOverView, UpdateLimitsView, ExportGamesView, ImportGamesView } from './views.js';
 
 class App {
     constructor() {
@@ -64,6 +64,7 @@ class App {
         this.router.register('editCircle', ({ circleId, returnPlayerId }) => CircleFormView(this.store, circleId, returnPlayerId));
         this.router.register('gameSetup', ({ gameId }) => GameSetupView(this.store, gameId));
         this.router.register('addIngamePlayer', () => AddIngamePlayerView(this.store));
+        this.router.register('replaceIngamePlayer', ({ oldPlayerId }) => ReplaceIngamePlayerView(this.store, oldPlayerId));
         this.router.register('removeIngamePlayer', () => RemoveIngamePlayerView(this.store));
         this.router.register('reorderPlayers', () => ReorderIngamePlayersView(this.store));
         this.router.register('confirmRemoveIngamePlayer', ({ playerId }) => ConfirmRemoveIngamePlayerView(this.store, playerId));
@@ -1971,6 +1972,63 @@ class App {
         this.router.navigate('updateLimits');
     }
 
+    showEndGamePopup() {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; display:flex; align-items:center; justify-content:center;';
+        
+        const popup = document.createElement('div');
+        popup.style.cssText = 'background:var(--background-color); border-radius:12px; padding:20px; max-width:90%; width:400px; box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+        
+        popup.innerHTML = `
+            <h2 style="margin:0 0 15px 0; text-align:center; color:var(--text-color);">Fermer la partie</h2>
+            <p style="margin:0 0 20px 0; text-align:center; color:var(--text-color); opacity:0.8;">Que voulez-vous faire ?</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button id="endGameBtn" style="background:#28a745; color:white; border:none; padding:15px; font-size:1em; border-radius:8px; cursor:pointer; font-weight:bold;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        <span>Terminer la partie</span>
+                    </div>
+                </button>
+                <button id="cancelGameBtn" style="background:#dc3545; color:white; border:none; padding:15px; font-size:1em; border-radius:8px; cursor:pointer; font-weight:bold;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        <span>Annuler la partie</span>
+                    </div>
+                </button>
+                <button id="closePopupBtn" style="background:rgba(128,128,128,0.2); color:var(--text-color); border:1px solid rgba(128,128,128,0.3); padding:12px; font-size:0.95em; border-radius:8px; cursor:pointer;">Retour</button>
+            </div>
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        document.getElementById('endGameBtn').onclick = () => {
+            document.body.removeChild(overlay);
+            this.navigateEndGame();
+        };
+        
+        document.getElementById('cancelGameBtn').onclick = () => {
+            document.body.removeChild(overlay);
+            this.navigateCancelGame();
+        };
+        
+        document.getElementById('closePopupBtn').onclick = () => {
+            document.body.removeChild(overlay);
+        };
+        
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        };
+    }
+
     navigateUpdateLimitsFromGameOver() {
         // Effacer la raison de fin de partie pour pouvoir continuer
         const session = this.store.restoreSession();
@@ -2059,12 +2117,26 @@ class App {
             if (!p) return '';
 
             return `
-                <div class="card draggable-ingame-item" draggable="true" data-index="${index}" style="display:flex; align-items:center; padding:10px; margin-bottom:10px; cursor: move; user-select: none; touch-action: none;">
+                <div class="card draggable-ingame-item" draggable="true" data-index="${index}" style="display:flex; align-items:center; padding:10px; margin-bottom:10px; user-select: none; touch-action: none; position:relative;">
                     <div style="margin-right:15px; cursor:move; font-size:1.2em; color:#ccc;">☰</div>
                     <div style="margin-right:10px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
                         ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                     </div>
                     <span style="flex:1; font-weight:bold;">${p.name}</span>
+                    <button class="no-drag-btn replace-btn" data-player-id="${p.id}" data-player-name="${p.name.replace(/"/g, '&quot;')}" data-player-avatar="${p.avatar}" style="background:#17a2b8; color:white; border:none; padding:8px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; width:36px; height:36px; margin-right:8px;" title="Remplacer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="17 1 21 5 17 9"></polyline>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <polyline points="7 23 3 19 7 15"></polyline>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                    </button>
+                    <button class="no-drag-btn delete-btn" data-player-id="${p.id}" data-player-name="${p.name.replace(/"/g, '&quot;')}" data-player-avatar="${p.avatar}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; width:36px; height:36px;" title="Supprimer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
                 </div>
             `;
         }).join('');
@@ -2081,6 +2153,12 @@ class App {
         const items = container.querySelectorAll('.draggable-ingame-item');
 
         const onDragStart = (e, index) => {
+            // Empêcher le drag si on clique sur le bouton de suppression
+            if (e.target.closest('button')) {
+                e.preventDefault();
+                return false;
+            }
+            
             draggedItem = items[index];
             originalIndex = index;
             e.dataTransfer?.setData('text/plain', index);
@@ -2149,6 +2227,29 @@ class App {
 
         container.addEventListener('dragover', onDragOver);
         container.addEventListener('drop', onDrop);
+        
+        // Empêcher le drag sur les boutons
+        const noDragButtons = container.querySelectorAll('.no-drag-btn');
+        noDragButtons.forEach(btn => {
+            btn.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+            });
+            btn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+            });
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const playerId = btn.dataset.playerId;
+                const playerName = btn.dataset.playerName;
+                const playerAvatar = btn.dataset.playerAvatar;
+                
+                if (btn.classList.contains('delete-btn')) {
+                    this.showRemovePlayerConfirmation(playerId, playerName, playerAvatar);
+                } else if (btn.classList.contains('replace-btn')) {
+                    this.router.navigate('replaceIngamePlayer', { oldPlayerId: playerId });
+                }
+            });
+        });
 
         // Touch Events for Mobile (Reusing logic structure but simplified)
         let touchStartIndex = null;
@@ -2158,6 +2259,11 @@ class App {
         const onTouchStart = (e) => {
             const item = e.target.closest('.draggable-ingame-item');
             if (!item) return;
+            
+            // Empêcher le drag si on touche le bouton
+            if (e.target.closest('.no-drag-btn')) {
+                return;
+            }
 
             e.preventDefault();
 
@@ -2258,7 +2364,48 @@ class App {
         }
 
         this.store.addPlayerToSession(playerId);
-        this.router.navigate('game', {}, 'back');
+        // Réinitialiser l'état de réorganisation pour inclure le nouveau joueur
+        this.reorderIngameState = this.store.restoreSession().players.map(p => p.id);
+        this.router.navigate('reorderPlayers', {}, 'back');
+    }
+
+    replacePlayerInGame(oldPlayerId, newPlayerId) {
+        const session = this.store.restoreSession();
+        
+        // Trouver l'index du joueur à remplacer
+        const playerIndex = session.players.findIndex(p => p.id === oldPlayerId);
+        
+        if (playerIndex !== -1) {
+            // Supprimer l'ancien joueur et ajouter le nouveau à la même position avec score à 0
+            session.players.splice(playerIndex, 1);
+            
+            const newPlayer = this.store.getPlayers().find(p => p.id === newPlayerId);
+            if (newPlayer) {
+                session.players.splice(playerIndex, 0, {
+                    id: newPlayer.id,
+                    score: 0,
+                    rounds: []
+                });
+            }
+            
+            // Remplacer l'ancien joueur par le nouveau dans tous les rounds de l'historique
+            session.history.forEach(round => {
+                if (round[oldPlayerId] !== undefined) {
+                    round[newPlayerId] = round[oldPlayerId];
+                    delete round[oldPlayerId];
+                }
+            });
+            
+            // Recalculer les scores totaux
+            this.store.recalculateTotals();
+            this.store.save();
+            
+            // Réinitialiser l'état de réorganisation
+            this.reorderIngameState = session.players.map(p => p.id);
+            
+            // Retourner à la page de réorganisation
+            this.router.navigate('reorderPlayers', {}, 'back');
+        }
     }
 
     // New method for the confirmation view action
@@ -2284,6 +2431,60 @@ class App {
         // Actually router 'back' just reverses animation direction.
         // It doesn't pop multiple states. 
         // Navigation to 'game' is safer.
+    }
+
+    showRemovePlayerConfirmation(playerId, playerName, playerAvatar) {
+        const session = this.store.restoreSession();
+        const game = this.store.getGames().find(g => g.id === session.gameId);
+        const currentPlayerCount = session.players.length;
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; display:flex; align-items:center; justify-content:center;';
+        
+        const popup = document.createElement('div');
+        popup.style.cssText = 'background:var(--background-color); border-radius:12px; padding:20px; max-width:90%; width:400px; box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+        
+        popup.innerHTML = `
+            <h2 style="margin:0 0 15px 0; text-align:center; color:var(--text-color);">Supprimer le joueur</h2>
+            <div style="text-align:center; margin-bottom:20px;">
+                <div style="font-size:3em; margin-bottom:10px;">${playerAvatar}</div>
+                <div style="font-weight:bold; font-size:1.2em; color:var(--text-color); margin-bottom:5px;">${playerName}</div>
+                <p style="margin:0; color:var(--text-color); opacity:0.8;">Voulez-vous vraiment supprimer ce joueur de la partie ? Son score sera perdu.</p>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button id="confirmRemoveBtn" style="background:#dc3545; color:white; border:none; padding:15px; font-size:1em; border-radius:8px; cursor:pointer; font-weight:bold;">Supprimer définitivement</button>
+                <button id="cancelRemoveBtn" style="background:rgba(128,128,128,0.2); color:var(--text-color); border:1px solid rgba(128,128,128,0.3); padding:12px; font-size:0.95em; border-radius:8px; cursor:pointer;">Annuler</button>
+            </div>
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        document.getElementById('confirmRemoveBtn').onclick = () => {
+            document.body.removeChild(overlay);
+            
+            // Vérifier le nombre minimum de joueurs
+            if (game.minPlayers && currentPlayerCount <= game.minPlayers) {
+                this.showHelpPopup(`Ce jeu nécessite au moins ${game.minPlayers} joueur${game.minPlayers > 1 ? 's' : ''}. Impossible de supprimer un joueur.`);
+                return;
+            }
+
+            this.store.removePlayerFromSession(playerId);
+            // Réinitialiser l'état de réorganisation
+            this.reorderIngameState = this.store.restoreSession().players.map(p => p.id);
+            // Rafraîchir l'UI
+            this.updateReorderIngameUI();
+        };
+        
+        document.getElementById('cancelRemoveBtn').onclick = () => {
+            document.body.removeChild(overlay);
+        };
+        
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        };
     }
 
     // Deprecated / Unused: old method with confirm
