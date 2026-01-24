@@ -1411,13 +1411,13 @@ export const AboutView = () => `
         <h3>Compteur de Points</h3>
         <p>Version ${APP_VERSION}</p>
         <p style="margin-top:20px;">Une application simple et efficace pour compter les points de vos jeux de société favoris (Tarot, Belote, UNO, et bien d'autres).</p>
-        <h4 style="margin-top:20px; margin-bottom:10px; color:var(--primary-color);">Nouveautés v1.11 :</h4>
+        <h4 style="margin-top:20px; margin-bottom:10px; color:var(--primary-color);">Nouveautés v1.12 :</h4>
         <ul style="line-height:1.8; padding-left:20px;">
-            <li>Gestion avancée des joueurs en cours de partie (ajout, remplacement, suppression)</li>
-            <li>Filtre par cercle sur toutes les pages de sélection de joueurs</li>
-            <li>Confirmation de remplacement de joueur avec préservation des scores</li>
-            <li>Amélioration de l'interface du tableau de scores avec sections colorées</li>
-            <li>Optimisation de l'affichage et de l'ergonomie</li>
+            <li>Classement avec médailles et gestion des égalités de score</li>
+            <li>Option pour afficher/masquer le classement en cours de partie</li>
+            <li>Option pour verrouiller l'édition des scores des tours terminés</li>
+            <li>Barre d'onglets sticky dans les statistiques</li>
+            <li>Améliorations visuelles du tableau de scores</li>
         </ul>
         <p style="margin-top:20px;">Développé avec passion.</p>
     </div>
