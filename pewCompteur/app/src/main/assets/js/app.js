@@ -1475,6 +1475,21 @@ class App {
         this.store.save();
     }
 
+    toggleShowLeaderboardDuringGame(checked) {
+        this.store.state.showLeaderboardDuringGame = checked;
+        this.store.save();
+        // Update leaderboard visibility in the current view
+        const leaderboard = document.getElementById('sticky-leaderboard');
+        if (leaderboard) {
+            leaderboard.style.display = checked ? '' : 'none';
+        }
+    }
+
+    toggleAllowEditPastRounds(checked) {
+        this.store.state.allowEditPastRounds = checked;
+        this.store.save();
+    }
+
     executeDeletePlayer(playerId) {
         this.store.deletePlayer(playerId);
         // Go back 2 levels: confirmation page + edit page, to return to player list

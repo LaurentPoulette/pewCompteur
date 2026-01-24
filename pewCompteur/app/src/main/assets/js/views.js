@@ -472,26 +472,31 @@ export const ActiveGameView = (store) => {
                                     
                                     if (isWinsMode) {
                                         const isChecked = round[p.id] === 1;
+                                        const allowEdit = store.state.allowEditPastRounds !== false;
                                         return `
                                     <td class="history-cell-score">
                                         <input type="radio" 
                                                name="winner-round-${roundIndex}"
                                                class="win-radio"
                                                ${isChecked ? 'checked' : ''}
+                                               ${!allowEdit ? 'disabled' : ''}
                                                onchange="window.app.updateWinnerForRound('${roundIndex}', '${p.id}')"
                                                onfocus="window.app.showPlayerNamePopupById('${p.id}')"
-                                               style="width:20px; height:20px; cursor:pointer;">
+                                               style="width:20px; height:20px; cursor:${allowEdit ? 'pointer' : 'not-allowed'}; opacity:${allowEdit ? '1' : '0.5'};">
                                     </td>
                                         `;
                                     } else {
+                                        const allowEdit = store.state.allowEditPastRounds !== false;
                                         return `
                                     <td class="history-cell-score">
                                         <input type="text" 
                                                class="score-input"
                                                value="${round[p.id] !== undefined ? round[p.id] : ''}" 
                                                readonly
-                                               onclick="window.app.showNumericKeypadById('${roundIndex}', '${p.id}', this.value)"
-                                               placeholder="-">
+                                               ${!allowEdit ? 'disabled' : ''}
+                                               onclick="${allowEdit ? `window.app.showNumericKeypadById('${roundIndex}', '${p.id}', this.value)` : ''}"
+                                               placeholder="-"
+                                               style="${!allowEdit ? 'cursor:not-allowed; opacity:0.5;' : ''}">
                                     </td>
                                         `;
                                     }
@@ -523,7 +528,7 @@ export const ActiveGameView = (store) => {
 
         </div >
 
-    <div id="sticky-leaderboard" style="padding:0; margin:0; border-radius:0;">
+    <div id="sticky-leaderboard" style="padding:0; margin:0; border-radius:0; ${!store.state.showLeaderboardDuringGame ? 'display:none;' : ''}">
         <h3 style="margin: 10px 0 5px 0; padding: 8px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 8px; text-align: center; font-size: 1.1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Classement</h3>
         
         <div id="leaderboard-content" class="sticky-leaderboard-content">
@@ -1442,6 +1447,14 @@ export const OptionsView = (store) => `
         
         <div>
             <h3 style="margin-bottom:15px; color:#333;">Paramètres</h3>
+            <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
+                <input type="checkbox" id="show-leaderboard-during-game" ${store.state.showLeaderboardDuringGame ? 'checked' : ''} onchange="window.app.toggleShowLeaderboardDuringGame(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+                <span style="font-size:1em; color:#333;">Afficher le classement en cours de partie</span>
+            </label>
+            <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
+                <input type="checkbox" id="allow-edit-past-rounds" ${store.state.allowEditPastRounds ? 'checked' : ''} onchange="window.app.toggleAllowEditPastRounds(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+                <span style="font-size:1em; color:#333;">Modifier les score des tours terminés</span>
+            </label>
             <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
                 <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
                 <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>

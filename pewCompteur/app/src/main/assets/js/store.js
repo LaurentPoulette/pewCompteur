@@ -9,7 +9,9 @@ export class Store {
             lastSelectedPlayers: [], // IDs of players selected in the last game
             homeFilterFavorites: false, // Filter favorites on home page
             playerCircleFilter: 'all', // Filter players by circle
-            hideDeletedGamesInStats: false // Hide deleted games in statistics
+            hideDeletedGamesInStats: false, // Hide deleted games in statistics
+            showLeaderboardDuringGame: true, // Show leaderboard during game
+            allowEditPastRounds: true // Allow editing scores of completed rounds
         };
         this.load();
     }
@@ -28,7 +30,9 @@ export class Store {
                 lastSelectedPlayers: loadedState.lastSelectedPlayers || [],
                 homeFilterFavorites: loadedState.homeFilterFavorites || false,
                 playerCircleFilter: loadedState.playerCircleFilter || 'all',
-                hideDeletedGamesInStats: loadedState.hideDeletedGamesInStats || false
+                hideDeletedGamesInStats: loadedState.hideDeletedGamesInStats || false,
+                showLeaderboardDuringGame: loadedState.showLeaderboardDuringGame !== undefined ? loadedState.showLeaderboardDuringGame : true,
+                allowEditPastRounds: loadedState.allowEditPastRounds !== undefined ? loadedState.allowEditPastRounds : true
             };
         } else {
             this.seedDefaults();
