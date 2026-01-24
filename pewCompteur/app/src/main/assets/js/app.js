@@ -1856,22 +1856,32 @@ class App {
 
         const sorted = [...players].sort((a, b) => isLowestWin ? a.score - b.score : b.score - a.score);
 
+        // Calculer les rangs réels avec gestion des égalités
+        let currentRank = 1;
+        const ranksAndPlayers = sorted.map((p, i) => {
+            if (i > 0 && sorted[i].score !== sorted[i - 1].score) {
+                currentRank = i + 1;
+            }
+            return { player: p, rank: currentRank };
+        });
+
         const html = `
     <table class="leaderboard-table">
         <tbody>
             <tr>
-                ${sorted.map((p, i) => {
-            let themeClass = 'theme-default';
-            if (i === 0) {
-                themeClass = 'theme-first';
-            } else if (i === sorted.length - 1 && sorted.length > 1) {
-                themeClass = 'theme-last';
-            }
+                ${ranksAndPlayers.map(({ player: p, rank }) => {
+            let rankIcon = `#${rank}`;
+            let rankSize = '1em';
+
+            if (rank === 1) { rankIcon = '🥇'; rankSize = '1.3em'; }
+            else if (rank === 2) { rankIcon = '🥈'; rankSize = '1.2em'; }
+            else if (rank === 3) { rankIcon = '🥉'; rankSize = '1.2em'; }
+
             return `
                             <td class="leaderboard-cell">
-                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')" style="flex-direction:column; justify-content:center; cursor:pointer;">
+                                 <div class="leaderboard-card" title="${p.name}" onclick="window.app.showPlayerNamePopup('${p.name.replace(/'/g, "\\'")}')" style="flex-direction:column; justify-content:center; cursor:pointer;">
                                     <div style="margin-bottom:2px; font-weight:bold; font-size:0.9em;">
-                                        <span class="leaderboard-rank">${i + 1}</span>:${p.score}
+                                        <span class="leaderboard-rank" style="font-size:${rankSize};">${rankIcon}</span> ${p.score}
                                     </div>
                                     <div style="display:flex; align-items:center; gap:4px;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:16px; height:16px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:0.9em;">${p.avatar}</span>`} 
@@ -1888,6 +1898,7 @@ class App {
     `;
 
         document.getElementById('leaderboard-content').innerHTML = html;
+
 
         // Check for game end
         const reason = this.checkGameEndCondition(session, game);

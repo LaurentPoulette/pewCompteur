@@ -258,24 +258,33 @@ export const ActiveGameView = (store) => {
     // Players for leaderboard (sorted)
     const getLeaderboardHTML = () => {
         const sorted = [...players].sort((a, b) => isLowestWin ? a.score - b.score : b.score - a.score);
+        
+        // Calculer les rangs réels avec gestion des égalités
+        let currentRank = 1;
+        const ranksAndPlayers = sorted.map((p, i) => {
+            if (i > 0 && sorted[i].score !== sorted[i - 1].score) {
+                currentRank = i + 1;
+            }
+            return { player: p, rank: currentRank };
+        });
+        
         return `
     <table class="leaderboard-table">
         <tbody>
             <tr>
-                ${sorted.map((p, i) => {
-            let themeClass = 'theme-default';
+                ${ranksAndPlayers.map(({ player: p, rank }) => {
+            let rankIcon = `#${rank}`;
+            let rankSize = '1em';
 
-            if (i === 0) {
-                themeClass = 'theme-first';
-            } else if (i === sorted.length - 1 && sorted.length > 1) {
-                themeClass = 'theme-last';
-            }
+            if (rank === 1) { rankIcon = '🥇'; rankSize = '1.3em'; }
+            else if (rank === 2) { rankIcon = '🥈'; rankSize = '1.2em'; }
+            else if (rank === 3) { rankIcon = '🥉'; rankSize = '1.2em'; }
 
             return `
                             <td class="leaderboard-cell">
-                                 <div class="leaderboard-card ${themeClass}" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="flex-direction:column; justify-content:center; cursor:pointer;">
+                                 <div class="leaderboard-card" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="flex-direction:column; justify-content:center; cursor:pointer;">
                                     <div style="margin-bottom:2px; font-weight:bold; font-size:0.9em;">
-                                        <span class="leaderboard-rank">${i + 1}</span>:${p.score}
+                                        <span class="leaderboard-rank" style="font-size:${rankSize};">${rankIcon}</span> ${p.score}
                                     </div>
                                     <div style="display:flex; align-items:center; gap:4px;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:16px; height:16px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:0.9em;">${p.avatar}</span>`} 
@@ -1337,20 +1346,27 @@ export const GameOverView = (store) => {
                             <div style="max-height:400px; overflow-y:auto;">
                                 <table class="leaderboard-table">
                                     <tbody>
-                                        ${players.map((p, i) => {
-        let rankIcon = `#${i + 1}`;
-        let size = '1em';
+                                        ${(() => {
+        // Calculer les rangs réels avec gestion des égalités
+        let currentRank = 1;
+        return players.map((p, i) => {
+            if (i > 0 && players[i].score !== players[i - 1].score) {
+                currentRank = i + 1;
+            }
+            
+            let rankIcon = `#${currentRank}`;
+            let size = '1em';
 
-        if (i === 0) { rankIcon = '🥇'; size = '1.5em'; }
-        if (i === 1) rankIcon = '🥈';
-        if (i === 2) rankIcon = '🥉';
+            if (currentRank === 1) { rankIcon = '🥇'; size = '1.5em'; }
+            else if (currentRank === 2) { rankIcon = '🥈'; }
+            else if (currentRank === 3) { rankIcon = '🥉'; }
 
-        let rankClass = 'rank-text-default';
-        if (i === 0) rankClass = 'rank-text-0';
-        else if (i === 1) rankClass = 'rank-text-1';
-        else if (i === 2) rankClass = 'rank-text-2';
+            let rankClass = 'rank-text-default';
+            if (currentRank === 1) rankClass = 'rank-text-0';
+            else if (currentRank === 2) rankClass = 'rank-text-1';
+            else if (currentRank === 3) rankClass = 'rank-text-2';
 
-        return `
+            return `
                         <tr>
                             <td class="gameover-rank-cell ${rankClass}">${rankIcon}</td>
                             <td class="gameover-name-cell">
@@ -1361,7 +1377,9 @@ export const GameOverView = (store) => {
                             </td>
                             <td class="gameover-score-cell">${p.score}</td>
                         </tr>
-                 `}).join('')}
+             `;
+        }).join('');
+    })()}
                                         <tr>
                                             <td colspan="3" style="height:100px;"></td>
                                         </tr>
