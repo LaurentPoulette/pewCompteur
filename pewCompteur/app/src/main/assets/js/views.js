@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.11';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.12';
 
 export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
