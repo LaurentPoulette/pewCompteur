@@ -335,7 +335,7 @@ export const ActiveGameView = (store) => {
             <div class="card" style="flex:1; overflow-y:auto; overflow-x:auto; max-width:100%;">
                 <table class="history-table" style="text-align: center; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; z-index: 10;">
-                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <tr style="background: linear-gradient(135deg, #5a67d8 0%, #4c51bf 100%);">
                             <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em; position: relative;">
                                 <button onclick="window.app.router.navigate('reorderPlayers')" style="position: absolute; left: 10px; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Gérer les joueurs">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -346,10 +346,10 @@ export const ActiveGameView = (store) => {
                                 <span>Joueurs</span>
                             </th>
                         </tr>
-                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <th class="history-header" style="background: transparent; padding: 2px; border-bottom: none; color: white;">#</th>
+                        <tr style="background: linear-gradient(135deg, #c3dafe 0%, #a3bffa 100%);">
+                            <th class="history-header" style="background: transparent; padding: 2px; border-bottom: none; border-right: 1px solid white; color: #2d3748;">#</th>
                             ${tablePlayers.map(p => `
-                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: transparent; padding: 2px; border-bottom: none; color: white;">
+                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: transparent; padding: 2px;  color: #2d3748;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
@@ -360,14 +360,14 @@ export const ActiveGameView = (store) => {
                                 </th>
                             `).join('')}
                         </tr>
-                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-weight:bold;">
-                            <td class="history-header" style="background: transparent; padding: 2px; border-top: none; font-size: 1.3em; color: white;">Σ</td>
+                        <tr style="background: linear-gradient(135deg, #c3dafe 0%, #a3bffa 100%); font-weight:bold;">
+                            <td class="history-header" style="background: transparent; padding: 2px; font-size: 1.3em; color: #2d3748;">Σ</td>
                             ${tablePlayers.map(p => `
-                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color: white; background: transparent; padding: 2px; border-top: none;">${p.score}</td>
+                                <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color: #2d3748; background: transparent; padding: 2px; ">${p.score}</td>
                             `).join('')}
                         </tr>
-                        <tr style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em;">
+                        <tr style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);">
+                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em; border-bottom: 3px solid white;">
                                 <div style="display: flex; justify-content: center; align-items: center; position: relative;">
                                     <button onclick="window.app.addRound()" style="position: absolute; left: 0; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Nouveau tour">
                                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
@@ -384,28 +384,80 @@ export const ActiveGameView = (store) => {
                                 </div>
                             </th>
                         </tr>
+                        ${(() => {
+                            // Afficher le tour en cours dans le thead
+                            if (session.history.length > 0) {
+                                const currentRoundIndex = session.history.length - 1;
+                                const round = session.history[currentRoundIndex];
+                                let roundSum = 0;
+                                tablePlayers.forEach(p => {
+                                    const val = round[p.id];
+                                    if (val !== undefined && val !== "") roundSum += parseInt(val);
+                                });
+                                const checkValue = hasFixedScore ? (game.fixedRoundScore - roundSum) : null;
+                                
+                                return `
+                        <tr class="history-row-new" style="background: #e6f7ff; box-shadow: inset 0 0 0 3px black;">
+                            <td class="history-cell-round" id="round-cell-${currentRoundIndex}">
+                                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                    <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:2px solid var(--primary-color); border-radius:50%; font-weight:bold; color:var(--primary-color);">${currentRoundIndex + 1}</span>
+                                    ${hasFixedScore ? `<span id="check-val-${currentRoundIndex}" style="font-size:0.8em; font-weight:bold; color:${checkValue === 0 ? 'var(--primary-color)' : '#ef4444'}; margin-top:2px;">${checkValue === 0 ? 'OK' : checkValue}</span>` : ''}
+                                </div>
+                            </td>
+                            ${tablePlayers.map((p, pIndex) => {
+                                if (isWinsMode) {
+                                    const isChecked = round[p.id] === 1;
+                                    return `
+                            <td class="history-cell-score">
+                                <input type="radio" 
+                                       name="winner-round-${currentRoundIndex}"
+                                       class="win-radio"
+                                       ${isChecked ? 'checked' : ''}
+                                       onchange="window.app.updateWinnerForRound('${currentRoundIndex}', '${p.id}')"
+                                       onfocus="window.app.showPlayerNamePopupById('${p.id}')"
+                                       style="width:20px; height:20px; cursor:pointer;">
+                            </td>
+                                    `;
+                                } else {
+                                    return `
+                            <td class="history-cell-score">
+                                <input type="text" 
+                                       class="score-input"
+                                       value="${round[p.id] !== undefined ? round[p.id] : ''}" 
+                                       readonly
+                                       onclick="window.app.showNumericKeypadById('${currentRoundIndex}', '${p.id}', this.value)"
+                                       placeholder="-">
+                            </td>
+                                    `;
+                                }
+                            }).join('')}
+                        </tr>
+                                `;
+                            }
+                            return '';
+                        })()}
                     </thead>
     <tbody>
-        ${session.history.map((r, i) => ({ round: r, roundIndex: i }))
+        ${session.history.slice(0, -1).map((r, i) => ({ round: r, roundIndex: i }))
             .reverse()
-            .map(({ round, roundIndex }, displayIndex) => {
+            .map(({ round, roundIndex }) => {
                 let roundSum = 0;
                 tablePlayers.forEach(p => {
                     const val = round[p.id];
                     if (val !== undefined && val !== "") roundSum += parseInt(val);
                 });
                 const checkValue = hasFixedScore ? (game.fixedRoundScore - roundSum) : null;
-                const rowClass = displayIndex === 0 ? 'history-row-new' : '';
 
                 return `
-                            <tr class="${rowClass}">
+                            <tr style="background: #e6f7ff;">
                                 <td class="history-cell-round" id="round-cell-${roundIndex}">
                                     <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                         <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:2px solid var(--primary-color); border-radius:50%; font-weight:bold; color:var(--primary-color);">${roundIndex + 1}</span>
                                         ${hasFixedScore ? `<span id="check-val-${roundIndex}" style="font-size:0.8em; font-weight:bold; color:${checkValue === 0 ? 'var(--primary-color)' : '#ef4444'}; margin-top:2px;">${checkValue === 0 ? 'OK' : checkValue}</span>` : ''}
                                     </div>
                                 </td>
-                                ${tablePlayers.map(p => {
+                                ${tablePlayers.map((p, pIndex) => {
+                                    
                                     if (isWinsMode) {
                                         const isChecked = round[p.id] === 1;
                                         return `
@@ -434,6 +486,25 @@ export const ActiveGameView = (store) => {
                                 }).join('')}
                             </tr>
                         `}).join('')}
+        ${(() => {
+            // Ajouter 20 lignes vides pour montrer la grille de saisie
+            const emptyRows = [];
+            for (let i = 0; i < 20; i++) {
+                emptyRows.push(`
+                            <tr style="background: #e6f7ff;">
+                                <td class="history-cell-round" style="pointer-events: none;">
+                                    <div style="height:28px;"></div>
+                                </td>
+                                ${tablePlayers.map(() => `
+                                    <td class="history-cell-score" style="pointer-events: none;">
+                                        <div style="height:40px;"></div>
+                                    </td>
+                                `).join('')}
+                            </tr>
+                `);
+            }
+            return emptyRows.join('');
+        })()}
     </tbody>
                 </table >
             </div >

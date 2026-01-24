@@ -275,6 +275,8 @@ select {
 /* Refactored Table Styles */
 .history-table .history-header {
     padding: 5px 5px 0 5px;
+     border-bottom: 1px solid white;
+    border-right: 1px solid white;
 }
 
 .history-table .history-header:first-child {
@@ -288,20 +290,26 @@ select {
 }
 
 .history-table .history-cell-round {
-    padding-top: 5px;
-    border-bottom: 1px solid #eee;
+        padding-top: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid white;
+    border-right: 1px solid white;
     width: 55px;
     min-width: 55px;
 }
 
 .history-table .history-cell-score {
-    padding: 0px;
-    border-bottom: 1px solid #eee;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid white;
+    border-right: 1px solid white;
 }
 
 .history-table .history-cell-check {
-    padding: 0px;
-    border-bottom: 1px solid #eee;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid white;
+    border-right: 1px solid white;
     font-weight: bold;
 }
 
@@ -544,7 +552,3 @@ td input:focus {
 }
 
 /* New Round Highlight */
-.history-row-new {
-    background-color: #ffff00 !important;
-    /* Bright yellow */
-}
