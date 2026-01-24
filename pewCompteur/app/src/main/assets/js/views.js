@@ -400,7 +400,10 @@ export const ActiveGameView = (store) => {
                         <tr class="history-row-new" style="background: #e6f7ff; box-shadow: inset 0 0 0 3px black;">
                             <td class="history-cell-round" id="round-cell-${currentRoundIndex}">
                                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                    <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:2px solid var(--primary-color); border-radius:50%; font-weight:bold; color:var(--primary-color);">${currentRoundIndex + 1}</span>
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 20h9"></path>
+                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                    </svg>
                                     ${hasFixedScore ? `<span id="check-val-${currentRoundIndex}" style="font-size:0.8em; font-weight:bold; color:${checkValue === 0 ? 'var(--primary-color)' : '#ef4444'}; margin-top:2px;">${checkValue === 0 ? 'OK' : checkValue}</span>` : ''}
                                 </div>
                             </td>
