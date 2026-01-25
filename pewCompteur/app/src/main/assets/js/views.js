@@ -584,7 +584,7 @@ export const GameFormView = (store, gameId) => {
         
         ${isEditMode ? `
         <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="margin:0; font-size:1.1rem; font-weight:bold;">Informations</h3>
+            <h3 style="margin:0; font-size:1.1rem; font-weight:bold;">Information</h3>
             <button onclick="window.app.toggleGameFavorite('${game.id}')" style="background:none; border:none; cursor:pointer; padding:0; width:28px; height:28px;">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="${game.favorite ? '#ffd700' : 'none'}" stroke="${game.favorite ? '#fff' : '#fff'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -592,30 +592,32 @@ export const GameFormView = (store, gameId) => {
             </button>
         </div>
         ` : `
-        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Informations</h3>
+        <h3 style="margin-top:0; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Information</h3>
         `}
 
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
-            <input type="text" inputmode="none" id="${prefix}-name" value="${game?.name || ''}" readonly onclick="window.app.showTextKeypad('${prefix}-name', this.value, 'Nom du jeu')" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
+            <input type="text" inputmode="none" id="${prefix}-name" value="${game?.name || ''}" readonly onclick="window.app.showTextKeypad('${prefix}-name', this.value, 'Nom du jeu')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:15px; background:#f9fafb; border-radius:8px;">
-            <div style="display:flex; align-items:center; gap:8px; font-weight:bold;">
-                <label for="${prefix}-track-dealer">Suivre le donneur</label>
-                <span onclick="window.app.showHelpPopup('Pendant la partie, le donneur sera affiché et changera à chaque tour')" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <label style="font-weight:bold; width:40%;">Joueurs</label>
+            <div style="display:flex; gap:6px; width:55%; align-items:center;">
+                <div style="position:relative; width:50%;">
+                    <span style="position:absolute; left:4px; top:50%; transform:translateY(-50%); font-size:0.75em; color:#999; font-weight:bold; pointer-events:none;">min</span>
+                    <input type="text" inputmode="none" id="${prefix}-min-players" value="${game?.minPlayers || ''}" placeholder="" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-min-players', this.value, 'Minimum de joueurs')" style="width:100%; padding:10px 10px 10px 28px; border:1px solid #ccc; border-radius:5px; text-align:center; cursor:pointer; font-size:0.95em;">
+                </div>
+                <span style="font-weight:bold; color:#999; font-size:0.9em;">-</span>
+                <div style="position:relative; width:50%;">
+                    <span style="position:absolute; left:4px; top:50%; transform:translateY(-50%); font-size:0.75em; color:#999; font-weight:bold; pointer-events:none;">max</span>
+                    <input type="text" inputmode="none" id="${prefix}-max-players" value="${game?.maxPlayers || ''}" placeholder="" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-max-players', this.value, 'Maximum de joueurs')" style="width:100%; padding:10px 10px 10px 28px; border:1px solid #ccc; border-radius:5px; text-align:center; cursor:pointer; font-size:0.95em;">
+                </div>
             </div>
-            <label class="toggle-switch">
-                <input type="checkbox" id="${prefix}-track-dealer" ${game?.trackDealer ? 'checked' : ''}>
-                <span class="toggle-slider"></span>
-            </label>
         </div>
-
-        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
-                <label for="${prefix}-score-mode">Mode de score</label>
+                <label for="${prefix}-score-mode">Mode</label>
                 <span onclick="window.app.showHelpPopup(&quot;Choisissez si les joueurs accumulent des points ou si on compte juste les victoires (1 point par tour gagné)&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
             </div>
             <select id="${prefix}-score-mode" onchange="document.getElementById('${prefix}-fixed-score-container').style.display = this.value === 'points' ? 'flex' : 'none';" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; background:white;">
@@ -640,6 +642,19 @@ export const GameFormView = (store, gameId) => {
             <input type="text" inputmode="none" id="${prefix}-fixed-score-value" value="${game?.fixedRoundScore || ''}" placeholder="Optionnel" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-fixed-score-value', this.value, 'Score fixe par tour')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
+            <div style="font-weight:bold; width:40%; display:flex; align-items:center; gap:8px;">
+                <label for="${prefix}-track-dealer">Suivre le donneur</label>
+                <span onclick="window.app.showHelpPopup('Pendant la partie, le donneur sera affiché et changera à chaque tour')" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
+            </div>
+            <div style="width:55%; display:flex; justify-content:flex-start;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="${prefix}-track-dealer" ${game?.trackDealer ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Fin de partie</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
@@ -650,18 +665,6 @@ export const GameFormView = (store, gameId) => {
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-rounds" style="font-weight:bold; width:40%;">Limite de tours</label>
             <input type="text" inputmode="none" id="${prefix}-rounds" value="${game?.rounds || ''}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-rounds', this.value, 'Nombre de tours')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
-        </div>
-
-        <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Nombre de joueurs</h3>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="${prefix}-min-players" style="font-weight:bold; width:40%;">Minimum</label>
-            <input type="text" inputmode="none" id="${prefix}-min-players" value="${game?.minPlayers || ''}" placeholder="Optionnel" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-min-players', this.value, 'Minimum de joueurs')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
-        </div>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
-            <label for="${prefix}-max-players" style="font-weight:bold; width:40%;">Maximum</label>
-            <input type="text" inputmode="none" id="${prefix}-max-players" value="${game?.maxPlayers || ''}" placeholder="Optionnel" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-max-players', this.value, 'Maximum de joueurs')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
     </div>
