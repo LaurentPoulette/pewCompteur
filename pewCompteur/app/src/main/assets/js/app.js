@@ -690,8 +690,105 @@ class App {
         this.store.state.lastSelectedPlayers = playersList;
         this.store.save();
 
-        this.store.startNewSession(gameId, playersList, game.name, config);
-        this.router.navigate('game');
+        // Si le jeu suit le donneur, demander qui est le premier donneur
+        if (game.trackDealer) {
+            this.selectDealer(false, gameId, playersList, game.name, config);
+        } else {
+            this.store.startNewSession(gameId, playersList, game.name, config);
+            this.router.navigate('game');
+        }
+    }
+
+    selectDealer(isChange = false, gameId = null, playersList = null, gameName = null, config = null) {
+        let players, session, currentDealerId;
+        
+        if (isChange) {
+            // Mode changement de donneur
+            session = this.store.restoreSession();
+            if (!session || !session.dealerId) return;
+            currentDealerId = session.dealerId;
+            players = session.players.map(sp => {
+                const info = this.store.getPlayers().find(p => p.id === sp.id);
+                return { ...sp, ...info };
+            });
+        } else {
+            // Mode sélection initiale
+            players = playersList.map(pid => this.store.getPlayers().find(p => p.id === pid));
+            currentDealerId = null;
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+        
+        const popup = document.createElement('div');
+        popup.style.cssText = 'background:white; border-radius:12px; padding:20px; max-width:400px; width:100%; box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+        
+        const title = isChange ? 'Sélectionnez le nouveau donneur' : 'Sélectionnez le premier donneur';
+        
+        popup.innerHTML = `
+            <h3 style="margin:0 0 15px 0; color:#333; text-align:center;">${title}</h3>
+            <div style="display:grid; gap:10px; margin-bottom:20px;">
+                ${players.map(p => {
+                    const isCurrentDealer = currentDealerId && p.id === currentDealerId;
+                    return `
+                    <button class="dealer-btn" data-player-id="${p.id}" style="padding:15px; border:${isCurrentDealer ? '2px solid var(--primary-color)' : '1px solid #ddd'}; border-radius:8px; background:${isCurrentDealer ? '#e6f7ff' : 'white'}; cursor:pointer; display:flex; align-items:center; gap:10px; transition:all 0.2s; position:relative;">
+                        ${p.photo ? `<img src="${p.photo}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
+                        <span style="font-weight:bold; color:#333;">${p.name}</span>
+                        ${isCurrentDealer ? '<span style="position:absolute; right:15px; color:var(--primary-color); font-weight:bold;">✓</span>' : ''}
+                    </button>
+                `}).join('')}
+            </div>
+            ${isChange ? '<button id="cancel-dealer-btn" style="width:100%; padding:12px; background:#6c757d; color:white; border:none; border-radius:8px; font-size:1em; cursor:pointer;">Annuler</button>' : ''}
+        `;
+        
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        
+        // Gérer la sélection
+        popup.querySelectorAll('.dealer-btn').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                const isCurrentDealer = currentDealerId && btn.dataset.playerId === currentDealerId;
+                if (!isCurrentDealer) {
+                    btn.style.background = '#e6f7ff';
+                    btn.style.borderColor = 'var(--primary-color)';
+                }
+            });
+            btn.addEventListener('mouseleave', () => {
+                const isCurrentDealer = currentDealerId && btn.dataset.playerId === currentDealerId;
+                if (!isCurrentDealer) {
+                    btn.style.background = 'white';
+                    btn.style.borderColor = '#ddd';
+                }
+            });
+            btn.addEventListener('click', () => {
+                const selectedDealerId = btn.dataset.playerId;
+                overlay.remove();
+                
+                if (isChange) {
+                    this.store.changeDealer(selectedDealerId);
+                    // Rafraîchir la vue
+                    const content = ActiveGameView(this.store);
+                    document.querySelector('.view:last-child').innerHTML = content;
+                } else {
+                    this.store.startNewSession(gameId, playersList, gameName, config, selectedDealerId);
+                    this.router.navigate('game');
+                }
+            });
+        });
+        
+        // Bouton annuler (uniquement en mode changement)
+        if (isChange) {
+            popup.querySelector('#cancel-dealer-btn').addEventListener('click', () => {
+                overlay.remove();
+            });
+            
+            // Cliquer sur l'overlay pour fermer
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                }
+            });
+        }
     }
 
     // Removed handleImageUpload as it's no longer used for file input
@@ -1082,6 +1179,7 @@ class App {
         const minPlayersInput = document.getElementById(`${prefix}-min-players`);
         const maxPlayersInput = document.getElementById(`${prefix}-max-players`);
         const targetInput = document.getElementById(`${prefix}-target`);
+        const trackDealerInput = document.getElementById(`${prefix}-track-dealer`);
 
         const isEditMode = idInput && idInput.value;
         const name = nameInput.value.trim();
@@ -1103,7 +1201,8 @@ class App {
                 rounds: roundsInput.value ? parseInt(roundsInput.value) : null,
                 fixedRoundScore: fixedScoreValue.value ? parseInt(fixedScoreValue.value) : null,
                 minPlayers: minPlayers,
-                maxPlayers: maxPlayers
+                maxPlayers: maxPlayers,
+                trackDealer: trackDealerInput?.checked || false
             };
 
             if (isEditMode) {
@@ -1230,10 +1329,12 @@ class App {
         const keypad = document.getElementById('numeric-keypad');
         const display = document.getElementById('keypad-display');
         const nameDisplay = document.getElementById('keypad-player-name');
+        const nextButton = document.getElementById('keypad-next-button');
         
         // Stocker les informations de contexte
         keypad.dataset.roundIndex = roundIndex;
         keypad.dataset.playerId = playerId;
+        keypad.dataset.isGeneric = 'false';
         
         // Stocker l'élément input qui a déclenché le pavé
         this.currentInputElement = event.target;
@@ -1244,16 +1345,47 @@ class App {
         // Initialiser l'affichage avec la valeur actuelle
         display.textContent = currentValue || '0';
         
+        // Afficher le bouton "Valider et suivant"
+        if (nextButton) nextButton.style.display = 'flex';
+        
+        // Afficher le pavé
+        keypad.style.display = 'flex';
+    }
+
+    showGenericNumericKeypad(inputId, currentValue, label = '') {
+        const keypad = document.getElementById('numeric-keypad');
+        const display = document.getElementById('keypad-display');
+        const nameDisplay = document.getElementById('keypad-player-name');
+        const nextButton = document.getElementById('keypad-next-button');
+        
+        // Stocker l'ID de l'input
+        keypad.dataset.inputId = inputId;
+        keypad.dataset.isGeneric = 'true';
+        
+        // Stocker l'élément input
+        this.currentInputElement = document.getElementById(inputId);
+        
+        // Afficher le libellé du champ
+        nameDisplay.textContent = label;
+        
+        // Initialiser l'affichage avec la valeur actuelle (vide si null/undefined)
+        display.textContent = currentValue && currentValue !== '' ? currentValue : '';
+        
+        // Masquer le bouton "Valider et suivant"
+        if (nextButton) nextButton.style.display = 'none';
+        
         // Afficher le pavé
         keypad.style.display = 'flex';
     }
 
     keypadInput(digit) {
+        const keypad = document.getElementById('numeric-keypad');
         const display = document.getElementById('keypad-display');
+        const isGeneric = keypad.dataset.isGeneric === 'true';
         let current = display.textContent;
         
-        // Si c'est zéro, remplacer par le chiffre
-        if (current === '0' || current === '-0') {
+        // Si c'est vide ou zéro, remplacer par le chiffre
+        if (current === '0' || current === '-0' || current === '' || current === '-') {
             const isNegative = current.startsWith('-');
             display.textContent = isNegative ? '-' + digit : digit;
         } else {
@@ -1262,13 +1394,16 @@ class App {
     }
 
     keypadBackspace() {
+        const keypad = document.getElementById('numeric-keypad');
         const display = document.getElementById('keypad-display');
+        const isGeneric = keypad.dataset.isGeneric === 'true';
         let current = display.textContent;
         
         if (current.length > 1) {
             display.textContent = current.slice(0, -1);
         } else {
-            display.textContent = '0';
+            // Pour les inputs génériques, laisser vide. Pour les scores, mettre '0'
+            display.textContent = isGeneric ? '' : '0';
         }
     }
 
@@ -1288,16 +1423,26 @@ class App {
     validateKeypadInput() {
         const keypad = document.getElementById('numeric-keypad');
         const display = document.getElementById('keypad-display');
-        const roundIndex = keypad.dataset.roundIndex;
-        const playerId = keypad.dataset.playerId;
         const value = display.textContent;
+        const isGeneric = keypad.dataset.isGeneric === 'true';
         
-        // Mettre à jour le score dans le store
-        this.updateRound(roundIndex, playerId, value);
-        
-        // Mettre à jour l'affichage de l'input dans le tableau
-        if (this.currentInputElement && this.currentInputElement.tagName === 'INPUT') {
-            this.currentInputElement.value = value;
+        if (isGeneric) {
+            // Mode générique : juste mettre à jour l'input
+            if (this.currentInputElement && this.currentInputElement.tagName === 'INPUT') {
+                this.currentInputElement.value = value;
+            }
+        } else {
+            // Mode score : mettre à jour le round
+            const roundIndex = keypad.dataset.roundIndex;
+            const playerId = keypad.dataset.playerId;
+            
+            // Mettre à jour le score dans le store
+            this.updateRound(roundIndex, playerId, value);
+            
+            // Mettre à jour l'affichage de l'input dans le tableau
+            if (this.currentInputElement && this.currentInputElement.tagName === 'INPUT') {
+                this.currentInputElement.value = value;
+            }
         }
         
         // Fermer le pavé
@@ -1329,6 +1474,18 @@ class App {
         
         const currentPlayerIndex = session.players.findIndex(p => p.id === playerId);
         if (currentPlayerIndex === -1) {
+            this.closeNumericKeypad();
+            return;
+        }
+        
+        // Vérifier si tous les scores du tour sont saisis
+        const currentRound = session.history[roundIndex] || {};
+        const allScoresFilled = session.players.every(p => 
+            currentRound[p.id] !== undefined && currentRound[p.id] !== ''
+        );
+        
+        // Si tous les scores sont remplis, fermer le clavier
+        if (allScoresFilled) {
             this.closeNumericKeypad();
             return;
         }

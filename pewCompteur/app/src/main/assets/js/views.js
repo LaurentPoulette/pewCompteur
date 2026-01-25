@@ -353,6 +353,15 @@ export const ActiveGameView = (store) => {
                                     </svg>
                                 </button>
                                 <span>Joueurs</span>
+                                ${session.dealerId ? `
+                                <button onclick="window.app.selectDealer(true)" style="position: absolute; right: 10px; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 6px; border-radius: 50%; align-items: center; justify-content: center;" title="Changer le donneur">
+                                    <svg width="15" height="20" viewBox="0 0 24 32" style="display: block;">
+                                        <rect x="0" y="0" width="24" height="32" rx="2" fill="white" stroke="#333" stroke-width="1"/>
+                                        <text x="3" y="9" font-size="7" font-weight="bold" fill="#e53e3e">A</text>
+                                        <path d="M 12 26 C 12 26, 6 20, 6 16 C 6 12, 9 10, 12 13 C 15 10, 18 12, 18 16 C 18 20, 12 26, 12 26 Z" fill="#e53e3e"/>
+                                    </svg>
+                                </button>
+                                ` : ''}
                             </th>
                         </tr>
                         <tr style="background: linear-gradient(135deg, #c3dafe 0%, #a3bffa 100%);">
@@ -431,8 +440,9 @@ export const ActiveGameView = (store) => {
                             </td>
                                     `;
                                 } else {
+                                    const isDealer = session.dealerId && session.dealerId === p.id;
                                     return `
-                            <td class="history-cell-score">
+                            <td class="history-cell-score ${isDealer ? 'dealer-cell' : ''}">
                                 <input type="text" 
                                        class="score-input"
                                        value="${round[p.id] !== undefined ? round[p.id] : ''}" 
@@ -538,35 +548,6 @@ export const ActiveGameView = (store) => {
             </div >
         </div >
     </div >
-    
-    <!-- Pavé numérique personnalisé -->
-    <div id="numeric-keypad" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target === this) window.app.closeNumericKeypad()">
-        <div style="background:white; border-radius:12px; padding:20px; max-width:320px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
-            <div id="keypad-player-name" style="text-align:center; font-size:1.1em; font-weight:bold; margin-bottom:10px; color:#333;"></div>
-            <div id="keypad-display" style="background:#f0f0f0; padding:15px; border-radius:8px; text-align:center; font-size:2em; font-weight:bold; margin-bottom:15px; min-height:60px; display:flex; align-items:center; justify-content:center; color:#333;">0</div>
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:15px;">
-                <button onclick="window.app.keypadInput('7')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">7</button>
-                <button onclick="window.app.keypadInput('8')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">8</button>
-                <button onclick="window.app.keypadInput('9')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">9</button>
-                <button onclick="window.app.keypadInput('4')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">4</button>
-                <button onclick="window.app.keypadInput('5')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">5</button>
-                <button onclick="window.app.keypadInput('6')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">6</button>
-                <button onclick="window.app.keypadInput('1')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">1</button>
-                <button onclick="window.app.keypadInput('2')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">2</button>
-                <button onclick="window.app.keypadInput('3')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">3</button>
-                <button onclick="window.app.keypadToggleSign()" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">+/-</button>
-                <button onclick="window.app.keypadInput('0')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">0</button>
-                <button onclick="window.app.keypadBackspace()" style="padding:15px; font-size:1.2em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
-            </div>
-            <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <button onclick="window.app.closeNumericKeypad()" style="flex:1; padding:15px; font-size:1.1em; border:1px solid #ddd; border-radius:8px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Annuler</button>
-                <button onclick="window.app.validateKeypadInput()" style="flex:1; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:var(--primary-color); color:white; cursor:pointer; font-weight:bold;">Valider</button>
-            </div>
-            <div style="display:flex;">
-                <button onclick="window.app.validateKeypadInputAndNext()" style="width:100%; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:bold;">Valider et suivant ➜</button>
-            </div>
-        </div>
-    </div>
     `;
 };
 export const GameFormView = (store, gameId) => {
@@ -607,6 +588,14 @@ export const GameFormView = (store, gameId) => {
             <input type="text" id="${prefix}-name" value="${game?.name || ''}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
         </div>
 
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:15px; background:#f9fafb; border-radius:8px;">
+            <div style="display:flex; align-items:center; gap:8px; font-weight:bold;">
+                <label for="${prefix}-track-dealer">Suivre le donneur</label>
+                <span onclick="window.app.showHelpPopup('Pendant la partie, le donneur sera affiché et changera à chaque tour')" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
+            </div>
+            <input type="checkbox" id="${prefix}-track-dealer" ${game?.trackDealer ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;">
+        </div>
+
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
@@ -633,31 +622,31 @@ export const GameFormView = (store, gameId) => {
                 <label for="${prefix}-fixed-score-value">Score fixe</label>
                 <span onclick="window.app.showHelpPopup(&quot;Le score est fixé pour un tour de jeu, ce qui permet d'afficher un décompte lors de la saisie des scores&quot;)" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
             </div>
-            <input type="number" id="${prefix}-fixed-score-value" value="${game?.fixedRoundScore || ''}" placeholder="Optionnel" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="${prefix}-fixed-score-value" value="${game?.fixedRoundScore || ''}" placeholder="Optionnel" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-fixed-score-value', this.value, 'Score fixe par tour')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Fin de partie</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-target" style="font-weight:bold; width:40%;">Limite de score</label>
-            <input type="number" id="${prefix}-target" value="${game?.target || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="${prefix}-target" value="${game?.target || ''}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-target', this.value, 'Objectif de score')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-rounds" style="font-weight:bold; width:40%;">Limite de tours</label>
-            <input type="number" id="${prefix}-rounds" value="${game?.rounds || ''}" placeholder="Illimité" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="${prefix}-rounds" value="${game?.rounds || ''}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-rounds', this.value, 'Nombre de tours')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Nombre de joueurs</h3>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-min-players" style="font-weight:bold; width:40%;">Minimum</label>
-            <input type="number" id="${prefix}-min-players" value="${game?.minPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="${prefix}-min-players" value="${game?.minPlayers || ''}" placeholder="Optionnel" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-min-players', this.value, 'Minimum de joueurs')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-max-players" style="font-weight:bold; width:40%;">Maximum</label>
-            <input type="number" id="${prefix}-max-players" value="${game?.maxPlayers || ''}" placeholder="Optionnel" min="1" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="${prefix}-max-players" value="${game?.maxPlayers || ''}" placeholder="Optionnel" readonly onclick="window.app.showGenericNumericKeypad('${prefix}-max-players', this.value, 'Maximum de joueurs')" style="width:55%; padding:15px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
     </div>
@@ -978,12 +967,12 @@ export const GameSetupView = (store, gameId) => {
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="setup-score-limit" style="font-weight:bold; width: 60%;">Limite de Score</label>
-                                <input type="number" id="setup-score-limit" value="${defaultTarget}" placeholder="Ex: 1000" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+                                <input type="text" inputmode="none" id="setup-score-limit" value="${defaultTarget}" placeholder="Ex: 1000" readonly onclick="window.app.showGenericNumericKeypad('setup-score-limit', this.value, 'Objectif de score')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
                             </div>
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="setup-round-limit" style="font-weight:bold; width: 60%;">Nombre de tours</label>
-                                <input type="number" id="setup-round-limit" value="${defaultRounds}" placeholder="Illimité" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+                                <input type="text" inputmode="none" id="setup-round-limit" value="${defaultRounds}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('setup-round-limit', this.value, 'Nombre de tours')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
                             </div>
                         </div>
                         </div>
@@ -1016,12 +1005,12 @@ export const UpdateLimitsView = (store) => {
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="update-score-limit" style="font-weight:bold; width:60%;">Limite de score</label>
-                                <input type="number" id="update-score-limit" value="${currentTarget}" placeholder="Illimité" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+                                <input type="text" inputmode="none" id="update-score-limit" value="${currentTarget}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('update-score-limit', this.value, 'Objectif de score')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
                             </div>
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="update-round-limit" style="font-weight:bold; width:60%;">Limite de tours</label>
-                                <input type="number" id="update-round-limit" value="${currentRounds}" placeholder="Illimité" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+                                <input type="text" inputmode="none" id="update-round-limit" value="${currentRounds}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('update-round-limit', this.value, 'Nombre de tours')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
                             </div>
                         </div>
                         </div>

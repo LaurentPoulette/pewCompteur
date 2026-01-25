@@ -17,6 +17,35 @@
         <!-- Views will be injected here test -->
     </div>
 
+    <!-- Pavé numérique personnalisé -->
+    <div id="numeric-keypad" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target === this && window.app) window.app.closeNumericKeypad()">
+        <div style="background:white; border-radius:12px; padding:20px; max-width:320px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+            <div id="keypad-player-name" style="text-align:center; font-size:1.1em; font-weight:bold; margin-bottom:10px; color:#333;"></div>
+            <div id="keypad-display" style="background:#f0f0f0; padding:15px; border-radius:8px; text-align:center; font-size:2em; font-weight:bold; margin-bottom:15px; min-height:60px; display:flex; align-items:center; justify-content:center; color:#333;">0</div>
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:15px;">
+                <button onclick="window.app.keypadInput('7')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">7</button>
+                <button onclick="window.app.keypadInput('8')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">8</button>
+                <button onclick="window.app.keypadInput('9')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">9</button>
+                <button onclick="window.app.keypadInput('4')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">4</button>
+                <button onclick="window.app.keypadInput('5')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">5</button>
+                <button onclick="window.app.keypadInput('6')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">6</button>
+                <button onclick="window.app.keypadInput('1')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">1</button>
+                <button onclick="window.app.keypadInput('2')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">2</button>
+                <button onclick="window.app.keypadInput('3')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">3</button>
+                <button onclick="window.app.keypadToggleSign()" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">+/-</button>
+                <button onclick="window.app.keypadInput('0')" style="padding:15px; font-size:1.5em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">0</button>
+                <button onclick="window.app.keypadBackspace()" style="padding:15px; font-size:1.2em; border:1px solid #ddd; border-radius:8px; background:white; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <button onclick="window.app.closeNumericKeypad()" style="flex:1; padding:15px; font-size:1.1em; border:1px solid #ddd; border-radius:8px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Annuler</button>
+                <button onclick="window.app.validateKeypadInput()" style="flex:1; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:var(--primary-color); color:white; cursor:pointer; font-weight:bold;">Valider</button>
+            </div>
+            <div id="keypad-next-button" style="display:flex;">
+                <button onclick="window.app.validateKeypadInputAndNext()" style="width:100%; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:#10b981; color:white; cursor:pointer; font-weight:bold;">Valider et suivant ➜</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="js/app.js?v=3"></script>
 </body>
 

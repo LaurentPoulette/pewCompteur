@@ -173,7 +173,7 @@ export class Store {
         }
     }
 
-    startNewSession(gameId, playerIds, title, config = {}) {
+    startNewSession(gameId, playerIds, title, config = {}, initialDealerId = null) {
         this.state.activeGame = {
             sessionId: 's_' + Date.now(),
             gameId,
@@ -182,7 +182,8 @@ export class Store {
             players: playerIds.map(pid => ({ id: pid, score: 0, rounds: [] })),
             currentRound: 1,
             history: [{}], // Start with one empty round
-            startTime: Date.now()
+            startTime: Date.now(),
+            dealerId: initialDealerId // ID du donneur actuel
         };
         this.save();
     }
@@ -191,6 +192,16 @@ export class Store {
         if (!this.state.activeGame) return;
         this.state.activeGame.history.push({});
         this.state.activeGame.currentRound++;
+        
+        // Faire tourner le donneur si activé
+        if (this.state.activeGame.dealerId) {
+            const currentDealerIndex = this.state.activeGame.players.findIndex(p => p.id === this.state.activeGame.dealerId);
+            if (currentDealerIndex !== -1) {
+                const nextDealerIndex = (currentDealerIndex + 1) % this.state.activeGame.players.length;
+                this.state.activeGame.dealerId = this.state.activeGame.players[nextDealerIndex].id;
+            }
+        }
+        
         this.save();
     }
 
@@ -199,6 +210,12 @@ export class Store {
         if (!this.state.activeGame) return;
         // Merge with existing config
         this.state.activeGame.config = { ...this.state.activeGame.config, ...newConfig };
+        this.save();
+    }
+
+    changeDealer(newDealerId) {
+        if (!this.state.activeGame) return;
+        this.state.activeGame.dealerId = newDealerId;
         this.save();
     }
 
