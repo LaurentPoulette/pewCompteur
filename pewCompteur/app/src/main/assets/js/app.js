@@ -3014,7 +3014,10 @@ class App {
                         const label = exists ? (isArchived ? ' (archivé - sera réactivé)' : ' (mettre à jour ?)') : '';
                         return `
                             <label style="display:flex; align-items:center; padding:12px; background:white; border-radius:8px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; ${exists ? 'border: 2px solid #ff4444;' : ''}">
-                                <input type="checkbox" class="import-game-checkbox" data-game='${JSON.stringify(g).replace(/'/g, "&apos;")}' style="margin-right:12px; width:20px; height:20px; cursor:pointer;" ${exists ? '' : 'checked'}>
+                                <div class="toggle-switch" style="margin-right:12px;">
+                                    <input type="checkbox" class="import-game-checkbox" data-game='${JSON.stringify(g).replace(/'/g, "&apos;")}' ${exists ? '' : 'checked'}>
+                                    <span class="toggle-slider"></span>
+                                </div>
                                 <span style="font-weight:500; ${exists ? 'color:#ff4444;' : ''}">${g.name}${label}</span>
                             </label>
                         `;

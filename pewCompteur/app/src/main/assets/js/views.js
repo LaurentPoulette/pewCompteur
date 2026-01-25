@@ -593,7 +593,10 @@ export const GameFormView = (store, gameId) => {
                 <label for="${prefix}-track-dealer">Suivre le donneur</label>
                 <span onclick="window.app.showHelpPopup('Pendant la partie, le donneur sera affiché et changera à chaque tour')" style="cursor:pointer; font-size:1.2em; color:#667eea;" title="Aide">ℹ️</span>
             </div>
-            <input type="checkbox" id="${prefix}-track-dealer" ${game?.trackDealer ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;">
+            <label class="toggle-switch">
+                <input type="checkbox" id="${prefix}-track-dealer" ${game?.trackDealer ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+            </label>
         </div>
 
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Score</h3>
@@ -839,7 +842,10 @@ export const PlayerFormView = (store, playerId) => {
                 return `
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:10px; border-radius:5px; background:#f9f9f9;">
                     <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                        <input type="checkbox" id="circle-${c.id}" ${isChecked ? 'checked' : ''} onchange="window.app.togglePlayerCircle(${isEditMode ? `'${player.id}'` : 'null'}, '${c.id}')" style="width:20px; height:20px; cursor:pointer;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="circle-${c.id}" ${isChecked ? 'checked' : ''} onchange="window.app.togglePlayerCircle(${isEditMode ? `'${player.id}'` : 'null'}, '${c.id}')">
+                            <span class="toggle-slider"></span>
+                        </label>
                         <label for="circle-${c.id}" style="cursor:pointer; flex:1;">${c.name}</label>
                     </div>
                     <div style="display:flex; gap:5px;">
@@ -1437,15 +1443,24 @@ export const OptionsView = (store) => `
         <div>
             <h3 style="margin-bottom:15px; color:#333;">Paramètres</h3>
             <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
-                <input type="checkbox" id="show-leaderboard-during-game" ${store.state.showLeaderboardDuringGame ? 'checked' : ''} onchange="window.app.toggleShowLeaderboardDuringGame(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+                <div class="toggle-switch" style="margin-right:12px;">
+                    <input type="checkbox" id="show-leaderboard-during-game" ${store.state.showLeaderboardDuringGame ? 'checked' : ''} onchange="window.app.toggleShowLeaderboardDuringGame(this.checked)">
+                    <span class="toggle-slider"></span>
+                </div>
                 <span style="font-size:1em; color:#333;">Afficher le classement en cours de partie</span>
             </label>
             <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
-                <input type="checkbox" id="allow-edit-past-rounds" ${store.state.allowEditPastRounds ? 'checked' : ''} onchange="window.app.toggleAllowEditPastRounds(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+                <div class="toggle-switch" style="margin-right:12px;">
+                    <input type="checkbox" id="allow-edit-past-rounds" ${store.state.allowEditPastRounds ? 'checked' : ''} onchange="window.app.toggleAllowEditPastRounds(this.checked)">
+                    <span class="toggle-slider"></span>
+                </div>
                 <span style="font-size:1em; color:#333;">Modifier les score des tours terminés</span>
             </label>
             <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
-                <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)" style="margin-right:12px; width:20px; height:20px; cursor:pointer;">
+                <div class="toggle-switch" style="margin-right:12px;">
+                    <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)">
+                    <span class="toggle-slider"></span>
+                </div>
                 <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>
             </label>
         </div>
@@ -1907,7 +1922,10 @@ export const ExportGamesView = (store) => {
             <div style="margin-bottom:20px;">
                 ${games.map(g => `
                     <label style="display:flex; align-items:center; padding:12px; background:white; border-radius:8px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer;">
-                        <input type="checkbox" id="export-game-${g.id}" value="${g.id}" style="margin-right:12px; width:20px; height:20px; cursor:pointer;" checked>
+                        <div class="toggle-switch" style="margin-right:12px;">
+                            <input type="checkbox" id="export-game-${g.id}" value="${g.id}" checked>
+                            <span class="toggle-slider"></span>
+                        </div>
                         <span style="font-weight:500;">${g.name}</span>
                     </label>
                 `).join('')}
