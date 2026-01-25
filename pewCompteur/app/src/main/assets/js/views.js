@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.12';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.13';
 
 export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
@@ -1426,13 +1426,14 @@ export const AboutView = () => `
         <h3>Compteur de Points</h3>
         <p>Version ${APP_VERSION}</p>
         <p style="margin-top:20px;">Une application simple et efficace pour compter les points de vos jeux de société favoris (Tarot, Belote, UNO, et bien d'autres).</p>
-        <h4 style="margin-top:20px; margin-bottom:10px; color:var(--primary-color);">Nouveautés v1.12 :</h4>
+        <h4 style="margin-top:20px; margin-bottom:10px; color:var(--primary-color);">Nouveautés v1.13 :</h4>
         <ul style="line-height:1.8; padding-left:20px;">
-            <li>Classement avec médailles et gestion des égalités de score</li>
-            <li>Option pour afficher/masquer le classement en cours de partie</li>
-            <li>Option pour verrouiller l'édition des scores des tours terminés</li>
-            <li>Barre d'onglets sticky dans les statistiques</li>
-            <li>Améliorations visuelles du tableau de scores</li>
+            <li>Mode Victoires : comptez simplement les tours gagnés au lieu des points</li>
+            <li>Interface de saisie de jeu simplifiée avec seulement 2 sections</li>
+            <li>Clavier alphanumérique avec curseur repositionnable au toucher</li>
+            <li>Espaces visibles dans la saisie de texte (affichés comme ·)</li>
+            <li>Initiales à deux lettres pour les noms avec espaces</li>
+            <li>Correction de l'affichage null/NaN dans la modification des limites</li>
         </ul>
         <p style="margin-top:20px;">Développé avec passion.</p>
     </div>
