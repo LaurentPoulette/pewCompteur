@@ -585,7 +585,7 @@ export const GameFormView = (store, gameId) => {
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
             <label for="${prefix}-name" style="font-weight:bold; width: 40%;">Nom du jeu</label>
-            <input type="text" id="${prefix}-name" value="${game?.name || ''}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="${prefix}-name" value="${game?.name || ''}" readonly onclick="window.app.showTextKeypad('${prefix}-name', this.value, 'Nom du jeu')" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:15px; background:#f9fafb; border-radius:8px;">
@@ -810,7 +810,7 @@ export const PlayerFormView = (store, playerId) => {
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="${prefix}-name" style="font-weight:bold; width: 40%;">Nom</label>
-            <input type="text" id="${prefix}-name" value="${currentName}" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="${prefix}-name" value="${currentName}" readonly onclick="window.app.showTextKeypad('${prefix}-name', this.value, 'Nom du joueur')" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
         
         <div onclick="window.app.openAvatarSelection()" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px; cursor:pointer;">
@@ -929,7 +929,7 @@ export const CircleFormView = (store, circleId, returnPlayerId) => {
 
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
             <label for="circle-name" style="font-weight:bold; width: 40%;">Nom</label>
-            <input type="text" id="circle-name" value="${circle?.name || ''}" placeholder="Ex: Famille, Amis..." style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right;">
+            <input type="text" inputmode="none" id="circle-name" value="${circle?.name || ''}" placeholder="Ex: Famille, Amis..." readonly onclick="window.app.showTextKeypad('circle-name', this.value, 'Nom du cercle')" style="width:55%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
         </div>
     </div>
     </div>

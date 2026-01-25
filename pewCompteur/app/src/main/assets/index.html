@@ -17,6 +17,163 @@
         <!-- Views will be injected here test -->
     </div>
 
+    <!-- Clavier alphanumérique personnalisé -->
+    <div id="text-keypad" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target === this && window.app) window.app.closeTextKeypad()">
+        <div style="background:white; border-radius:12px; padding:20px; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+            <div id="text-keypad-label" style="text-align:center; font-size:1.1em; font-weight:bold; margin-bottom:10px; color:#333;"></div>
+            <div id="text-keypad-display" style="background:#f0f0f0; padding:15px; border-radius:8px; text-align:center; font-size:1.3em; font-weight:bold; margin-bottom:15px; min-height:50px; display:flex; align-items:center; justify-content:center; color:#333; word-break:break-all;"></div>
+            
+            <!-- Mode lettres -->
+            <div id="text-keypad-letters" style="display:block;">
+                <!-- Touches alphabétiques ligne 1 -->
+                <div style="display:grid; grid-template-columns:repeat(10, 1fr); gap:5px; margin-bottom:10px;">
+                    <button class="text-key" data-lower="a" data-upper="A" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">a</button>
+                    <button class="text-key" data-lower="z" data-upper="Z" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">z</button>
+                    <button class="text-key" data-lower="e" data-upper="E" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">e</button>
+                    <button class="text-key" data-lower="r" data-upper="R" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">r</button>
+                    <button class="text-key" data-lower="t" data-upper="T" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">t</button>
+                    <button class="text-key" data-lower="y" data-upper="Y" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">y</button>
+                    <button class="text-key" data-lower="u" data-upper="U" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">u</button>
+                    <button class="text-key" data-lower="i" data-upper="I" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">i</button>
+                    <button class="text-key" data-lower="o" data-upper="O" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">o</button>
+                    <button class="text-key" data-lower="p" data-upper="P" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">p</button>
+                </div>
+                <!-- Touches alphabétiques ligne 2 -->
+                <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:5px; margin-bottom:10px; padding-left:5%;">
+                    <button class="text-key" data-lower="q" data-upper="Q" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">q</button>
+                    <button class="text-key" data-lower="s" data-upper="S" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">s</button>
+                    <button class="text-key" data-lower="d" data-upper="D" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">d</button>
+                    <button class="text-key" data-lower="f" data-upper="F" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">f</button>
+                    <button class="text-key" data-lower="g" data-upper="G" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">g</button>
+                    <button class="text-key" data-lower="h" data-upper="H" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">h</button>
+                    <button class="text-key" data-lower="j" data-upper="J" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">j</button>
+                    <button class="text-key" data-lower="k" data-upper="K" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">k</button>
+                    <button class="text-key" data-lower="l" data-upper="L" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">l</button>
+                </div>
+                <!-- Touches alphabétiques ligne 3 avec Shift -->
+                <div style="display:grid; grid-template-columns:1.5fr repeat(7, 1fr) 1.5fr; gap:5px; margin-bottom:10px;">
+                    <button id="text-shift-key" onclick="window.app.textKeypadToggleShift()" style="padding:10px 5px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:#e0e0e0; color:#000; cursor:pointer; font-weight:bold;">⇧</button>
+                    <button class="text-key" data-lower="w" data-upper="W" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">w</button>
+                    <button class="text-key" data-lower="x" data-upper="X" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">x</button>
+                    <button class="text-key" data-lower="c" data-upper="C" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">c</button>
+                    <button class="text-key" data-lower="v" data-upper="V" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">v</button>
+                    <button class="text-key" data-lower="b" data-upper="B" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">b</button>
+                    <button class="text-key" data-lower="n" data-upper="N" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">n</button>
+                    <button class="text-key" data-lower="m" data-upper="M" onclick="window.app.textKeypadInput(this.textContent)" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">m</button>
+                    <button onclick="window.app.textKeypadBackspace()" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#ffebee; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
+                </div>
+                <!-- Ligne du bas -->
+                <div style="display:grid; grid-template-columns:1.2fr 1.2fr 4fr 1.2fr; gap:5px; margin-bottom:15px;">
+                    <button onclick="window.app.textKeypadSetMode('numbers')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:#e0e0e0; color:#000; cursor:pointer; font-weight:bold;">123</button>
+                    <button onclick="window.app.textKeypadSetMode('accents')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:#e0e0e0; color:#000; cursor:pointer; font-weight:bold;">àé</button>
+                    <button onclick="window.app.textKeypadInput(' ')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer;">Espace</button>
+                    <button onclick="window.app.textKeypadInput('.')" style="padding:10px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer;">.</button>
+                </div>
+            </div>
+            
+            <!-- Mode chiffres et symboles -->
+            <div id="text-keypad-numbers" style="display:none;">
+                <!-- Ligne 1 : Chiffres -->
+                <div style="display:grid; grid-template-columns:repeat(10, 1fr); gap:5px; margin-bottom:10px;">
+                    <button onclick="window.app.textKeypadInput('1')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">1</button>
+                    <button onclick="window.app.textKeypadInput('2')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">2</button>
+                    <button onclick="window.app.textKeypadInput('3')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">3</button>
+                    <button onclick="window.app.textKeypadInput('4')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">4</button>
+                    <button onclick="window.app.textKeypadInput('5')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">5</button>
+                    <button onclick="window.app.textKeypadInput('6')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">6</button>
+                    <button onclick="window.app.textKeypadInput('7')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">7</button>
+                    <button onclick="window.app.textKeypadInput('8')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">8</button>
+                    <button onclick="window.app.textKeypadInput('9')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">9</button>
+                    <button onclick="window.app.textKeypadInput('0')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">0</button>
+                </div>
+                <!-- Ligne 2 : Symboles fréquents -->
+                <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:5px; margin-bottom:10px; padding-left:5%;">
+                    <button onclick="window.app.textKeypadInput('-')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">-</button>
+                    <button onclick="window.app.textKeypadInput('/')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">/</button>
+                    <button onclick="window.app.textKeypadInput(':')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">:</button>
+                    <button onclick="window.app.textKeypadInput(';')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">;</button>
+                    <button onclick="window.app.textKeypadInput('(')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">(</button>
+                    <button onclick="window.app.textKeypadInput(')')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">)</button>
+                    <button onclick="window.app.textKeypadInput('€')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">€</button>
+                    <button onclick="window.app.textKeypadInput('&')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">&</button>
+                    <button onclick="window.app.textKeypadInput('@')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">@</button>
+                </div>
+                <!-- Ligne 3 : Plus de symboles -->
+                <div style="display:grid; grid-template-columns:1.5fr repeat(7, 1fr) 1.5fr; gap:5px; margin-bottom:10px;">
+                    <button onclick="window.app.textKeypadInput('#')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">#</button>
+                    <button onclick="window.app.textKeypadInput('_')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">_</button>
+                    <button onclick="window.app.textKeypadInput('!')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">!</button>
+                    <button onclick="window.app.textKeypadInput('?')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">?</button>
+                    <button onclick="window.app.textKeypadInput('%')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">%</button>
+                    <button onclick="window.app.textKeypadInput('*')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">*</button>
+                    <button onclick="window.app.textKeypadInput('+')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">+</button>
+                    <button onclick="window.app.textKeypadInput('=')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">=</button>
+                    <button onclick="window.app.textKeypadBackspace()" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#ffebee; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
+                </div>
+                <!-- Ligne du bas -->
+                <div style="display:grid; grid-template-columns:1.2fr 1.2fr 4fr 1.2fr; gap:5px; margin-bottom:15px;">
+                    <button onclick="window.app.textKeypadSetMode('letters')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:#e0e0e0; color:#000; cursor:pointer; font-weight:bold;">ABC</button>
+                    <button onclick="window.app.textKeypadSetMode('accents')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:#e0e0e0; color:#000; cursor:pointer; font-weight:bold;">àé</button>
+                    <button onclick="window.app.textKeypadInput(' ')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer;">Espace</button>
+                    <button onclick="window.app.textKeypadInput(',')" style="padding:10px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer;">,</button>
+                </div>
+            </div>
+            
+            <!-- Mode accents -->
+            <div id="text-keypad-accents" style="display:none;">
+                <!-- Ligne 1 : Accents sur E -->
+                <div style="display:grid; grid-template-columns:repeat(10, 1fr); gap:5px; margin-bottom:10px;">
+                    <button onclick="window.app.textKeypadInput('é')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">é</button>
+                    <button onclick="window.app.textKeypadInput('è')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">è</button>
+                    <button onclick="window.app.textKeypadInput('ê')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ê</button>
+                    <button onclick="window.app.textKeypadInput('ë')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ë</button>
+                    <button onclick="window.app.textKeypadInput('É')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">É</button>
+                    <button onclick="window.app.textKeypadInput('È')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">È</button>
+                    <button onclick="window.app.textKeypadInput('Ê')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Ê</button>
+                    <button onclick="window.app.textKeypadInput('Ë')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Ë</button>
+                    <button onclick="window.app.textKeypadInput('€')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">€</button>
+                    <button onclick="window.app.textKeypadInput('œ')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">œ</button>
+                </div>
+                <!-- Ligne 2 : Accents sur A, I, O, U -->
+                <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:5px; margin-bottom:10px; padding-left:5%;">
+                    <button onclick="window.app.textKeypadInput('à')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">à</button>
+                    <button onclick="window.app.textKeypadInput('â')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">â</button>
+                    <button onclick="window.app.textKeypadInput('î')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">î</button>
+                    <button onclick="window.app.textKeypadInput('ï')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ï</button>
+                    <button onclick="window.app.textKeypadInput('ô')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ô</button>
+                    <button onclick="window.app.textKeypadInput('ù')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ù</button>
+                    <button onclick="window.app.textKeypadInput('û')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">û</button>
+                    <button onclick="window.app.textKeypadInput('ü')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ü</button>
+                    <button onclick="window.app.textKeypadInput('ÿ')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ÿ</button>
+                </div>
+                <!-- Ligne 3 : Cédille et majuscules -->
+                <div style="display:grid; grid-template-columns:1.5fr repeat(7, 1fr) 1.5fr; gap:5px; margin-bottom:10px;">
+                    <button onclick="window.app.textKeypadInput('ç')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer; font-weight:bold;">ç</button>
+                    <button onclick="window.app.textKeypadInput('Ç')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Ç</button>
+                    <button onclick="window.app.textKeypadInput('À')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">À</button>
+                    <button onclick="window.app.textKeypadInput('Â')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Â</button>
+                    <button onclick="window.app.textKeypadInput('Î')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Î</button>
+                    <button onclick="window.app.textKeypadInput('Ô')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Ô</button>
+                    <button onclick="window.app.textKeypadInput('Ù')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Ù</button>
+                    <button onclick="window.app.textKeypadInput('Û')" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Û</button>
+                    <button onclick="window.app.textKeypadBackspace()" style="padding:10px 5px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:#ffebee; color:#000; cursor:pointer; font-weight:bold;">⌫</button>
+                </div>
+                <!-- Ligne du bas -->
+                <div style="display:grid; grid-template-columns:1.2fr 1.2fr 4fr 1.2fr; gap:5px; margin-bottom:15px;">
+                    <button onclick="window.app.textKeypadSetMode('letters')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:#e0e0e0; color:#000; cursor:pointer; font-weight:bold;">ABC</button>
+                    <button onclick="window.app.textKeypadSetMode('numbers')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:#e0e0e0; color:#000; cursor:pointer; font-weight:bold;">123</button>
+                    <button onclick="window.app.textKeypadInput(' ')" style="padding:10px; font-size:0.9em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer;">Espace</button>
+                    <button onclick="window.app.textKeypadInput('.')" style="padding:10px; font-size:1em; border:1px solid #ddd; border-radius:6px; background:white; color:#000; cursor:pointer;">.</button>
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="window.app.closeTextKeypad()" style="flex:1; padding:15px; font-size:1.1em; border:1px solid #ddd; border-radius:8px; background:#f0f0f0; color:#000; cursor:pointer; font-weight:bold;">Annuler</button>
+                <button onclick="window.app.validateTextKeypadInput()" style="flex:1; padding:15px; font-size:1.1em; border:none; border-radius:8px; background:var(--primary-color); color:white; cursor:pointer; font-weight:bold;">Valider</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Pavé numérique personnalisé -->
     <div id="numeric-keypad" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target === this && window.app) window.app.closeNumericKeypad()">
         <div style="background:white; border-radius:12px; padding:20px; max-width:320px; width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">

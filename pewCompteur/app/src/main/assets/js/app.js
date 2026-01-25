@@ -1520,6 +1520,115 @@ class App {
         document.getElementById('keypad-display').textContent = '0';
     }
 
+    // Clavier alphanumérique personnalisé
+    showTextKeypad(inputId, currentValue, label = '') {
+        const keypad = document.getElementById('text-keypad');
+        const display = document.getElementById('text-keypad-display');
+        const labelDisplay = document.getElementById('text-keypad-label');
+        
+        // Stocker l'ID de l'input
+        keypad.dataset.inputId = inputId;
+        
+        // Stocker l'élément input
+        this.currentTextInputElement = document.getElementById(inputId);
+        
+        // Initialiser l'état du shift (minuscules par défaut)
+        this.textKeypadShiftOn = false;
+        this.textKeypadMode = 'letters'; // 'letters', 'numbers', or 'accents'
+        this.updateTextKeypadCase();
+        this.updateTextKeypadMode();
+        
+        // Afficher le libellé
+        labelDisplay.textContent = label;
+        
+        // Initialiser l'affichage avec la valeur actuelle
+        display.textContent = currentValue || '';
+        
+        // Afficher le clavier
+        keypad.style.display = 'flex';
+    }
+
+    textKeypadSetMode(mode) {
+        this.textKeypadMode = mode;
+        this.updateTextKeypadMode();
+    }
+
+    updateTextKeypadMode() {
+        const lettersDiv = document.getElementById('text-keypad-letters');
+        const numbersDiv = document.getElementById('text-keypad-numbers');
+        const accentsDiv = document.getElementById('text-keypad-accents');
+        
+        lettersDiv.style.display = this.textKeypadMode === 'letters' ? 'block' : 'none';
+        numbersDiv.style.display = this.textKeypadMode === 'numbers' ? 'block' : 'none';
+        accentsDiv.style.display = this.textKeypadMode === 'accents' ? 'block' : 'none';
+    }
+
+    textKeypadToggleShift() {
+        this.textKeypadShiftOn = !this.textKeypadShiftOn;
+        this.updateTextKeypadCase();
+    }
+
+    updateTextKeypadCase() {
+        const shiftKey = document.getElementById('text-shift-key');
+        const letterKeys = document.querySelectorAll('.text-key');
+        
+        letterKeys.forEach(key => {
+            if (this.textKeypadShiftOn) {
+                key.textContent = key.dataset.upper;
+                shiftKey.style.background = 'var(--primary-color)';
+                shiftKey.style.color = 'white';
+            } else {
+                key.textContent = key.dataset.lower;
+                shiftKey.style.background = '#e0e0e0';
+                shiftKey.style.color = '#000';
+            }
+        });
+    }
+
+    textKeypadInput(char) {
+        const display = document.getElementById('text-keypad-display');
+        let current = display.textContent;
+        
+        display.textContent = current + char;
+        
+        // Si shift est activé, le désactiver après la saisie d'une lettre
+        if (this.textKeypadShiftOn && char.match(/[a-zA-Z]/)) {
+            this.textKeypadShiftOn = false;
+            this.updateTextKeypadCase();
+        }
+    }
+
+    textKeypadBackspace() {
+        const display = document.getElementById('text-keypad-display');
+        let current = display.textContent;
+        
+        if (current.length > 0) {
+            display.textContent = current.slice(0, -1);
+        }
+    }
+
+    validateTextKeypadInput() {
+        const keypad = document.getElementById('text-keypad');
+        const display = document.getElementById('text-keypad-display');
+        const value = display.textContent;
+        
+        // Mettre à jour l'input
+        if (this.currentTextInputElement) {
+            this.currentTextInputElement.value = value;
+        }
+        
+        // Fermer le clavier
+        this.closeTextKeypad();
+    }
+
+    closeTextKeypad() {
+        const keypad = document.getElementById('text-keypad');
+        keypad.style.display = 'none';
+        
+        // Réinitialiser l'affichage
+        document.getElementById('text-keypad-display').textContent = '';
+    }
+
     showPlayerNamePopupById(playerId) {
         const session = this.store.restoreSession();
         if (!session) return;
