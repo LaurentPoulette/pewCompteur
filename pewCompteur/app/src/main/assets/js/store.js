@@ -45,16 +45,64 @@ export class Store {
 
     seedDefaults() {
         // Default games
-        this.state.games = [
-            { id: 'belote', name: 'Belote', winCondition: 'highest', target: 1000, color: '#ef4444', icon: '&nbsp;🃑&nbsp;' },
-            { id: 'tarot', name: 'Tarot', winCondition: 'highest', target: 0, color: '#3b82f6', icon: '&nbsp;🃑&nbsp;' },
-            { id: 'uno', name: 'UNO', winCondition: 'lowest', target: 500, color: '#eab308', icon: '&nbsp;🃑&nbsp;' },
-            { id: '5R', name: 'Cinq rois', winCondition: 'lowest', target: 0, rounds: 13, color: '#eab308', icon: '&nbsp;🃑&nbsp;' },
-        ];
+        this.state.games =
+
+            [
+                {
+                    "id": "uno",
+                    "name": "UNO",
+                    "winCondition": "lowest",
+                    "target": 500,
+                    "scoreMode": "points",
+                    "rounds": null,
+                    "fixedRoundScore": null,
+                    "minPlayers": 2,
+                    "maxPlayers": 10,
+                    "trackDealer": true
+                },
+                {
+                    "id": "5R",
+                    "name": "Cinq rois",
+                    "winCondition": "lowest",
+                    "target": 0,
+                    "rounds": 13,
+                    "scoreMode": "points",
+                    "fixedRoundScore": null,
+                    "minPlayers": 2,
+                    "maxPlayers": 7,
+                    "trackDealer": true
+                },
+                {
+                    "id": "papayoo",
+                    "name": "Papayoo",
+                    "winCondition": "lowest",
+                    "target": 0,
+                    "rounds": null,
+                    "scoreMode": "points",
+                    "fixedRoundScore": null,
+                    "minPlayers": 3,
+                    "maxPlayers": 8,
+                    "trackDealer": true
+                },
+                {
+                    "id": "django",
+                    "name": "Django",
+                    "winCondition": "highest",
+                    "target": 7,
+                    "rounds": null,
+                    "scoreMode": "wins",
+                    "fixedRoundScore": null,
+                    "minPlayers": 3,
+                    "maxPlayers": 5,
+                    "trackDealer": false
+                }
+            ];
         // Default players (example)
         this.state.players = [
             { id: 'p1', name: 'Joueur 1', avatar: '👤' },
-            { id: 'p2', name: 'Joueur 2', avatar: '👤' }
+            { id: 'p2', name: 'Joueur 2', avatar: '👤' },
+            { id: 'p3', name: 'Joueur 3', avatar: '👤' },
+            { id: 'p4', name: 'Joueur 4', avatar: '👤' },
         ];
         this.save();
     }
@@ -62,7 +110,7 @@ export class Store {
     getGames() {
         return this.state.games.filter(g => !g.deleted).sort((a, b) => a.name.localeCompare(b.name));
     }
-    getPlayers() { 
+    getPlayers() {
         return this.state.players.filter(p => !p.deleted);
     }
 
@@ -149,7 +197,7 @@ export class Store {
     deleteCircle(id) {
         if (!this.state.circles) this.state.circles = [];
         this.state.circles = this.state.circles.filter(c => c.id !== id);
-        
+
         // Remove circle from all players
         this.state.players.forEach(player => {
             if (player.circles) {
@@ -192,7 +240,7 @@ export class Store {
         if (!this.state.activeGame) return;
         this.state.activeGame.history.push({});
         this.state.activeGame.currentRound++;
-        
+
         // Faire tourner le donneur si activé
         if (this.state.activeGame.dealerId) {
             const currentDealerIndex = this.state.activeGame.players.findIndex(p => p.id === this.state.activeGame.dealerId);
@@ -201,7 +249,7 @@ export class Store {
                 this.state.activeGame.dealerId = this.state.activeGame.players[nextDealerIndex].id;
             }
         }
-        
+
         this.save();
     }
 
