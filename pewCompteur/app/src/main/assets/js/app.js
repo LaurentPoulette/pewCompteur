@@ -1535,17 +1535,77 @@ class App {
         // Initialiser l'état du shift (minuscules par défaut)
         this.textKeypadShiftOn = false;
         this.textKeypadMode = 'letters'; // 'letters', 'numbers', or 'accents'
+        this.textKeypadCurrentText = currentValue || '';
+        this.textKeypadCursorPosition = this.textKeypadCurrentText.length; // Curseur à la fin
         this.updateTextKeypadCase();
         this.updateTextKeypadMode();
         
         // Afficher le libellé
         labelDisplay.textContent = label;
         
-        // Initialiser l'affichage avec la valeur actuelle
-        display.textContent = currentValue || '';
+        // Initialiser l'affichage avec le curseur
+        this.updateTextKeypadDisplay();
+        
+        // Ajouter un gestionnaire de clic pour positionner le curseur
+        display.onclick = (e) => this.handleTextKeypadClick(e);
         
         // Afficher le clavier
         keypad.style.display = 'flex';
+    }
+
+    updateTextKeypadDisplay() {
+        const display = document.getElementById('text-keypad-display');
+        const text = this.textKeypadCurrentText || '';
+        const pos = this.textKeypadCursorPosition;
+        
+        // Créer des spans pour chaque caractère pour mesure précise
+        let html = '';
+        for (let i = 0; i <= text.length; i++) {
+            if (i === pos) {
+                html += '<span class="text-cursor"></span>';
+            }
+            if (i < text.length) {
+                html += '<span class="text-char" data-pos="' + i + '">' + text.charAt(i) + '</span>';
+            }
+        }
+        
+        display.innerHTML = html || '<span class="text-cursor"></span>';
+    }
+
+    handleTextKeypadClick(event) {
+        const display = document.getElementById('text-keypad-display');
+        const text = this.textKeypadCurrentText || '';
+        
+        if (text.length === 0) {
+            this.textKeypadCursorPosition = 0;
+            this.updateTextKeypadDisplay();
+            return;
+        }
+        
+        // Obtenir toutes les positions des caractères
+        const charElements = display.querySelectorAll('.text-char');
+        const rect = display.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        
+        let closestPos = 0;
+        let closestDistance = Infinity;
+        
+        // Vérifier chaque caractère pour trouver le plus proche
+        charElements.forEach((charEl, index) => {
+            const charRect = charEl.getBoundingClientRect();
+            const charMiddle = charRect.left + charRect.width / 2 - rect.left;
+            const distance = Math.abs(clickX - charMiddle);
+            
+            // Position avant ce caractère
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestPos = clickX < charMiddle ? index : index + 1;
+            }
+        });
+        
+        // Limiter la position entre 0 et text.length
+        this.textKeypadCursorPosition = Math.max(0, Math.min(text.length, closestPos));
+        this.updateTextKeypadDisplay();
     }
 
     textKeypadSetMode(mode) {
@@ -1586,10 +1646,14 @@ class App {
     }
 
     textKeypadInput(char) {
-        const display = document.getElementById('text-keypad-display');
-        let current = display.textContent;
+        const text = this.textKeypadCurrentText || '';
+        const pos = this.textKeypadCursorPosition;
         
-        display.textContent = current + char;
+        // Insérer le caractère à la position du curseur
+        this.textKeypadCurrentText = text.substring(0, pos) + char + text.substring(pos);
+        this.textKeypadCursorPosition = pos + 1; // Avancer le curseur
+        
+        this.updateTextKeypadDisplay();
         
         // Si shift est activé, le désactiver après la saisie d'une lettre
         if (this.textKeypadShiftOn && char.match(/[a-zA-Z]/)) {
@@ -1599,18 +1663,20 @@ class App {
     }
 
     textKeypadBackspace() {
-        const display = document.getElementById('text-keypad-display');
-        let current = display.textContent;
+        const text = this.textKeypadCurrentText || '';
+        const pos = this.textKeypadCursorPosition;
         
-        if (current.length > 0) {
-            display.textContent = current.slice(0, -1);
+        if (pos > 0) {
+            // Supprimer le caractère avant le curseur
+            this.textKeypadCurrentText = text.substring(0, pos - 1) + text.substring(pos);
+            this.textKeypadCursorPosition = pos - 1; // Reculer le curseur
+            this.updateTextKeypadDisplay();
         }
     }
 
     validateTextKeypadInput() {
         const keypad = document.getElementById('text-keypad');
-        const display = document.getElementById('text-keypad-display');
-        const value = display.textContent;
+        const value = this.textKeypadCurrentText || '';
         
         // Mettre à jour l'input
         if (this.currentTextInputElement) {
