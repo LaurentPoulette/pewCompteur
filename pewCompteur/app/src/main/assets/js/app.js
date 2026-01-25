@@ -1565,7 +1565,10 @@ class App {
                 html += '<span class="text-cursor"></span>';
             }
             if (i < text.length) {
-                html += '<span class="text-char" data-pos="' + i + '">' + text.charAt(i) + '</span>';
+                const char = text.charAt(i);
+                // Remplacer l'espace par un point médian visible
+                const displayChar = char === ' ' ? '·' : char;
+                html += '<span class="text-char" data-pos="' + i + '">' + displayChar + '</span>';
             }
         }
         

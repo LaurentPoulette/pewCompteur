@@ -289,7 +289,13 @@ export const ActiveGameView = (store) => {
                                     <div style="display:flex; align-items:center; gap:4px;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:16px; height:16px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:0.9em;">${p.avatar}</span>`} 
                                         <span class="name-full" style="font-size:0.85em;">${p.name}</span>
-                                        <span class="name-initial" style="font-size:0.85em;">${p.name.charAt(0).toUpperCase()}</span>
+                                        <span class="name-initial" style="font-size:0.85em;">${(() => {
+                                            const words = p.name.trim().split(/\s+/);
+                                            if (words.length >= 2) {
+                                                return words[0].charAt(0).toUpperCase() + words[1].charAt(0).toUpperCase();
+                                            }
+                                            return p.name.charAt(0).toUpperCase();
+                                        })()}</span>
                                     </div>
                                 </div>
                             </td>
@@ -373,7 +379,13 @@ export const ActiveGameView = (store) => {
                                     </div>
                                     <div style="font-size:0.8em;">
                                         <span class="name-full">${p.name}</span>
-                                        <span class="name-initial">${p.name.charAt(0).toUpperCase()}</span>
+                                        <span class="name-initial">${(() => {
+                                            const words = p.name.trim().split(/\s+/);
+                                            if (words.length >= 2) {
+                                                return words[0].charAt(0).toUpperCase() + words[1].charAt(0).toUpperCase();
+                                            }
+                                            return p.name.charAt(0).toUpperCase();
+                                        })()}</span>
                                     </div>
                                 </th>
                             `).join('')}
@@ -1454,7 +1466,7 @@ export const OptionsView = (store) => `
                     <input type="checkbox" id="allow-edit-past-rounds" ${store.state.allowEditPastRounds ? 'checked' : ''} onchange="window.app.toggleAllowEditPastRounds(this.checked)">
                     <span class="toggle-slider"></span>
                 </div>
-                <span style="font-size:1em; color:#333;">Modifier les score des tours terminés</span>
+                <span style="font-size:1em; color:#333;">Modifier les scores des tours terminés</span>
             </label>
             <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
                 <div class="toggle-switch" style="margin-right:12px;">
