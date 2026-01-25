@@ -274,7 +274,21 @@ export class Store {
         if (!this.state.activeGame.history[roundIndex]) {
             this.state.activeGame.history[roundIndex] = {};
         }
-        this.state.activeGame.history[roundIndex][playerId] = value;
+        
+        // En mode victoire, convertir en 1 (gagnant) ou 0 (perdant)
+        const game = this.getGames().find(g => g.id === this.state.activeGame.gameId);
+        const isWinsMode = game && game.scoreMode === 'wins';
+        
+        if (isWinsMode) {
+            // En mode victoire : 1 point si valeur > 0, sinon 0
+            const numVal = (value === undefined || value === "" || value === null) ? 0 : (typeof value === 'number' ? value : parseInt(value));
+            const storedValue = numVal > 0 ? 1 : 0;
+            console.log(`Mode victoire: valeur ${value} -> ${numVal} -> stocké ${storedValue}`);
+            this.state.activeGame.history[roundIndex][playerId] = storedValue;
+        } else {
+            // En mode points : stocker la valeur telle quelle
+            this.state.activeGame.history[roundIndex][playerId] = value;
+        }
 
         // Recalculate totals
         this.recalculateTotals();
@@ -287,13 +301,15 @@ export class Store {
         // Reset scores
         this.state.activeGame.players.forEach(p => p.score = 0);
 
-        // Sum up history
+        // Sum up history (fonctionne pour mode points et victoires)
         this.state.activeGame.history.forEach(round => {
             this.state.activeGame.players.forEach(p => {
                 const val = round[p.id] || 0;
                 p.score += val;
             });
         });
+        
+        console.log(`Totaux recalculés:`, this.state.activeGame.players.map(p => ({ nom: p.name, score: p.score })));
     }
 
     addPlayerToSession(playerId) {

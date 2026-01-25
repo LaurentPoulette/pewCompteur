@@ -2150,22 +2150,41 @@ class App {
         const currentRoundData = session.history[roundIndex];
         const isLastRound = parseInt(roundIndex) === session.history.length - 1;
 
+        console.log(`updateRound: roundIndex=${roundIndex}, history.length=${session.history.length}, isLastRound=${isLastRound}`);
+
         if (isLastRound) {
             const isRoundComplete = session.players.every(p => currentRoundData[p.id] !== undefined && currentRoundData[p.id] !== "");
+            
+            console.log(`isLastRound=true, isRoundComplete=${isRoundComplete}`);
+            console.log(`currentRoundData:`, currentRoundData);
+            console.log(`players check:`, session.players.map(p => ({ id: p.id, value: currentRoundData[p.id] })));
             
             if (isRoundComplete) {
                 // Vérifier les conditions de fin de partie
                 const effectiveRounds = (session.config && session.config.rounds) !== undefined ? session.config.rounds : game.rounds;
                 const effectiveTarget = (session.config && session.config.target) !== undefined ? session.config.target : game.target;
+                const isWinsMode = game.scoreMode === 'wins';
+
+                console.log(`=== Vérification fin de partie ===`);
+                console.log(`Mode: ${game.scoreMode}, Cible: ${effectiveTarget}, Tours: ${effectiveRounds}`);
+                console.log(`Scores actuels:`, session.players.map(p => ({ nom: p.name, score: p.score })));
 
                 let gameOverReason = null;
                 
                 if (effectiveRounds && session.history.length >= effectiveRounds) {
                     gameOverReason = "Limite de tours atteinte";
+                    console.log(`Limite de tours atteinte: ${session.history.length} >= ${effectiveRounds}`);
                 } else if (effectiveTarget && effectiveTarget > 0) {
+                    // Vérifier le score total (fonctionne pour mode points et victoires)
                     const anyReached = session.players.some(p => p.score >= effectiveTarget);
+                    console.log(`Vérification limite de score: ${anyReached}`);
+                    session.players.forEach(p => {
+                        console.log(`  ${p.name}: ${p.score} >= ${effectiveTarget} ? ${p.score >= effectiveTarget}`);
+                    });
                     if (anyReached) gameOverReason = "Limite de score atteinte";
                 }
+
+                console.log(`Raison de fin: ${gameOverReason || 'aucune'}`);
 
                 if (gameOverReason) {
                     // Sauvegarder la raison et naviguer vers GameOver
@@ -2268,80 +2287,49 @@ class App {
     }
 
     checkGameEndCondition(session, game) {
-        // 1. Check if all scores for the current round are filled
-        // We only check the LAST round (or all rounds, but typically the game ends on the latest activity)
-        // Actually, we should check if ANY end condition is met, but usually we wait for the round to be "complete"
-        // Let's check if the CURRENT round (last in history) is fully filled
+        // Check if the LAST round is fully filled
         const currentRound = session.history[session.history.length - 1];
-        if (!currentRound) return;
+        if (!currentRound) return null;
 
         const isRoundComplete = session.players.every(p => currentRound[p.id] !== undefined && currentRound[p.id] !== "");
-        let reason = null;
+        
+        if (!isRoundComplete) return null;
 
         // Determine effective limits (session config overrides game defaults if present)
         const effectiveRounds = (session.config && session.config.rounds) !== undefined ? session.config.rounds : game.rounds;
         const effectiveTarget = (session.config && session.config.target) !== undefined ? session.config.target : game.target;
 
-        if (isRoundComplete) {
-            // Check Max Rounds
-            if (effectiveRounds && session.history.length >= effectiveRounds) {
-                reason = "Limite de tours atteinte";
-            } else if (effectiveTarget && effectiveTarget > 0) {
-                // Check if any player has reached the target
-                const anyReached = session.players.some(p => p.score >= effectiveTarget);
-                if (anyReached) reason = "Limite de score atteinte";
-            }
+        console.log(`=== checkGameEndCondition ===`);
+        console.log(`Mode: ${game.scoreMode}, Cible: ${effectiveTarget}, Tours: ${effectiveRounds}`);
+        console.log(`Scores actuels:`, session.players.map(p => ({ nom: p.name, score: p.score })));
+
+        let reason = null;
+
+        // Check Max Rounds
+        if (effectiveRounds && session.history.length >= effectiveRounds) {
+            reason = "Limite de tours atteinte";
+            console.log(`Limite de tours atteinte: ${session.history.length} >= ${effectiveRounds}`);
+        } else if (effectiveTarget && effectiveTarget > 0) {
+            // Check if any player has reached the target
+            const anyReached = session.players.some(p => p.score >= effectiveTarget);
+            console.log(`Vérification limite de score: ${anyReached}`);
+            session.players.forEach(p => {
+                console.log(`  ${p.name}: ${p.score} >= ${effectiveTarget} ? ${p.score >= effectiveTarget}`);
+            });
+            if (anyReached) reason = "Limite de score atteinte";
         }
 
-        const bannerContainer = document.getElementById('game-over-banner-bottom');
-        const newRoundBtn = document.getElementById('btn-new-round');
+        console.log(`Raison de fin: ${reason || 'aucune'}`);
 
-        if (bannerContainer && newRoundBtn) {
-            if (reason) {
-                // Only show if not manually dismissed (we can track this in state or simply re-show it on update? 
-                // The user request implies "Continue Game" dismisses it. 
-                // If we check every update, it might reappear if we don't track dismissal.
-                // For now, let's assume if condition is met, we show it, unless we are in "continued" mode.
-                // But we don't have "continued" mode in state. 
-                // Let's just update DOM.
-                // If "Continue Game" is clicked, we'll probably want to ignore this check until next round?
-                // Let's keeping it simple: Update shows it. "Continue" hides it.
-                // If user updates score again, it might reappear if condition still met. That seems correct.
-
-                // Wait, if I click "Continue", I want to add a round.
-                // So "Continue" just hides banner and shows button.
-                // Then I click "Add Round", which adds round.
-                // Then condition (rounds limit) might be valid or not depending on if limit was "reached" or "exceeded".
-                // If limit was 10 rounds, and we are at 10. Banner shows.
-                // "Continue". Banner hides. Button shows.
-                // Click "New Round". Now 11 rounds.
-                // Update checks... 11 >= 10. Banner shows again?
-                // Probably yes. The user wants to "Force" continue.
-                // Maybe we should only show banner if `!session.continued`?
-                // Let's implement `continueGame` to set a flag in session?
-
-                // For this step, let's just do the DOM update as requested.
-                // If the user wants to truly "disable" the limit, they should probably change config.
-                // But "Continuer la partie" implies ignoring the CURRENT stop.
-
-                bannerContainer.innerHTML = `
-                    <div style="background-color:var(--primary-color); color:white; padding:15px; border-radius:8px; margin-bottom:10px; text-align:center; box-shadow: 0 44px 6px rgba(0,0,0,0.1);">
-                        <div style="font-size:1.2em; font-weight:bold;">🏁 Partie Terminée</div>
-                        <div style="opacity:0.9; margin-bottom:10px;">${reason}</div>
-                        <div style="display:flex; justify-content:center; gap:10px;">
-                             <button onclick="window.app.navigateUpdateLimits()" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5); color:white; padding:8px 12px; font-size:0.9rem; border-radius:4px; flex:1;">Continuer</button>
-                             <button onclick="window.app.navigateEndGame()" style="background:white; color:var(--primary-color); border:none; padding:8px 12px; font-size:0.9rem; border-radius:4px; font-weight:bold; flex:1;">Terminer</button>
-                        </div>
-                    </div>
-                `;
-                bannerContainer.style.display = 'block';
-                newRoundBtn.style.display = 'none';
-            } else {
-                bannerContainer.innerHTML = '';
-                bannerContainer.style.display = 'none';
-                newRoundBtn.style.display = 'block';
-            }
+        if (reason) {
+            // Navigate to GameOver
+            session.gameOverReason = reason;
+            this.store.save();
+            setTimeout(() => {
+                this.router.navigate('gameOver');
+            }, 100);
         }
+
         return reason;
     }
 

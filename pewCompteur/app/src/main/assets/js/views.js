@@ -1011,6 +1011,10 @@ export const UpdateLimitsView = (store) => {
     const currentTarget = (session.config && session.config.target !== undefined) ? session.config.target : (game.target || '');
     const gameTitle = game ? game.name : 'Fin de partie';
 
+    // Convertir null/undefined/NaN en chaîne vide pour l'affichage
+    const displayRounds = (currentRounds === null || currentRounds === undefined || isNaN(currentRounds)) ? '' : currentRounds;
+    const displayTarget = (currentTarget === null || currentTarget === undefined || isNaN(currentTarget)) ? '' : currentTarget;
+
     return `
                         <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px;">
                             <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
@@ -1023,12 +1027,12 @@ export const UpdateLimitsView = (store) => {
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="update-score-limit" style="font-weight:bold; width:60%;">Limite de score</label>
-                                <input type="text" inputmode="none" id="update-score-limit" value="${currentTarget}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('update-score-limit', this.value, 'Objectif de score')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
+                                <input type="text" inputmode="none" id="update-score-limit" value="${displayTarget}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('update-score-limit', this.value, 'Objectif de score')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
                             </div>
 
                             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #f0f0f0; padding-bottom:10px;">
                                 <label for="update-round-limit" style="font-weight:bold; width:60%;">Limite de tours</label>
-                                <input type="text" inputmode="none" id="update-round-limit" value="${currentRounds}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('update-round-limit', this.value, 'Nombre de tours')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
+                                <input type="text" inputmode="none" id="update-round-limit" value="${displayRounds}" placeholder="Illimité" readonly onclick="window.app.showGenericNumericKeypad('update-round-limit', this.value, 'Nombre de tours')" style="width:30%; padding:10px; border:1px solid #ccc; border-radius:5px; text-align:right; cursor:pointer;">
                             </div>
                         </div>
                         </div>
@@ -1403,6 +1407,7 @@ export const GameOverView = (store) => {
                     </div>
                     
                     <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100; background:white; padding:10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-radius:8px;">
+                        <button onclick="window.app.navigateUpdateLimits()" style="width:100%; padding:15px; font-size:1.1rem; background-color:white; color:var(--primary-color); border:2px solid var(--primary-color); border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:10px;">Continuer la partie</button>
                         <button onclick="window.app.executeEndGame()" style="width:100%; padding:15px; font-size:1.1rem; background-color:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Retour à l'accueil</button>
                     </div>
                     `;
