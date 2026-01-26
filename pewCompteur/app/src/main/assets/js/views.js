@@ -372,8 +372,11 @@ export const ActiveGameView = (store) => {
                         </tr>
                         <tr style="background: linear-gradient(135deg, #c3dafe 0%, #a3bffa 100%);">
                             <th class="history-header" style="background: transparent; padding: 2px; border-bottom: none; border-right: 1px solid white; color: #2d3748;">#</th>
-                            ${tablePlayers.map(p => `
-                                <th class="history-header" title="${p.name}" onclick="window.app.showPlayerNamePopupById('${p.id}')" style="cursor:pointer; background: transparent; padding: 2px;  color: #2d3748;">
+                            ${tablePlayers.map(p => {
+                                const isDealer = session.dealerId && session.dealerId === p.id;
+                                return `
+                                <th class="history-header ${isDealer ? 'dealer-cell' : ''}" title="${p.name}" onclick="${isDealer ? 'window.app.selectDealer(true)' : 'window.app.showPlayerNamePopupById(\'' + p.id + '\')'}"
+                                    style="cursor:pointer; background: transparent; padding: 2px;  color: #2d3748;">
                                     <div style="height:34px; display:flex; align-items:center; justify-content:center;">
                                         ${p.photo ? `<img src="${p.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                                     </div>
@@ -388,7 +391,8 @@ export const ActiveGameView = (store) => {
                                         })()}</span>
                                     </div>
                                 </th>
-                            `).join('')}
+                            `;
+                            }).join('')}
                         </tr>
                         <tr style="background: linear-gradient(135deg, #c3dafe 0%, #a3bffa 100%); font-weight:bold;">
                             <td class="history-header" style="background: transparent; padding: 2px; font-size: 1.3em; color: #2d3748;">Σ</td>
@@ -452,9 +456,8 @@ export const ActiveGameView = (store) => {
                             </td>
                                     `;
                                 } else {
-                                    const isDealer = session.dealerId && session.dealerId === p.id;
                                     return `
-                            <td class="history-cell-score ${isDealer ? 'dealer-cell' : ''}">
+                            <td class="history-cell-score">
                                 <input type="text" 
                                        class="score-input"
                                        value="${round[p.id] !== undefined ? round[p.id] : ''}" 

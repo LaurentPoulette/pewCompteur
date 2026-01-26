@@ -723,10 +723,11 @@ class App {
         const popup = document.createElement('div');
         popup.style.cssText = 'background:white; border-radius:12px; padding:20px; max-width:400px; width:100%; box-shadow:0 4px 20px rgba(0,0,0,0.3);';
         
-        const title = isChange ? 'Sélectionnez le nouveau donneur' : 'Sélectionnez le premier donneur';
+        const title = 'Choix du donneur';
+        const dealerIcon = `<span style="display:inline-block; width:28px; height:38px; background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 32%22><rect x=%220%22 y=%220%22 width=%2224%22 height=%2232%22 rx=%222%22 fill=%22white%22 stroke=%22%23333%22 stroke-width=%221%22/><text x=%223%22 y=%229%22 font-size=%227%22 font-weight=%22bold%22 fill=%22%23e53e3e%22>A</text><path d=%22M 12 26 C 12 26, 6 20, 6 16 C 6 12, 9 10, 12 13 C 15 10, 18 12, 18 16 C 18 20, 12 26, 12 26 Z%22 fill=%22%23e53e3e%22/></svg>'); background-size:contain; background-repeat:no-repeat; vertical-align:middle; margin-right:10px;"></span>`;
         
         popup.innerHTML = `
-            <h3 style="margin:0 0 15px 0; color:#333; text-align:center;">${title}</h3>
+            <h3 style="margin:0 0 15px 0; color:#333; display:flex; align-items:center;">${dealerIcon}${title}</h3>
             <div style="display:grid; gap:10px; margin-bottom:20px;">
                 ${players.map(p => {
                     const isCurrentDealer = currentDealerId && p.id === currentDealerId;
