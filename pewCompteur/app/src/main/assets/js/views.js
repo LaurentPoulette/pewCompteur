@@ -1415,7 +1415,7 @@ export const GameOverView = (store) => {
                     </div>
                     
                     <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100; background:white; padding:10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-radius:8px;">
-                        <button onclick="window.app.navigateUpdateLimits()" style="width:100%; padding:15px; font-size:1.1rem; background-color:white; color:var(--primary-color); border:2px solid var(--primary-color); border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:10px;">Continuer la partie</button>
+                        ${gameOverReason !== "Terminé manuellement" ? `<button onclick="window.app.navigateUpdateLimits()" style="width:100%; padding:15px; font-size:1.1rem; background-color:white; color:var(--primary-color); border:2px solid var(--primary-color); border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:10px;">${gameOverReason && gameOverReason.includes('Limite') ? 'Modifier les limites' : 'Continuer la partie'}</button>` : ''}
                         <button onclick="window.app.executeEndGame()" style="width:100%; padding:15px; font-size:1.1rem; background-color:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Retour à l'accueil</button>
                     </div>
                     `;
@@ -1453,8 +1453,8 @@ export const OptionsView = (store) => `
     
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
         <button onclick="window.app.router.navigate('statistics')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
-            <span>Statistiques</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Historique</span>
         </button>
         
         <button onclick="window.app.router.navigate('exportGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
@@ -1877,15 +1877,15 @@ export const StatisticsView = (store) => {
         <div style="position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; overflow:hidden;">
             <header style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom: 20px; flex-shrink: 0; padding: 2px;">
                 <button onclick="window.app.router.back()" style="padding: 8px 12px; display:flex; align-items:center; justify-self:start;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
-                <h1 style="margin:0; text-align:center;">Statistiques</h1>
+                <h1 style="margin:0; text-align:center;">Historique</h1>
                 <div></div>
             </header>
 
             <!-- TABS -->
-            <div style="position:sticky; top:0; z-index:10; background:var(--surface-color); display:flex; margin-bottom:20px; border-bottom:1px solid #ccc; flex-shrink:0;">
-                <button onclick="window.app.updateStatisticsState('tab', 'global')" style="flex:1; padding:10px; border:none; background:${state.tab === 'global' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'global' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'global' ? 'bold' : 'normal'}; cursor:pointer;">Global</button>
-                <button onclick="window.app.updateStatisticsState('tab', 'history')" style="flex:1; padding:10px; border:none; background:${state.tab === 'history' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'history' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'history' ? 'bold' : 'normal'}; cursor:pointer;">Historique</button>
-                <button onclick="window.app.updateStatisticsState('tab', 'comparator')" style="flex:1; padding:10px; border:none; background:${state.tab === 'comparator' ? 'white' : '#e5e5e5'}; color: #333; border-bottom:${state.tab === 'comparator' ? '3px solid var(--primary-color)' : 'none'}; font-weight:${state.tab === 'comparator' ? 'bold' : 'normal'}; cursor:pointer;">Comparaison</button>
+            <div style="position:sticky; top:0; z-index:10; background:var(--surface-color); display:flex; gap:8px; margin-bottom:20px; padding:8px; flex-shrink:0;">
+                <button onclick="window.app.updateStatisticsState('tab', 'global')" style="flex:1; padding:12px 16px; border:none; background:${state.tab === 'global' ? 'linear-gradient(135deg, var(--primary-color) 0%, #60a5fa 100%)' : 'transparent'}; color:${state.tab === 'global' ? 'white' : '#666'}; border-radius:12px; font-weight:${state.tab === 'global' ? '600' : '500'}; cursor:pointer; transition:all 0.3s ease; box-shadow:${state.tab === 'global' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'}; font-size:0.95em;">Global</button>
+                <button onclick="window.app.updateStatisticsState('tab', 'history')" style="flex:1; padding:12px 16px; border:none; background:${state.tab === 'history' ? 'linear-gradient(135deg, var(--primary-color) 0%, #60a5fa 100%)' : 'transparent'}; color:${state.tab === 'history' ? 'white' : '#666'}; border-radius:12px; font-weight:${state.tab === 'history' ? '600' : '500'}; cursor:pointer; transition:all 0.3s ease; box-shadow:${state.tab === 'history' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'}; font-size:0.95em;">Parties</button>
+                <button onclick="window.app.updateStatisticsState('tab', 'comparator')" style="flex:1; padding:12px 16px; border:none; background:${state.tab === 'comparator' ? 'linear-gradient(135deg, var(--primary-color) 0%, #60a5fa 100%)' : 'transparent'}; color:${state.tab === 'comparator' ? 'white' : '#666'}; border-radius:12px; font-weight:${state.tab === 'comparator' ? '600' : '500'}; cursor:pointer; transition:all 0.3s ease; box-shadow:${state.tab === 'comparator' ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'}; font-size:0.95em;">Joueurs</button>
             </div>
 
             <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overflow-x:hidden; padding: 0 2px 180px 2px;">
