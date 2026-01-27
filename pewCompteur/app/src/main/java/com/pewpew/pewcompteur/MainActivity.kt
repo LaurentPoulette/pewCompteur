@@ -3,6 +3,7 @@ package com.pewpew.pewcompteur
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
@@ -24,6 +25,11 @@ import com.pewpew.pewcompteur.ui.theme.PewCompteurTheme
 import org.json.JSONObject
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 class MainActivity : ComponentActivity() {
 
@@ -129,6 +135,9 @@ class MainActivity : ComponentActivity() {
             loadUrl("https://appassets.androidplatform.net/assets/index.html")
         }
 
+        // Vérifier la version au démarrage
+        checkVersion()
+
         onBackPressedDispatcher.addCallback(this) {
             // This now calls a global JS function that will call back into our interface.
             webView.evaluateJavascript("window.requestBackAction();", null)
@@ -153,5 +162,59 @@ class MainActivity : ComponentActivity() {
             .setPositiveButton("Oui") { _, _ -> finish() }
             .setNegativeButton("Non", null)
             .show()
+    }
+
+    private fun checkVersion() {
+        val currentVersion = packageManager.getPackageInfo(packageName, 0).versionName ?: return
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val url = URL("https://sites.google.com/view/apps-pewpew/accueil/pewcompteur/version")
+                val html = url.readText()
+                
+                // Rechercher "Version actuelle : x.y" dans le HTML
+                val regex = Regex("Version actuelle\\s*:\\s*([\\d.]+)", RegexOption.IGNORE_CASE)
+                val match = regex.find(html)
+                
+                withContext(Dispatchers.Main) {
+                    if (match != null) {
+                        val remoteVersion = match.groupValues[1]
+                        
+                        // Comparer les versions
+                        if (isVersionGreater(remoteVersion, currentVersion)) {
+                            // Nouvelle version disponible
+                            AlertDialog.Builder(this@MainActivity)
+                                .setIcon(R.mipmap.ic_launcher)
+                                .setTitle("🎉 Mise à jour disponible")
+                                .setMessage("Une nouvelle version ($remoteVersion) est disponible !\n\nVersion actuelle : $currentVersion\nNouvelle version : $remoteVersion\n\nVoulez-vous mettre à jour l'application ?")
+                                .setPositiveButton("Mettre à jour") { _, _ ->
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.pewpew.pewcompteur"))
+                                    startActivity(intent)
+                                }
+                                .setNegativeButton("Plus tard", null)
+                                .setCancelable(true)
+                                .show()
+                        }
+                        // Si la version est à jour, ne rien afficher
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Erreur lors de la vérification de version", e)
+            }
+        }
+    }
+    
+    private fun isVersionGreater(version1: String, version2: String): Boolean {
+        val parts1 = version1.split(".").map { it.toIntOrNull() ?: 0 }
+        val parts2 = version2.split(".").map { it.toIntOrNull() ?: 0 }
+        
+        val maxLength = maxOf(parts1.size, parts2.size)
+        for (i in 0 until maxLength) {
+            val v1 = parts1.getOrNull(i) ?: 0
+            val v2 = parts2.getOrNull(i) ?: 0
+            if (v1 > v2) return true
+            if (v1 < v2) return false
+        }
+        return false
     }
 }

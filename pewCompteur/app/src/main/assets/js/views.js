@@ -1,4 +1,4 @@
-export const APP_VERSION = window.APP_VERSION_NATIVE || '1.13';
+export const APP_VERSION = window.APP_VERSION_NATIVE || '1.15';
 
 export const HomeView = (store, showOnlyFavorites = false) => {
     const allGames = store.getGames();
@@ -1427,20 +1427,71 @@ export const AboutView = () => `
         <h1 style="margin:0; text-align:center;">A propos</h1>
         <div></div>
     </header>
-    <div class="card">
-        <h3>Compteur de Points</h3>
-        <p>Version ${APP_VERSION}</p>
-        <p style="margin-top:20px;">Une application simple et efficace pour compter les points de vos jeux de société favoris (Tarot, Belote, UNO, et bien d'autres).</p>
-        <h4 style="margin-top:20px; margin-bottom:10px; color:var(--primary-color);">Nouveautés v1.13 :</h4>
-        <ul style="line-height:1.8; padding-left:20px;">
-            <li>Mode Victoires : comptez simplement les tours gagnés au lieu des points</li>
-            <li>Interface de saisie de jeu simplifiée avec seulement 2 sections</li>
-            <li>Clavier alphanumérique avec curseur repositionnable au toucher</li>
-            <li>Espaces visibles dans la saisie de texte (affichés comme ·)</li>
-            <li>Initiales à deux lettres pour les noms avec espaces</li>
-            <li>Correction de l'affichage null/NaN dans la modification des limites</li>
-        </ul>
-        <p style="margin-top:20px;">Développé avec passion.</p>
+    
+    <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Compteur de Points</h3>
+        
+        <p style="text-align:center; color:#666; font-size:1.1em; margin:0 0 15px 0;">Version ${APP_VERSION}</p>
+        
+        <p style="text-align:center; color:#333; margin:0 0 30px 0; padding:0 20px;">Une application simple et efficace pour compter les points de vos jeux favoris (Tarot, Belote, UNO, et bien d'autres).</p>
+        
+        <div style="margin-bottom:15px;">
+            <h3 onclick="const content = this.nextElementSibling; const icon = this.querySelector('.toggle-icon'); const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px'; content.style.maxHeight = isExpanded ? '0px' : content.scrollHeight + 'px'; content.style.opacity = isExpanded ? '0' : '1'; icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';" style="cursor:pointer; margin:0 0 0 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
+                <span>Nouveautés v1.15</span>
+                <svg class="toggle-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease-in-out; transform: rotate(180deg); flex-shrink:0;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </h3>
+            <div style="max-height:1000px; opacity:1; overflow:hidden; transition:max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;">
+                <ul style="line-height:1.8; padding-left:20px; margin:15px 0 0 0; color:#333;">
+                    <li>Nouveau design de la page "A propos" avec sections à dégradé bleu</li>
+                    <li>Icône SVG chevron avec rotation animée pour déplier/replier</li>
+                    <li>Animations fluides pour le dépliage/repliage des versions</li>
+                    <li>Sections arrondies cohérentes avec le reste de l'application</li>
+                    <li>Historique des versions organisé et repliable</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <h3 onclick="const content = this.nextElementSibling; const icon = this.querySelector('.toggle-icon'); const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px'; content.style.maxHeight = isExpanded ? '0px' : content.scrollHeight + 'px'; content.style.opacity = isExpanded ? '0' : '1'; icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';" style="cursor:pointer; margin:0 0 0 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
+                <span>Nouveautés v1.14</span>
+                <svg class="toggle-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease-in-out; transform: rotate(0deg); flex-shrink:0;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </h3>
+            <div style="max-height:0px; opacity:0; overflow:hidden; transition:max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;">
+                <ul style="line-height:1.8; padding-left:20px; margin:15px 0 0 0; color:#333;">
+                    <li>Nouveau design des onglets dans la page Historique avec dégradé et ombres</li>
+                    <li>Renommage : "Statistiques" devient "Historique"</li>
+                    <li>Onglets renommés : "Liste" → "Parties", "Comparaison" → "Joueurs"</li>
+                    <li>Icône d'horloge pour le bouton Historique dans Options</li>
+                    <li>Bouton "Continuer la partie" masqué si fin manuelle</li>
+                    <li>Bouton devient "Modifier les limites" si fin par limite atteinte</li>
+                    <li>Vérification automatique des mises à jour au démarrage</li>
+                    <li>Page "A propos" avec historique des versions repliable</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div style="margin-bottom:15px;">
+            <h3 onclick="const content = this.nextElementSibling; const icon = this.querySelector('.toggle-icon'); const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px'; content.style.maxHeight = isExpanded ? '0px' : content.scrollHeight + 'px'; content.style.opacity = isExpanded ? '0' : '1'; icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';" style="cursor:pointer; margin:0 0 0 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
+                <span>Nouveautés v1.13</span>
+                <svg class="toggle-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease-in-out; transform: rotate(0deg); flex-shrink:0;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </h3>
+            <div style="max-height:0px; opacity:0; overflow:hidden; transition:max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;">
+                <ul style="line-height:1.8; padding-left:20px; margin:15px 0 0 0; color:#333;">
+                    <li>Mode Victoires : comptez simplement les tours gagnés au lieu des points</li>
+                    <li>Interface de saisie de jeu simplifiée avec seulement 2 sections</li>
+                    <li>Clavier alphanumérique avec curseur repositionnable au toucher</li>
+                    <li>Espaces visibles dans la saisie de texte (affichés comme ·)</li>
+                    <li>Initiales à deux lettres pour les noms avec espaces</li>
+                    <li>Correction de l'affichage null/NaN dans la modification des limites</li>
+                </ul>
+            </div>
+        </div>
     </div>
 `;
 
@@ -1452,6 +1503,8 @@ export const OptionsView = (store) => `
     </header>
     
     <div style="flex:1; overflow-y:auto; width:100%; padding-bottom:20px;">
+        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Fonctions avancées</h3>
+        
         <button onclick="window.app.router.navigate('statistics')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:10px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span>Historique</span>
@@ -1461,35 +1514,37 @@ export const OptionsView = (store) => `
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span>Exporter jeux</span>
         </button>
+        
         <button onclick="window.app.router.navigate('importGames')" class="primary-button" style="width:100%; padding:15px; font-size:1em; margin-bottom:30px; display:flex; align-items:center; justify-content:flex-start; gap:15px;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
             <span>Importer jeux</span>
         </button>
         
-        <div>
-            <h3 style="margin-bottom:15px; color:#333;">Paramètres</h3>
-            <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
-                <div class="toggle-switch" style="margin-right:12px;">
-                    <input type="checkbox" id="show-leaderboard-during-game" ${store.state.showLeaderboardDuringGame ? 'checked' : ''} onchange="window.app.toggleShowLeaderboardDuringGame(this.checked)">
-                    <span class="toggle-slider"></span>
-                </div>
-                <span style="font-size:1em; color:#333;">Afficher le classement en cours de partie</span>
-            </label>
-            <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
-                <div class="toggle-switch" style="margin-right:12px;">
-                    <input type="checkbox" id="allow-edit-past-rounds" ${store.state.allowEditPastRounds ? 'checked' : ''} onchange="window.app.toggleAllowEditPastRounds(this.checked)">
-                    <span class="toggle-slider"></span>
-                </div>
-                <span style="font-size:1em; color:#333;">Autoriser la modification des scores des tours terminés</span>
-            </label>
-            <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
-                <div class="toggle-switch" style="margin-right:12px;">
-                    <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)">
-                    <span class="toggle-slider"></span>
-                </div>
-                <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>
-            </label>
-        </div>
+        <h3 style="margin:0 0 20px 0; padding:12px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align:center;">Paramètres</h3>
+        
+        <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
+            <div class="toggle-switch" style="margin-right:12px;">
+                <input type="checkbox" id="show-leaderboard-during-game" ${store.state.showLeaderboardDuringGame ? 'checked' : ''} onchange="window.app.toggleShowLeaderboardDuringGame(this.checked)">
+                <span class="toggle-slider"></span>
+            </div>
+            <span style="font-size:1em; color:#333;">Afficher le classement en cours de partie</span>
+        </label>
+        
+        <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:10px;">
+            <div class="toggle-switch" style="margin-right:12px;">
+                <input type="checkbox" id="allow-edit-past-rounds" ${store.state.allowEditPastRounds ? 'checked' : ''} onchange="window.app.toggleAllowEditPastRounds(this.checked)">
+                <span class="toggle-slider"></span>
+            </div>
+            <span style="font-size:1em; color:#333;">Autoriser la modification des scores des tours terminés</span>
+        </label>
+        
+        <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
+            <div class="toggle-switch" style="margin-right:12px;">
+                <input type="checkbox" id="hide-deleted-games" ${store.state.hideDeletedGamesInStats ? 'checked' : ''} onchange="window.app.toggleHideDeletedGames(this.checked)">
+                <span class="toggle-slider"></span>
+            </div>
+            <span style="font-size:1em; color:#333;">Masquer les jeux supprimés dans les statistiques</span>
+        </label>
     </div>
     
     <div style="position:fixed; bottom:20px; left:20px; right:20px; z-index:100;">
