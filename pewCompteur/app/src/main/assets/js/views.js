@@ -1480,7 +1480,7 @@ export const OptionsView = (store) => `
                     <input type="checkbox" id="allow-edit-past-rounds" ${store.state.allowEditPastRounds ? 'checked' : ''} onchange="window.app.toggleAllowEditPastRounds(this.checked)">
                     <span class="toggle-slider"></span>
                 </div>
-                <span style="font-size:1em; color:#333;">Modifier les scores des tours terminés</span>
+                <span style="font-size:1em; color:#333;">Autoriser la modification des scores des tours terminés</span>
             </label>
             <label style="display:flex; align-items:center; padding:15px; background:white; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; margin-bottom:80px;">
                 <div class="toggle-switch" style="margin-right:12px;">
