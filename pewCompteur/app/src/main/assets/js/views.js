@@ -335,9 +335,9 @@ export const ActiveGameView = (store) => {
                 limitText = `Aucune limite de point ni de tour`;
             }
             
-            return `<div style="margin-bottom: 15px; padding:10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0; font-size:0.95em; display: flex; align-items: center; justify-content: center; position: relative;">
-                <button onclick="window.app.navigateUpdateLimits()" style="position: absolute; left: 10px; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Modifier les limites">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            return `<div style="margin-bottom: 15px; padding:10px 15px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:white; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0; font-size:0.95em; display: flex; align-items: center; justify-content: center; position: relative; min-height:48px;">
+                <button onclick="window.app.navigateUpdateLimits()" style="position: absolute; left: 10px; background: var(--primary-color); color: white; border: none; cursor: pointer; padding: 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Modifier les limites">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
@@ -351,16 +351,16 @@ export const ActiveGameView = (store) => {
                 <table class="history-table" style="text-align: center; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; z-index: 10;">
                         <tr style="background: linear-gradient(135deg, #5a67d8 0%, #4c51bf 100%);">
-                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em; position: relative;">
-                                <button onclick="window.app.router.navigate('reorderPlayers')" style="position: absolute; left: 10px; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Gérer les joueurs">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <th colspan="${tablePlayers.length + 1}" style="padding: 12px 8px; color: white; font-weight: bold; font-size: 1em; position: relative; min-height:48px;">
+                                <button onclick="window.app.router.navigate('reorderPlayers')" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: var(--primary-color); color: white; border: none; cursor: pointer; padding: 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Gérer les joueurs">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
                                 </button>
                                 <span>Joueurs</span>
                                 ${session.dealerId ? `
-                                <button onclick="window.app.selectDealer(true)" style="position: absolute; right: 10px; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 6px; border-radius: 50%; align-items: center; justify-content: center;" title="Changer le donneur">
+                                <button onclick="window.app.selectDealer(true)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--primary-color); color: white; border: none; cursor: pointer; padding: 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Changer le donneur">
                                     <svg width="15" height="20" viewBox="0 0 24 32" style="display: block;">
                                         <rect x="0" y="0" width="24" height="32" rx="2" fill="white" stroke="#333" stroke-width="1"/>
                                         <text x="3" y="9" font-size="7" font-weight="bold" fill="#e53e3e">A</text>
@@ -400,22 +400,20 @@ export const ActiveGameView = (store) => {
                                 <td class="history-header" data-player-id="${p.id}" style="font-size:1.1em; color: #2d3748; background: transparent; padding: 2px; ">${p.score}</td>
                             `).join('')}
                         </tr>
-                        <tr style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);">
-                            <th colspan="${tablePlayers.length + 1}" style="padding: 8px; color: white; font-weight: bold; font-size: 1em; border-bottom: 3px solid white;">
-                                <div style="display: flex; justify-content: center; align-items: center; position: relative;">
-                                    <button onclick="window.app.addRound()" style="position: absolute; left: 0; background: rgba(255,255,255,0.2); border: none; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Nouveau tour">
-                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                                    </button>
-                                    <span>${(() => {
-                                        const currentRoundsCount = session.history.length;
-                                        const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
-                                        if (effectiveRounds) {
-                                            return `Tours ${currentRoundsCount} sur ${effectiveRounds}`;
-                                        } else {
-                                            return `Tours (${currentRoundsCount})`;
-                                        }
-                                    })()}</span>
-                                </div>
+                        <tr style="background: linear-gradient(135deg, #5a67d8 0%, #4c51bf 100%);">
+                            <th colspan="${tablePlayers.length + 1}" style="padding: 12px 8px; color: white; font-weight: bold; font-size: 1em; border-bottom: 3px solid white; min-height: 48px; position: relative;">
+                                <button onclick="window.app.addRound()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: var(--primary-color); color: white; border: none; cursor: pointer; padding: 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Nouveau tour">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                                </button>
+                                <span>${(() => {
+                                    const currentRoundsCount = session.history.length;
+                                    const effectiveRounds = (session.config && session.config.rounds !== undefined) ? session.config.rounds : game.rounds;
+                                    if (effectiveRounds) {
+                                        return `Tours ${currentRoundsCount} sur ${effectiveRounds}`;
+                                    } else {
+                                        return `Tours (${currentRoundsCount})`;
+                                    }
+                                })()}</span>
                             </th>
                         </tr>
                         ${(() => {
@@ -772,7 +770,9 @@ export const AvatarSelectionView = (store) => {
             <div id="avatar-selection-photo-capture-preview" style="display:${hasPhoto ? 'block' : 'none'}; margin-top:10px;">
                 <div style="position:relative; display:inline-block;">
                     <img id="avatar-selection-photo-capture-display" src="${currentPhoto}" onclick="window.app.reselectPhoto('avatar-selection');" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-color); box-shadow: 0 0 8px var(--primary-color); cursor:pointer;">
-                    <button onclick="event.stopPropagation(); window.app.deletePhoto('avatar-selection');" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1.2em; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">×</button>
+                    <button onclick="event.stopPropagation(); window.app.deletePhoto('avatar-selection');" style="position:absolute; top:-5px; right:-5px; background:#dc3545; color:white; border:none; border-radius:6px; padding:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -849,7 +849,9 @@ export const PlayerFormView = (store, playerId) => {
 
         <h3 style="margin-top:25px; margin-bottom:15px; padding:12px 15px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; border-radius:8px; font-size:1.1rem; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:space-between;">
             <span>Cercles</span>
-            <button onclick="event.stopPropagation(); window.app.navigateCircleForm(${isEditMode ? `'${player.id}'` : 'null'})" style="background:rgba(255,255,255,0.3); border:none; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5em; cursor:pointer; padding:0;">+</button>
+            <button onclick="event.stopPropagation(); window.app.navigateCircleForm(${isEditMode ? `'${player.id}'` : 'null'})" style="background: var(--primary-color); border:none; color:white; padding:8px; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
         </h3>
         
         ${circles.length === 0 ? `

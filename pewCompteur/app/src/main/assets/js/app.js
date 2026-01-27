@@ -2489,16 +2489,16 @@ class App {
                         ${p.photo ? `<img src="${p.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : `<span style="font-size:1.5em;">${p.avatar}</span>`}
                     </div>
                     <span style="flex:1; font-weight:bold;">${p.name}</span>
-                    <button class="no-drag-btn replace-btn" data-player-id="${p.id}" data-player-name="${p.name.replace(/"/g, '&quot;')}" data-player-avatar="${p.avatar}" style="background:#17a2b8; color:white; border:none; padding:8px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; width:36px; height:36px; margin-right:8px;" title="Remplacer">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button class="no-drag-btn replace-btn" data-player-id="${p.id}" data-player-name="${p.name.replace(/"/g, '&quot;')}" data-player-avatar="${p.avatar}" style="background:#17a2b8; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-right:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Remplacer">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="17 1 21 5 17 9"></polyline>
                             <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
                             <polyline points="7 23 3 19 7 15"></polyline>
                             <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                         </svg>
                     </button>
-                    <button class="no-drag-btn delete-btn" data-player-id="${p.id}" data-player-name="${p.name.replace(/"/g, '&quot;')}" data-player-avatar="${p.avatar}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; width:36px; height:36px;" title="Supprimer">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button class="no-drag-btn delete-btn" data-player-id="${p.id}" data-player-name="${p.name.replace(/"/g, '&quot;')}" data-player-avatar="${p.avatar}" style="background:#dc3545; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" title="Supprimer">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6"></polyline>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                         </svg>
